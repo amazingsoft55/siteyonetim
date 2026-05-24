@@ -1,0 +1,64 @@
+import { NextResponse } from "next/server";
+import { getDb } from "@/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import * as bcrypt from "bcryptjs";
+import { signJwt } from "@/lib/auth";
+import { cookies } from "next/headers";
+
+export async function POST(request: Request) {
+  try {
+    const { usernameOrPhone, password } = await request.json();
+
+    if (!usernameOrPhone || !password) {
+      return NextResponse.json({ error: "Lütfen kullanıcı adı ve şifre girin." }, { status: 400 });
+    }
+
+    // @ts-ignore
+    const env = process.env;
+    const db = getDb(env.DB);
+
+    const userList = await db.select().from(users).where(eq(users.emailOrPhone, usernameOrPhone)).limit(1);
+    const user = userList[0];
+
+    if (!user) {
+      return NextResponse.json({ error: "Hatalı giriş bilgileri." }, { status: 401 });
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+
+    if (!isValidPassword) {
+      return NextResponse.json({ error: "Hatalı giriş bilgileri." }, { status: 401 });
+    }
+
+    // JWT oluştur
+    const token = await signJwt({
+      id: user.id,
+      role: user.role,
+      name: user.name,
+      siteId: user.siteId,
+      apartmentNo: user.apartmentNo,
+    });
+
+    // Cookie olarak ayarla
+    cookies().set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: 60 * 60 * 24, // 1 gün
+    });
+
+    return NextResponse.json({
+      message: "Giriş başarılı",
+      user: {
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        siteId: user.siteId
+      }
+    });
+  } catch (error: any) {
+    return NextResponse.json({ error: "Sunucu hatası", details: error.message }, { status: 500 });
+  }
+}

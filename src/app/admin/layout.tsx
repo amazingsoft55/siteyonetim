@@ -1,0 +1,119 @@
+"use client";
+
+import * as React from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { ShieldCheck, Users, Megaphone, LayoutDashboard, Wrench, Settings, LogOut } from "lucide-react";
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Protect route
+  React.useEffect(() => {
+    const isAdmin = localStorage.getItem("admin");
+    if (!isAdmin) {
+      router.push("/login");
+    }
+  }, [router]);
+
+  const isActive = (path: string) => pathname === path;
+
+  const menuItems = [
+    { name: "Özet Durum", href: "/admin", icon: LayoutDashboard },
+    { name: "Sakinler & Aidatlar", href: "/admin/residents", icon: Users },
+    { name: "Duyuru Yönetimi", href: "/admin/announcements", icon: Megaphone },
+    { name: "Arıza & Talepler", href: "/admin/requests", icon: Wrench },
+    { name: "Site Ayarları", href: "/admin/settings", icon: Settings },
+  ];
+
+  return (
+    <div className="flex h-screen bg-rose-50/10 dark:bg-[#0b0f19] flex-col sm:flex-row transition-colors duration-300">
+      {/* Sidebar for Desktop */}
+      <aside className="hidden sm:flex flex-col w-64 border-r border-rose-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 h-full p-4 shrink-0">
+        <div className="flex items-center gap-2.5 px-2 py-4 mb-6 border-b border-zinc-100 dark:border-zinc-800/80">
+          <div className="h-10 w-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-600/10">
+            <ShieldCheck className="h-5.5 w-5.5" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Yönetici Paneli</p>
+            <p className="text-xs text-rose-600 dark:text-rose-400 font-bold tracking-wide uppercase">Yetkili Erişim</p>
+          </div>
+        </div>
+        
+        <nav className="flex-1 space-y-1.5">
+          {menuItems.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-3 px-3 py-3 rounded-2xl transition-all duration-200 font-medium text-sm ${
+                  active
+                    ? "bg-rose-600 text-white shadow-md shadow-rose-600/10"
+                    : "text-zinc-600 dark:text-zinc-400 hover:bg-rose-50 dark:hover:bg-zinc-800 hover:text-rose-600 dark:hover:text-rose-400"
+                }`}
+              >
+                <item.icon className="h-5 w-5" />
+                <span>{item.name}</span>
+              </a>
+            );
+          })}
+        </nav>
+        
+        <div className="mt-auto border-t border-zinc-100 dark:border-zinc-800/80 pt-4 flex justify-between items-center px-2">
+          <ThemeToggle />
+          <button 
+            onClick={() => {
+              localStorage.removeItem("admin");
+              router.push("/login");
+            }}
+            className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 font-bold hover:underline"
+          >
+            <LogOut className="h-4 w-4" />
+            Çıkış Yap
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto pb-20 sm:pb-0">
+        <div className="sm:hidden flex items-center justify-between p-4 border-b border-rose-200/50 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 sticky top-0 z-10">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-rose-600 text-white flex items-center justify-center shadow-sm">
+              <ShieldCheck className="h-4.5 w-4.5" />
+            </div>
+            <h1 className="text-md font-bold text-zinc-950 dark:text-zinc-50">Yönetim Modu</h1>
+          </div>
+          <ThemeToggle />
+        </div>
+        <div className="h-full">
+          {children}
+        </div>
+      </main>
+
+      {/* Bottom Navigation for Mobile */}
+      <nav className="sm:hidden fixed bottom-0 w-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200/60 dark:border-zinc-800/80 flex items-center justify-around pb-safe z-50">
+        {menuItems.map((item) => {
+          const active = isActive(item.href);
+          return (
+            <a
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center gap-1 py-3 px-1 flex-1 transition-colors ${
+                active ? "text-rose-600 dark:text-rose-400" : "text-zinc-400 dark:text-zinc-500"
+              }`}
+            >
+              <item.icon className="h-5.5 w-5.5" />
+              <span className="text-[9px] font-semibold">{item.name.split(" ")[0]}</span>
+            </a>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
