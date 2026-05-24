@@ -37,7 +37,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ### Cloudflare (kısa)
 
-- **Build:** `npm run build` (Next + `@cloudflare/next-on-pages` bu repodaki `package.json` ile tanımlı.)
-- **Publish:** `npm run deploy:cf` — `npx wrangler deploy` kullanmayın (Next-on-Pages çıktısı için yanlış akış).
+- **Workers Builds “Build command”:** `npm run pages:build` **veya** `npx @cloudflare/next-on-pages@1`  
+  (`build` script’i yalnızca `next build` olmalı; aksi halde `vercel build` kendini yeniden çağırır ve hata verir.)
 
-Cloudflare’ın **Settings** bölümünde projeye bağlı **GitHub reposunun** gerçekten bu kodu içerdiğini doğrulayın; farklı bir fork’a bağlıysanız yerelde güncellenmiş dosyalar build’e girmez.
+- **Deploy command:** `npm run deploy:cf` — `npx wrangler deploy` kullanmayın.
