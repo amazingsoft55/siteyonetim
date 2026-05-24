@@ -1,5 +1,6 @@
 # Bu proje Cloudflare Pages (Next‑on‑Pages) çıktısı kullanır.
-# Workers Builds → Build: npm run pages:build ; Deploy: npm run deploy:cf (Pages; `wrangler deploy` doğru komut değil).
+# Workers Builds varsayılanı `npx wrangler deploy`; bu projede Deploy kutusunu
+# `npm run deploy:cf` veya (Build hâlâ `npm run build` ise) `npm run cf:publish` yapın.
 
 name = "siteyonetim"
 compatibility_date = "2024-05-24"
@@ -8,5 +9,5 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "siteyonetim-db"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "c8b48f81-826f-4e7e-a1f9-580afa5321b5"
 migrations_dir = "drizzle"

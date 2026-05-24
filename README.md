@@ -37,10 +37,9 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ### Cloudflare (kısa)
 
-- **`npm run build` yeterli değil** — sadece Next üretir; Cloudflare çıktısı için **`npm run pages:build`** şart (`@cloudflare/next-on-pages`; içeride tekrar `next build` çalışır; `build` script’inin yalnızca `next build` kalması doğrudur.)
+- **Doğru kombinasyon:** Build = `npm run pages:build`, Deploy = `npm run deploy:cf` (**`npx wrangler deploy` asla**).
 
-- **Workers Builds:**
-  - **Build command:** `npm run pages:build`
-  - **Deploy command:** `npm run deploy:cf` (`npx wrangler deploy` değil; `Missing entry-point` bu yüzden oluşuyor.)
+- **Panelde sadece Deploy satırını değiştirebiliyorsanız (en az değişiklik):**  
+  Build’i olduğu gibi `npm run build` bırakın, **Deploy:** **`npm run cf:publish`** yazın. Bu komut sırayla **`pages:build`** + **`wrangler pages deploy`** çalıştırır; ilk aşamada `next build` bir kez daha çalışır (yavaş ama geçer).
 
-- Tek adım (build+deploy tek komutta): **`npm run cf:publish`** (özelleştirmede uygunsa).
+- Tek adımda özelleştirmek isterseniz: Build’i boş bırakıp yalnızca Deploy = `npm run cf:publish` (Cloudflare’ın “build optional” davranışına bağlı; emin değilseniz yukarıdaki iki komutu kullanın).

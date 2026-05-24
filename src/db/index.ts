@@ -13,7 +13,7 @@ export function getDb(envDB?: any) {
 
   // Lokal geliştirme için fallback
   if (!sqliteDb) {
-    const sqlite = new Database(".wrangler/state/v3/d1/miniflare-D1DatabaseObject/00000000-0000-0000-0000-000000000000.sqlite");
+    const sqlite = new Database(".wrangler/state/v3/d1/miniflare-D1DatabaseObject/c8b48f81-826f-4e7e-a1f9-580afa5321b5.sqlite");
     sqliteDb = drizzleSqlite(sqlite, { schema });
   }
   return sqliteDb;
