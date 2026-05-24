@@ -40,8 +40,9 @@ export async function POST(request: Request) {
       apartmentNo: user.apartmentNo,
     });
 
-    // Cookie olarak ayarla
-    cookies().set("token", token, {
+    // Cookie olarak ayarla (Next.js 15+: cookies() async)
+    const cookieStore = await cookies();
+    cookieStore.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
