@@ -35,7 +35,22 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-## Cloudflare Pages (önemli)
+## Cloudflare Workers Builds / Pages
+
+Bu repo **[@cloudflare/next-on-pages](https://github.com/cloudflare/next-on-pages)** ile uyumludur.
+
+1. **Build komutu:** `npm run build` (`next build` + `next-on-pages` ile `.vercel/output/static` üretilir.)
+2. **Deploy komutu (Dashboard’daki ikinci adım):** **`npm run deploy:cf`** veya:
+
+   ```bash
+   npx wrangler pages deploy .vercel/output/static --project-name=siteyonetim
+   ```
+
+**`npx wrangler deploy`** bu projeye uygun değildir — standart Workers girişi / eski Workers Sites akışı `workers-site/index.js` bekler; Next‑on‑Pages çıktısı ise **`.vercel/output/static`** altında Pages için paketlenir. Yayın **`npm run deploy:cf`** (veya üstteki `wrangler pages deploy`) ile yapılmalıdır. `wrangler.toml` içinde kök dizinde D1 bağlamaları için `[[d1_databases]]` tanımlıdır; bağlar Pages projesinin ayarlarıyla da doğrulanmalıdır.
+
+Üretim/önizleme ortamında **Functions uyumluluğu**: Cloudflare konsolunda `nodejs_compat` ve uygun compatibility date’nin tanımlı olduğundan emin olun (Next‑on‑Pages belgeleri).
+
+## Cloudflare (iki GitHub reposu uyarısı)
 
 Bu proje bağımlılıkları güncellenmiş olduğunda **`origin` (yerelde `amazingsoft55/siteyonetim`) ile Cloudflare’nin bağlı olduğu repo aynı olmalı.**
 
