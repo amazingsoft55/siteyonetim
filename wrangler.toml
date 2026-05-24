@@ -1,10 +1,18 @@
-# Bu proje Cloudflare Pages (Next‑on‑Pages) çıktısı kullanır.
-# Workers Builds varsayılanı `npx wrangler deploy`; bu projede Deploy kutusunu
-# `npm run deploy:cf` veya (Build hâlâ `npm run build` ise) `npm run cf:publish` yapın.
+# Bu proje @cloudflare/next-on-pages çıktısı kullanır (.vercel/output/static).
+# Workers Builds varsayılanı `npx wrangler deploy`; aşağıdaki main + assets bu
+# komutun çıktıyı yayınlaması için yeterli (ÖNCE mutlaka `npm run pages:build`).
+# İsterseniz yine `wrangler pages deploy` da kullanılabilir (bkz. package.json).
 
 name = "siteyonetim"
 compatibility_date = "2024-05-24"
 compatibility_flags = ["nodejs_compat"]
+
+# Next‑on‑Pages üretir; yalnızca `next build` ile oluşmaz — `npm run pages:build` şart.
+# Cloudflare dokümantasyonu: advanced `_worker.js` + [assets]; _worker ham asset olarak gönderilmemeli.
+main = ".vercel/output/static/_worker.js"
+
+[assets]
+directory = ".vercel/output/static"
 
 [[d1_databases]]
 binding = "DB"
