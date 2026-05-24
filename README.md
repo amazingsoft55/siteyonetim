@@ -35,23 +35,9 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-## Cloudflare Workers Builds / Pages
+### Cloudflare (kısa)
 
-Bu repo **[@cloudflare/next-on-pages](https://github.com/cloudflare/next-on-pages)** ile uyumludur.
+- **Build:** `npm run build` (Next + `@cloudflare/next-on-pages` bu repodaki `package.json` ile tanımlı.)
+- **Publish:** `npm run deploy:cf` — `npx wrangler deploy` kullanmayın (Next-on-Pages çıktısı için yanlış akış).
 
-1. **Build komutu:** `npm run build` (`next build` + `next-on-pages` ile `.vercel/output/static` üretilir.)
-2. **Deploy komutu (Dashboard’daki ikinci adım):** **`npm run deploy:cf`** veya:
-
-   ```bash
-   npx wrangler pages deploy .vercel/output/static --project-name=siteyonetim
-   ```
-
-**`npx wrangler deploy`** bu projeye uygun değildir — standart Workers girişi / eski Workers Sites akışı `workers-site/index.js` bekler; Next‑on‑Pages çıktısı ise **`.vercel/output/static`** altında Pages için paketlenir. Yayın **`npm run deploy:cf`** (veya üstteki `wrangler pages deploy`) ile yapılmalıdır. `wrangler.toml` içinde kök dizinde D1 bağlamaları için `[[d1_databases]]` tanımlıdır; bağlar Pages projesinin ayarlarıyla da doğrulanmalıdır.
-
-Üretim/önizleme ortamında **Functions uyumluluğu**: Cloudflare konsolunda `nodejs_compat` ve uygun compatibility date’nin tanımlı olduğundan emin olun (Next‑on‑Pages belgeleri).
-
-## Cloudflare (iki GitHub reposu uyarısı)
-
-Bu proje bağımlılıkları güncellenmiş olduğunda **`origin` (yerelde `amazingsoft55/siteyonetim`) ile Cloudflare’nin bağlı olduğu repo aynı olmalı.**
-
-Cloudflare bağlantısı **başka bir GitHub reposuna** (`ör. MustafaKeskin55/siteyonetim`) aitse ve o repoda kod eskiyse derlemede sürekki `next@16` ile `next-on-pages` uyumsuzlukları görülür — çünkü orada **`package.json` hâlâ Next 16.2.6.** Çözüm: ya Cloudflare üzerinden deploy kaynağını güncellenmiş repoya bağlayın ya da aynı `main` dallarını iki repoya senkron (push/pr) yapın.
+Cloudflare’ın **Settings** bölümünde projeye bağlı **GitHub reposunun** gerçekten bu kodu içerdiğini doğrulayın; farklı bir fork’a bağlıysanız yerelde güncellenmiş dosyalar build’e girmez.
