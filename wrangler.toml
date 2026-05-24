@@ -1,8 +1,5 @@
 # Bu proje Cloudflare Pages (Next‑on‑Pages) çıktısı kullanır.
-# CI build: npm run pages:build (içerde `vercel build` çağırır; `npm run build` SADECE `next build` olmalı).
-# Yayın (DEPLOY komutu Dashboard’da): npm run deploy:cf
-#   veya doğrudan: npx wrangler pages deploy .vercel/output/static --project-name=siteyonetim
-# `npx wrangler deploy` kullanmayın — eski Workers Sites modu `workers-site/index.js` ister ve bu repoda yoktur.
+# Workers Builds → Build: npm run pages:build ; Deploy: npm run deploy:cf (Pages; `wrangler deploy` doğru komut değil).
 
 name = "siteyonetim"
 compatibility_date = "2024-05-24"
