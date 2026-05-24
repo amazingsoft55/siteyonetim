@@ -36,6 +36,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.0",
     "@cloudflare/next-on-pages": "^1.13.16",
     "@cloudflare/workers-types": "^4.20260524.1",
     "@tailwindcss/postcss": "^4",

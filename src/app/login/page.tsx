@@ -55,7 +55,18 @@ export default function LoginPage() {
     }
   };
 
+  // Seed ile aynı demo hesapları: /api/seed (user-1 sakini, admin-1 yöneticisi)
+  const fillDemoResident = () => {
+    setUsernameOrPhone("5555555555");
+    setPassword("123456");
+    setErrorMsg("");
+  };
 
+  const fillDemoAdmin = () => {
+    setUsernameOrPhone("admin");
+    setPassword("admin123");
+    setErrorMsg("");
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-[#0b0f19] px-4 transition-colors duration-300">
