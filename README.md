@@ -34,3 +34,9 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Cloudflare Pages (önemli)
+
+Bu proje bağımlılıkları güncellenmiş olduğunda **`origin` (yerelde `amazingsoft55/siteyonetim`) ile Cloudflare’nin bağlı olduğu repo aynı olmalı.**
+
+Cloudflare bağlantısı **başka bir GitHub reposuna** (`ör. MustafaKeskin55/siteyonetim`) aitse ve o repoda kod eskiyse derlemede sürekki `next@16` ile `next-on-pages` uyumsuzlukları görülür — çünkü orada **`package.json` hâlâ Next 16.2.6.** Çözüm: ya Cloudflare üzerinden deploy kaynağını güncellenmiş repoya bağlayın ya da aynı `main` dallarını iki repoya senkron (push/pr) yapın.
