@@ -31,20 +31,32 @@ export default function LoginPage() {
         }),
       });
 
-      const data = await response.json();
+      const data: unknown = await response.json();
 
       if (!response.ok) {
-        setErrorMsg(data.error || "Giriş başarısız.");
+        const rec = data !== null && typeof data === "object" ? data as { error?: unknown } : {};
+        const errText = typeof rec.error === "string" ? rec.error : "Giriş başarısız.";
+        setErrorMsg(errText);
+        setLoading(false);
+        return;
+      }
+
+      const ok = data as {
+        user: { role: string; id: string; name: string; siteId?: string | null };
+      };
+
+      if (!ok?.user || typeof ok.user.role !== "string") {
+        setErrorMsg("Geçersiz sunucu yanıtı.");
         setLoading(false);
         return;
       }
 
       // Başarılı, role göre yönlendir
-      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("user", JSON.stringify(ok.user));
       
-      if (data.user.role === "SUPER_ADMIN") {
+      if (ok.user.role === "SUPER_ADMIN") {
         router.push("/super-admin");
-      } else if (data.user.role === "ADMIN") {
+      } else if (ok.user.role === "ADMIN") {
         router.push("/admin");
       } else {
         router.push("/dashboard");
