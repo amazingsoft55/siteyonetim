@@ -10,9 +10,17 @@ import { cookies } from "next/headers";
 
 export const runtime = "edge";
 
+type LoginBody = {
+  usernameOrPhone?: unknown;
+  password?: unknown;
+};
+
 export async function POST(request: Request) {
   try {
-    const { usernameOrPhone, password } = await request.json();
+    const raw = (await request.json()) as LoginBody;
+    const usernameOrPhone =
+      typeof raw.usernameOrPhone === "string" ? raw.usernameOrPhone.trim() : "";
+    const password = typeof raw.password === "string" ? raw.password : "";
 
     if (!usernameOrPhone || !password) {
       return NextResponse.json({ error: "Lütfen kullanıcı adı ve şifre girin." }, { status: 400 });

@@ -12,17 +12,28 @@ export async function GET() {
   }
 }
 
+type SettingsPostBody = {
+  aidat?: unknown;
+  managerName?: unknown;
+  iban?: unknown;
+  bankName?: unknown;
+  phone?: unknown;
+};
+
 export async function POST(request: Request) {
   try {
     const db = await readDb();
-    const { aidat, managerName, iban, bankName, phone } = await request.json();
+    const raw = (await request.json()) as SettingsPostBody;
+
+    const strOrFallback = (v: unknown, fallback: string): string =>
+      typeof v === "string" && v.trim().length > 0 ? v.trim() : fallback;
 
     db.settings = {
-      aidat: aidat !== undefined ? aidat.toString() : db.settings.aidat,
-      managerName: managerName || db.settings.managerName,
-      iban: iban || db.settings.iban,
-      bankName: bankName || db.settings.bankName,
-      phone: phone || db.settings.phone
+      aidat: raw.aidat !== undefined ? String(raw.aidat) : db.settings.aidat,
+      managerName: strOrFallback(raw.managerName, db.settings.managerName),
+      iban: strOrFallback(raw.iban, db.settings.iban),
+      bankName: strOrFallback(raw.bankName, db.settings.bankName),
+      phone: strOrFallback(raw.phone, db.settings.phone),
     };
 
     await writeDb(db);

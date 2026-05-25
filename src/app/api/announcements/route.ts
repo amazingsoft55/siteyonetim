@@ -12,20 +12,34 @@ export async function GET() {
   }
 }
 
+type AnnouncementPostBody = {
+  title?: unknown;
+  content?: unknown;
+  category?: unknown;
+};
+
 export async function POST(request: Request) {
   try {
     const db = await readDb();
-    const { title, content, category } = await request.json();
+    const raw = (await request.json()) as AnnouncementPostBody;
+    const title = typeof raw.title === "string" ? raw.title.trim() : "";
+    const content = typeof raw.content === "string" ? raw.content.trim() : "";
+    const categoryRaw = raw.category;
 
     if (!title || !content) {
       return NextResponse.json({ error: "Başlık ve içerik alanları gereklidir." }, { status: 400 });
     }
 
+    const category =
+      typeof categoryRaw === "string" && categoryRaw.trim().length > 0
+        ? categoryRaw.trim()
+        : "Genel";
+
     const newAnnouncement = {
       id: Date.now(),
       title,
       content,
-      category: category || "Genel",
+      category,
       date: new Date().toLocaleDateString("tr-TR"),
       isNew: true
     };

@@ -12,16 +12,26 @@ export async function GET() {
   }
 }
 
+type ResidentPostBody = {
+  name?: unknown;
+  blok?: unknown;
+  daire?: unknown;
+  borc?: unknown;
+};
+
 export async function POST(request: Request) {
   try {
     const db = await readDb();
-    const { name, blok, daire, borc } = await request.json();
+    const raw = (await request.json()) as ResidentPostBody;
+    const name = typeof raw.name === "string" ? raw.name.trim() : "";
+    const blok = typeof raw.blok === "string" ? raw.blok.trim() : "";
+    const daire = typeof raw.daire === "string" ? raw.daire.trim() : "";
 
     if (!name || !daire || !blok) {
       return NextResponse.json({ error: "Eksik parametre." }, { status: 400 });
     }
 
-    const borcVal = Number(borc) || 0;
+    const borcVal = Number(raw.borc) || 0;
     const newResident = {
       id: Date.now(),
       name,
@@ -40,12 +50,21 @@ export async function POST(request: Request) {
   }
 }
 
+type ResidentPutBody = {
+  id?: unknown;
+  name?: unknown;
+  blok?: unknown;
+  daire?: unknown;
+  borc?: unknown;
+};
+
 export async function PUT(request: Request) {
   try {
     const db = await readDb();
-    const { id, name, blok, daire, borc } = await request.json();
+    const raw = (await request.json()) as ResidentPutBody;
+    const id = typeof raw.id === "number" ? raw.id : Number(raw.id);
 
-    if (!id) {
+    if (!id || Number.isNaN(id)) {
       return NextResponse.json({ error: "Sakin ID'si gerekli." }, { status: 400 });
     }
 
@@ -54,7 +73,11 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Sakin bulunamadı." }, { status: 404 });
     }
 
-    const borcVal = Number(borc) || 0;
+    const name = typeof raw.name === "string" ? raw.name.trim() : "";
+    const blok = typeof raw.blok === "string" ? raw.blok.trim() : "";
+    const daire = typeof raw.daire === "string" ? raw.daire.trim() : "";
+
+    const borcVal = Number(raw.borc) || 0;
     db.residents[residentIndex] = {
       ...db.residents[residentIndex],
       name: name || db.residents[residentIndex].name,
