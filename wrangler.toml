@@ -7,12 +7,11 @@ name = "siteyonetim"
 compatibility_date = "2024-05-24"
 compatibility_flags = ["nodejs_compat"]
 
-# Next‑on‑Pages üretir; yalnızca `next build` ile oluşmaz — `npm run pages:build` şart.
-# Cloudflare dokümantasyonu: advanced `_worker.js` + [assets]; _worker ham asset olarak gönderilmemeli.
-main = ".vercel/output/static/_worker.js"
+# OpenNext Cloudflare adapter
+main = ".open-next/worker.js"
 
 [assets]
-directory = ".vercel/output/static"
+directory = ".open-next/assets"
 
 [[d1_databases]]
 binding = "DB"
