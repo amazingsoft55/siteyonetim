@@ -4,11 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build:next": "next build",
-    "build": "npx @opennextjs/cloudflare",
-    "pages:build": "npm run build:next && npm run build",
-    "deploy:cf": "npx wrangler pages deploy .open-next/assets --project-name=siteyonetim",
-    "cf:publish": "npm run pages:build && npm run deploy:cf",
+    "build": "npx @cloudflare/next-on-pages@1",
+    "deploy:cf": "npx wrangler pages deploy .vercel/output/static --project-name=siteyonetim",
+    "cf:publish": "npm run build && npm run deploy:cf",
     "build:mobile": "next build && npx cap sync",
     "start": "next start",
     "lint": "eslint"
