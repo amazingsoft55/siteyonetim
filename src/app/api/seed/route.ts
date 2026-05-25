@@ -1,15 +1,26 @@
 import { NextResponse } from "next/server";
+import { getRequestContext } from "@cloudflare/next-on-pages";
+import type { D1Database } from "@cloudflare/workers-types";
 import { getDb } from "@/db";
 import { users, sites, payments, announcements, requests } from "@/db/schema";
 import * as bcrypt from "bcryptjs";
 
-export async function GET(request: Request) {
+export const runtime = "edge";
+
+export async function GET() {
   try {
-    // Edge API'lerinde veritabanını almak
-    // Geliştirme ortamında miniflare ile, production'da Cloudflare'den gelir
-    // @ts-ignore
-    const env = process.env;
-    const db = getDb(env.DB);
+    let dbBinding: D1Database | undefined;
+    try {
+      const { env } = getRequestContext() as { env: { DB?: D1Database } };
+      dbBinding = env.DB;
+    } catch {
+      return NextResponse.json(
+        { error: "Seed için Cloudflare D1 bağlamı gerekli (yerelde wrangler pages dev)." },
+        { status: 503 },
+      );
+    }
+
+    const db = getDb(dbBinding);
 
     // Veritabanının dolu olup olmadığını kontrol et
     const existingSites = await db.select().from(sites).limit(1);

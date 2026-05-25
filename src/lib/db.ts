@@ -1,3 +1,5 @@
+/** Edge uyumlu: fs yok; Workers’ta istekler arası kalıcılık D1 ile olur. Bu katman demo JSON verisini bellekte tutar. */
+
 interface Resident {
   id: number;
   name: string;
@@ -63,60 +65,74 @@ const initialData: DatabaseSchema = {
     { id: "PAY-8501", period: "Şubat 2026", amount: 1250, date: "15.02.2026", status: "Başarılı", type: "Havale/EFT" },
   ],
   requests: [
-    { id: "REQ-1002", title: "B Blok Asansör Titremesi", category: "Arıza", description: "B blok asansörü yukarı çıkarken 3. kat civarında çok fazla titreme yapıyor.", date: "24.05.2026", status: "İşlemde" },
-    { id: "REQ-1001", title: "Otopark Alanı Temizliği", category: "Temizlik", description: "-2. kat otopark alanında çok fazla toz birikmiş durumda, genel bir temizlik rica olunur.", date: "18.05.2026", status: "Çözüldü" }
+    {
+      id: "REQ-1002",
+      title: "B Blok Asansör Titremesi",
+      category: "Arıza",
+      description: "B blok asansörü yukarı çıkarken 3. kat civarında çok fazla titreme yapıyor.",
+      date: "24.05.2026",
+      status: "İşlemde",
+    },
+    {
+      id: "REQ-1001",
+      title: "Otopark Alanı Temizliği",
+      category: "Temizlik",
+      description: "-2. kat otopark alanında çok fazla toz birikmiş durumda, genel bir temizlik rica olunur.",
+      date: "18.05.2026",
+      status: "Çözüldü",
+    },
   ],
   announcements: [
-    { id: 1, title: "Havuz Bakımı Hakkında", date: "24 Mayıs 2026", content: "Açık havuzumuz 1 Haziran itibariyle kullanıma açılacaktır. Havuz kurallarına dikkat etmenizi rica ederiz.", category: "Genel", isNew: true },
-    { id: 2, title: "Mayıs Ayı Ortak Gider Bildirimi", date: "20 Mayıs 2026", content: "Ortak alan elektrik faturalarındaki artış nedeniyle Haziran ayı aidatlarına %5 enflasyon farkı yansıtılmıştır.", category: "Mali", isNew: false },
-    { id: 3, title: "Asansör Periyodik Bakımı", date: "15 Nisan 2026", content: "A Blok asansörleri periyodik bakım nedeniyle yarın 10:00 - 12:00 saatleri arasında geçici olarak servis dışı kalacaktır.", category: "Teknik", isNew: false }
+    {
+      id: 1,
+      title: "Havuz Bakımı Hakkında",
+      date: "24 Mayıs 2026",
+      content:
+        "Açık havuzumuz 1 Haziran itibariyle kullanıma açılacaktır. Havuz kurallarına dikkat etmenizi rica ederiz.",
+      category: "Genel",
+      isNew: true,
+    },
+    {
+      id: 2,
+      title: "Mayıs Ayı Ortak Gider Bildirimi",
+      date: "20 Mayıs 2026",
+      content:
+        "Ortak alan elektrik faturalarındaki artış nedeniyle Haziran ayı aidatlarına %5 enflasyon farkı yansıtılmıştır.",
+      category: "Mali",
+      isNew: false,
+    },
+    {
+      id: 3,
+      title: "Asansör Periyodik Bakımı",
+      date: "15 Nisan 2026",
+      content:
+        "A Blok asansörleri periyodik bakım nedeniyle yarın 10:00 - 12:00 saatleri arasında geçici olarak servis dışı kalacaktır.",
+      category: "Teknik",
+      isNew: false,
+    },
   ],
   settings: {
     aidat: "1250",
     managerName: "Ömür Site Yönetim A.Ş.",
     iban: "TR98 0006 2000 0000 1234 5678 90",
     bankName: "Garanti BBVA",
-    phone: "+90 212 555 0000"
-  }
+    phone: "+90 212 555 0000",
+  },
 };
 
 let memoryDb: DatabaseSchema | null = null;
 
-export async function readDb(): Promise<DatabaseSchema> {
-  // If running on Cloudflare, fs will throw; fallback to memoryDb
-  try {
-    const fs = require("fs");
-    const path = require("path");
-    const dbPath = path.join(process.cwd(), "src", "data", "db.json");
-    
-    const dir = path.dirname(dbPath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    
-    if (!fs.existsSync(dbPath)) {
-      fs.writeFileSync(dbPath, JSON.stringify(initialData, null, 2), "utf8");
-      return initialData;
-    }
-    
-    const raw = fs.readFileSync(dbPath, "utf8");
-    return JSON.parse(raw);
-  } catch (err) {
-    if (!memoryDb) {
-      memoryDb = { ...initialData };
-    }
-    return memoryDb;
+function getStore(): DatabaseSchema {
+  if (!memoryDb) {
+    memoryDb = JSON.parse(JSON.stringify(initialData)) as DatabaseSchema;
   }
+  return memoryDb;
+}
+
+export async function readDb(): Promise<DatabaseSchema> {
+  return getStore();
 }
 
 export async function writeDb(data: DatabaseSchema): Promise<void> {
-  try {
-    const fs = require("fs");
-    const path = require("path");
-    const dbPath = path.join(process.cwd(), "src", "data", "db.json");
-    
-    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), "utf8");
-  } catch (err) {
-    memoryDb = data;
-  }
+  memoryDb = data;
 }

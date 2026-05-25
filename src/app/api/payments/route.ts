@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
 
+export const runtime = "edge";
+
 export async function GET() {
   try {
     const db = await readDb();
@@ -10,14 +12,24 @@ export async function GET() {
   }
 }
 
+type PaymentPostBody = {
+  amount?: unknown;
+  period?: unknown;
+  type?: unknown;
+  cardName?: unknown;
+};
+
 export async function POST(request: Request) {
   try {
     const db = await readDb();
-    const { amount, period, type, cardName } = await request.json();
+    const raw = (await request.json()) as PaymentPostBody;
+    const { amount, period, type } = raw;
 
     const paymentAmount = Number(amount) || 1250;
-    const paymentPeriod = period || "Mayıs 2026";
-    const paymentType = type || "Kredi Kartı";
+    const paymentPeriod =
+      typeof period === "string" && period.trim().length > 0 ? period : "Mayıs 2026";
+    const paymentType =
+      typeof type === "string" && type.trim().length > 0 ? type : "Kredi Kartı";
 
     // 1. Create payment transaction record
     const newPayment = {

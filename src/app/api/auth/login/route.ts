@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
+import { getRequestContext } from "@cloudflare/next-on-pages";
+import type { D1Database } from "@cloudflare/workers-types";
 import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { signJwt } from "@/lib/auth";
 import { cookies } from "next/headers";
+
+export const runtime = "edge";
 
 export async function POST(request: Request) {
   try {
@@ -14,9 +18,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Lütfen kullanıcı adı ve şifre girin." }, { status: 400 });
     }
 
-    // @ts-ignore
-    const env = process.env;
-    const db = getDb(env.DB);
+    let dbBinding: D1Database | undefined;
+    try {
+      const { env } = getRequestContext() as { env: { DB?: D1Database } };
+      dbBinding = env.DB;
+    } catch {
+      return NextResponse.json(
+        { error: "Kimlik doğrulama için Cloudflare D1 bağlamı gerekli (yerelde wrangler pages dev)." },
+        { status: 503 },
+      );
+    }
+
+    const db = getDb(dbBinding);
 
     const userList = await db.select().from(users).where(eq(users.emailOrPhone, usernameOrPhone)).limit(1);
     const user = userList[0];

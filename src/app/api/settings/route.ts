@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
 
+export const runtime = "edge";
+
 export async function GET() {
   try {
     const db = await readDb();
