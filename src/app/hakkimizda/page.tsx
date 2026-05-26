@@ -1,5 +1,22 @@
+import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { getPublicSiteUrl } from "@/lib/site-url";
+
+const canon = `${getPublicSiteUrl()}/hakkimizda`;
+
+export const metadata: Metadata = {
+  title: "Hakkımızda",
+  description:
+    "Site Yönetimi olarak apartman ve site yöneticilerini dijitalleştiriyoruz. Aidat, duyuru ve talep süreçlerinde şeffaflık ve güvenlik odaklı çözüm sunuyoruz.",
+  alternates: { canonical: canon },
+  openGraph: {
+    title: "Hakkımızda | Site Yönetimi",
+    description:
+      "Apartman yönetim yazılımı vizyonumuz, değerlerimiz ve site sakinleri ile yöneticiler arasındaki güven ilişkisi.",
+    url: canon,
+  },
+};
 
 export default function Hakkimizda() {
   return (

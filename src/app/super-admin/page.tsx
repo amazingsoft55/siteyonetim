@@ -24,11 +24,11 @@ export default function SuperAdminDashboard() {
       ]);
       if (!mounted) return;
       if (!sr.ok || !ur.ok) {
-        const j =
-          sr.ok ?
-            await ur.json().catch(() => ({}))
-          : await sr.json().catch(() => ({}));
-        setLoadErr(typeof j?.error === "string" ? j.error : "Veriler yüklenemedi.");
+        const j = (sr.ok ? await ur.json().catch(() => ({})) : await sr.json().catch(() => ({}))) as Record<
+          string,
+          unknown
+        >;
+        setLoadErr(typeof j.error === "string" ? j.error : "Veriler yüklenemedi.");
         return;
       }
       const sJson = (await sr.json()) as SiteRow[];
@@ -58,12 +58,18 @@ export default function SuperAdminDashboard() {
             <Shield className="h-6 w-6 text-indigo-600 shrink-0" />
             <h1 className="text-xl font-bold tracking-tight">Super Admin Paneli</h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap justify-end">
             <Link
               href="/super-admin/kullanicilar"
               className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline whitespace-nowrap"
             >
               Siteler & kullanıcılar
+            </Link>
+            <Link
+              href="/super-admin/destek"
+              className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline whitespace-nowrap"
+            >
+              Yönetici destek
             </Link>
             <button
               type="button"
@@ -79,8 +85,16 @@ export default function SuperAdminDashboard() {
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         {loadErr && (
-          <div className="mb-6 p-4 rounded-2xl bg-amber-50 text-amber-900 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-100 dark:border-amber-900 text-sm">
-            {loadErr}
+          <div className="mb-6 space-y-2">
+            <div className="p-4 rounded-2xl bg-amber-50 text-amber-900 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-100 dark:border-amber-900 text-sm">
+              {loadErr}
+            </div>
+            <Link
+              href="/kurulum"
+              className="inline-block text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+            >
+              Veritabanı ve yerel kurulum rehberi →
+            </Link>
           </div>
         )}
 

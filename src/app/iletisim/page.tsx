@@ -1,6 +1,23 @@
+import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { MapPin, Phone, Mail } from "lucide-react";
+import { getPublicSiteUrl } from "@/lib/site-url";
+
+const iletisimCanonical = `${getPublicSiteUrl()}/iletisim`;
+
+export const metadata: Metadata = {
+  title: "İletişim",
+  description:
+    "Site Yönetimi iletişim: apartman ve site yönetim yazılımı, aidat takibi ve uygulama desteği için bize ulaşın.",
+  alternates: { canonical: iletisimCanonical },
+  openGraph: {
+    title: "İletişim | Site Yönetimi",
+    description:
+      "Apartman site yönetim platformu hakkında sorularınız ve kurumsal iletişim bilgileri.",
+    url: iletisimCanonical,
+  },
+};
 
 export default function Iletisim() {
   return (

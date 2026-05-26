@@ -12,7 +12,7 @@ export const defaultKeywords = [
   "yönetici paneli apartman",
   "site sakinleri uygulaması",
   "bina site yönetimi",
-  "topluluğu yönetimi",
+  "site topluluğu yönetimi",
 ];
 
 export function buildOrganizationJsonLd(): Record<string, unknown> {

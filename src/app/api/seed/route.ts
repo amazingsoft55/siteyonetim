@@ -16,7 +16,12 @@ export async function GET() {
       dbBinding = env.DB;
     } catch {
       return NextResponse.json(
-        { error: "Seed için Cloudflare D1 bağlamı gerekli (yerelde wrangler pages dev)." },
+        {
+          error:
+            "D1 bağlantısı yok. Yerelde `npm run dev` ile geliştirme için projede Cloudflare geliştirme platformunun etkin olduğundan emin olun (/kurulum).",
+          code: "NO_CLOUDFLARE_CONTEXT",
+          kurulumUrl: "/kurulum",
+        },
         { status: 503 },
       );
     }

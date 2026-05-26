@@ -2,6 +2,12 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import {
+  rootDefaultMetadata,
+  buildOrganizationJsonLd,
+  buildSoftwareApplicationJsonLd,
+  buildWebsiteJsonLd,
+} from "@/lib/seo-constants";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Site Yönetimi",
-  description: "Apartman ve Site Yönetim Uygulaması",
+  ...rootDefaultMetadata(),
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -27,6 +32,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: "#ffffff",
 };
+
+const jsonLdBlocks = [
+  buildOrganizationJsonLd(),
+  buildSoftwareApplicationJsonLd(),
+  buildWebsiteJsonLd(),
+];
 
 export default function RootLayout({
   children,
@@ -40,6 +51,14 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-background text-foreground">
+        {jsonLdBlocks.map((data, i) => (
+          <script
+            // eslint-disable-next-line react/no-danger
+            key={i}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+          />
+        ))}
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

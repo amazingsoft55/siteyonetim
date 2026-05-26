@@ -8,7 +8,13 @@ export function Navbar() {
       <div className="max-w-6xl mx-auto flex h-16 items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2">
           <div className="flex items-center justify-center h-10 w-10 rounded-lg shadow-sm overflow-hidden">
-            <Image src="/logo.png" alt="Logo" width={40} height={40} className="object-cover" />
+            <Image
+              src="/logo.png"
+              alt="Site Yönetimi — apartman ve site yönetim platformu logosu"
+              width={40}
+              height={40}
+              className="object-cover"
+            />
           </div>
           <span className="text-xl font-bold tracking-tight">Site Yönetimi</span>
         </Link>
@@ -16,6 +22,9 @@ export function Navbar() {
           <div className="hidden sm:flex items-center gap-6 mr-4 text-sm font-medium text-zinc-600 dark:text-zinc-400">
             <Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
               Ana Sayfa
+            </Link>
+            <Link href="/kurulum" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+              Kurulum
             </Link>
             <Link href="/hakkimizda" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
               Hakkımızda

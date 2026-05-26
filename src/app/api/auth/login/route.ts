@@ -32,7 +32,13 @@ export async function POST(request: Request) {
       dbBinding = env.DB;
     } catch {
       return NextResponse.json(
-        { error: "Kimlik doğrulama için Cloudflare D1 bağlamı gerekli (yerelde wrangler pages dev)." },
+        {
+          error:
+            "Veritabanına bağlanılamıyor. Geliştirmede next.config.mjs içinde setupDevPlatform gerekir; sonra D1 şemasını ve /api/seed adımlarını uygulayın.",
+          code: "NO_CLOUDFLARE_CONTEXT",
+          kurulumUrl: "/kurulum",
+          setupStatusUrl: "/api/setup/status",
+        },
         { status: 503 },
       );
     }

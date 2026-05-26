@@ -1,6 +1,31 @@
+import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { CreditCard, Megaphone, Wrench, ArrowRight } from "lucide-react";
+import { getPublicSiteUrl } from "@/lib/site-url";
+
+const homeUrl = getPublicSiteUrl();
+
+export const metadata: Metadata = {
+  title:
+    "Apartman ve site yönetimi — Aidat, duyuru ve arıza talepleri tek uygulamada",
+  description:
+    "Site sakinleri ve yöneticiler için dijital platform: kullanıcı paneli ile aidat görüntüleme ve talep bildirimi; yönetici paneli ile duyuru yönetimi ve operasyon takibi.",
+  keywords: [
+    "apartman yönetim uygulaması",
+    "site sakini portalı",
+    "aidat yönetimi",
+    "bakım ve arıza kaydı",
+  ],
+  alternates: { canonical: homeUrl },
+  openGraph: {
+    url: homeUrl,
+    title:
+      "Apartman ve site yönetimi — Aidat, duyuru ve arıza talepleri tek uygulamada",
+    description:
+      "Site Sakinleri için kullanıcı deneyimi; yöneticiler için kontrol paneli. Site Yönetimi ile yaşam alanınızın dijital merkezi.",
+  },
+};
 
 export default function Home() {
   return (

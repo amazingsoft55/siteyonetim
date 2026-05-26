@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 export default function LoginPage() {
@@ -10,6 +11,51 @@ export default function LoginPage() {
   const [usernameOrPhone, setUsernameOrPhone] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [errorMsg, setErrorMsg] = React.useState("");
+  const [setupBanner, setSetupBanner] = React.useState<{ kind: "ok" | "warn" | "err"; text: string } | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    fetch("/api/setup/status")
+      .then((r) => r.json().catch(() => null))
+      .then((data) => {
+        if (cancelled || !data || typeof data !== "object") return;
+        const d = data as {
+          ok?: boolean;
+          code?: string;
+          message?: string;
+          needsSeed?: boolean;
+          hasSupportTicketsTable?: boolean;
+          steps?: string[];
+        };
+        if (d.ok === false) {
+          const lines = Array.isArray(d.steps) ? d.steps.join(" ") : d.message ?? "Veritabanı bağlantısı yok.";
+          setSetupBanner({
+            kind: "err",
+            text: `${d.code ?? ""} ${lines}`.trim(),
+          });
+          return;
+        }
+        if (d.needsSeed) {
+          setSetupBanner({
+            kind: "warn",
+            text: "Veritabanı hazır görünüyor ancak henüz seed uygulanmamış. Tarayıcıda /api/seed adresini açın.",
+          });
+          return;
+        }
+        if (d.ok && d.hasSupportTicketsTable === false) {
+          setSetupBanner({
+            kind: "warn",
+            text: "Destek talepleri tablosu eksik olabilir. full-schema.sql veya 0002 migrasyonunu uygulayın.",
+          });
+          return;
+        }
+        if (d.ok) setSetupBanner({ kind: "ok", text: "Veritabanı bağlı. Giriş yapabilirsiniz." });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +80,12 @@ export default function LoginPage() {
       const data: unknown = await response.json();
 
       if (!response.ok) {
-        const rec = data !== null && typeof data === "object" ? data as { error?: unknown } : {};
+        const rec =
+          data !== null && typeof data === "object" ?
+            (data as {
+              error?: unknown;
+            })
+          : {};
         const errText = typeof rec.error === "string" ? rec.error : "Giriş başarısız.";
         setErrorMsg(errText);
         setLoading(false);
@@ -94,10 +145,42 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* Kurulum durumu */}
+        {setupBanner && setupBanner.kind === "err" && (
+          <div className="p-4 text-sm rounded-2xl bg-amber-50 text-amber-950 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-100 dark:border-amber-800 space-y-2">
+            <p className="font-semibold">Veritabanı / geliştirme ortamı</p>
+            <p className="text-xs sm:text-sm leading-relaxed">{setupBanner.text}</p>
+            <Link
+              href="/kurulum"
+              className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 dark:text-indigo-400 underline underline-offset-2"
+            >
+              Kurulum rehberine git →
+            </Link>
+          </div>
+        )}
+        {setupBanner && setupBanner.kind === "warn" && (
+          <div className="p-3.5 text-sm rounded-xl bg-amber-50/90 text-amber-900 border border-amber-200/80 dark:bg-amber-950/35 dark:text-amber-100 dark:border-amber-800/60 space-y-1">
+            <p>{setupBanner.text}</p>
+            <Link href="/kurulum" className="text-xs font-bold underline text-indigo-700 dark:text-indigo-400">
+              Adım adım talimatlar
+            </Link>
+          </div>
+        )}
+        {setupBanner && setupBanner.kind === "ok" && (
+          <div className="p-3 text-xs rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-200 dark:bg-emerald-950/35 dark:text-emerald-100 dark:border-emerald-900/70">
+            {setupBanner.text}
+          </div>
+        )}
+
         {/* Error Alert */}
         {errorMsg && (
-          <div className="p-3.5 text-sm rounded-xl bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800/50 animate-in fade-in duration-200">
-            {errorMsg}
+          <div className="p-3.5 text-sm rounded-xl bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800/50 animate-in fade-in duration-200 space-y-2">
+            <p>{errorMsg}</p>
+            {(errorMsg.includes("D1") || errorMsg.includes("bağlantı")) && (
+              <Link href="/kurulum" className="text-xs font-bold underline">
+                Kurulum sayfasına git
+              </Link>
+            )}
           </div>
         )}
 

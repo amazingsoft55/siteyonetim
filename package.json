@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "db:apply:local": "wrangler d1 execute siteyonetim-db --local --file=./drizzle/full-schema.sql",
+    "db:apply:remote": "wrangler d1 execute siteyonetim-db --remote --file=./drizzle/full-schema.sql",
     "build:next": "next build",
     "build": "npx @cloudflare/next-on-pages@1 && node scripts/cf-pages-assetsignore.js",
     "deploy:cf": "npx wrangler pages deploy .vercel/output/static --project-name=siteyonetim",
