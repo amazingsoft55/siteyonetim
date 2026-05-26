@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { count } from "drizzle-orm";
 import { tryGetDb } from "@/lib/cloudflare-db";
+import { resolveD1DisplayMeta } from "@/lib/d1-config";
 import { sites, users, adminSupportTickets } from "@/db/schema";
 
 export const runtime = "edge";
@@ -17,6 +18,8 @@ export async function GET() {
       {
         ok: false,
         code,
+        d1: resolveD1DisplayMeta(),
+        executeRemoteExample: `npx wrangler d1 execute siteyonetim-db --remote --file=./drizzle/full-schema.sql`,
         message:
           code === "NO_CLOUDFLARE_CONTEXT" ?
             "Geliştirme ortamında Cloudflare bağlamı yok."
@@ -45,6 +48,7 @@ export async function GET() {
       {
         ok: false,
         code: "SCHEMA_MISSING",
+        d1: resolveD1DisplayMeta(),
         message: "`sites` / `users` tabloları okunamadı.",
         hint: "drizzle/full-schema.sql dosyasını D1 üzerinde çalıştırın.",
       },
@@ -70,6 +74,7 @@ export async function GET() {
         "NEEDS_OPTIONAL_SUPPORT_MIGRATION"
       : "READY",
     database: "connected",
+    d1: resolveD1DisplayMeta(),
     sitesCount,
     usersCount,
     needsSeed,

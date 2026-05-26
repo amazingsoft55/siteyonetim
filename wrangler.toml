@@ -18,3 +18,8 @@ binding = "DB"
 database_name = "siteyonetim-db"
 database_id = "c8b48f81-826f-4e7e-a1f9-580afa5321b5"
 migrations_dir = "drizzle"
+
+# Teşhis (/api/setup/status): panodaki UUID ile aynı (bağlantı hâlâ [[d1_databases]] üzerinden env.DB)
+[vars]
+D1_DATABASE_ID = "c8b48f81-826f-4e7e-a1f9-580afa5321b5"
+D1_DATABASE_NAME = "siteyonetim-db"

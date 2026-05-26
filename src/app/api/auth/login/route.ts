@@ -53,6 +53,7 @@ export async function POST(request: Request) {
       role: users.role,
       siteId: users.siteId,
       apartmentNo: users.apartmentNo,
+      mustChangePassword: users.mustChangePassword,
     };
 
     const userList = await db.select(loginColumns).from(users).where(eq(users.emailOrPhone, usernameOrPhone)).limit(1);
@@ -75,13 +76,16 @@ export async function POST(request: Request) {
       /* Kolon/tablonun eski şemada olmaması girişi engellemesin; migrasyon için /kurulum */
     }
 
-    // JWT oluştur
+    const mustChangePassword = user.mustChangePassword === true;
+
+    // JWT oluştur (mcp: kalıcı şifre bekleniyor)
     const token = await signJwt({
       id: user.id,
       role: user.role,
       name: user.name,
       siteId: user.siteId,
       apartmentNo: user.apartmentNo,
+      mcp: mustChangePassword,
     });
 
     // Cookie olarak ayarla (Next.js 15+: cookies() async)
@@ -96,12 +100,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       message: "Giriş başarılı",
+      mustChangePassword,
       user: {
         id: user.id,
         name: user.name,
         role: user.role,
-        siteId: user.siteId
-      }
+        siteId: user.siteId,
+      },
     });
   } catch (error: any) {
     return NextResponse.json({ error: "Sunucu hatası", details: error.message }, { status: 500 });

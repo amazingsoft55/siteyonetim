@@ -15,6 +15,7 @@ const publicCols = {
   siteId: users.siteId,
   apartmentNo: users.apartmentNo,
   createdAt: users.createdAt,
+  mustChangePassword: users.mustChangePassword,
 };
 
 function forbidden() {
@@ -28,6 +29,7 @@ type PatchBody = {
   siteId?: unknown;
   apartmentNo?: unknown | null;
   role?: unknown;
+  forcePasswordChange?: unknown;
 };
 
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -61,6 +63,11 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   let nextSite = curr.siteId;
   let nextApt = curr.apartmentNo;
   let nextRole = curr.role as "SUPER_ADMIN" | "ADMIN" | "USER";
+  let nextMustChange = curr.mustChangePassword === true;
+
+  if (typeof raw.forcePasswordChange === "boolean") {
+    nextMustChange = raw.forcePasswordChange;
+  }
 
   if (typeof raw.name === "string" && raw.name.trim().length > 0) nextName = raw.name.trim();
 
@@ -84,6 +91,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       return NextResponse.json({ error: "Şifre en az 6 karakter olmalı." }, { status: 400 });
     }
     nextHash = await bcrypt.hash(raw.password, 10);
+    nextMustChange = false;
   }
 
   if (typeof raw.siteId === "string" && raw.siteId.trim().length > 0) {
@@ -133,6 +141,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       siteId: nextSite,
       apartmentNo: nextApt,
       role: nextRole,
+      mustChangePassword: nextMustChange,
     })
     .where(eq(users.id, targetId));
 

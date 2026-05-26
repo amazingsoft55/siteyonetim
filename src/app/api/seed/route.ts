@@ -59,7 +59,7 @@ export async function GET() {
             "INITIAL_SUPER_ADMIN_PASSWORD — en az 8 karakter, yalnızca sunucuda",
             "INITIAL_SITE_NAME — ilk site adı",
           ],
-          optional: ["INITIAL_SITE_ADDRESS", "INITIAL_SUPER_ADMIN_NAME"],
+          optional: ["INITIAL_SITE_ADDRESS", "INITIAL_SUPER_ADMIN_NAME", "INITIAL_SUPER_ADMIN_MUST_CHANGE_PASSWORD=1 (ilk girişte /sifre-belirle)"],
           missingEnvHints: missing,
           kurulumUrl: "/kurulum",
         },
@@ -77,12 +77,15 @@ export async function GET() {
     });
 
     const passwordHash = await bcrypt.hash(pass, 10);
+    const promptFirstLogin = /^1|true|yes$/i.test(process.env.INITIAL_SUPER_ADMIN_MUST_CHANGE_PASSWORD?.trim() ?? "");
+
     await db.insert(users).values({
       id: userId,
       name: adminName,
       emailOrPhone: login,
       passwordHash,
       role: "SUPER_ADMIN",
+      mustChangePassword: promptFirstLogin,
     });
 
     return NextResponse.json({

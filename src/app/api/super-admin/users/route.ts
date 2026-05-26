@@ -20,6 +20,7 @@ const publicUserColumns = {
   siteId: users.siteId,
   apartmentNo: users.apartmentNo,
   createdAt: users.createdAt,
+  mustChangePassword: users.mustChangePassword,
 };
 
 export async function GET() {
@@ -44,6 +45,7 @@ type CreateBody = {
   role?: unknown;
   siteId?: unknown;
   apartmentNo?: unknown;
+  forcePasswordChange?: unknown;
 };
 
 export async function POST(request: Request) {
@@ -72,6 +74,7 @@ export async function POST(request: Request) {
     typeof raw.apartmentNo === "string" && raw.apartmentNo.trim().length > 0
       ? raw.apartmentNo.trim()
       : undefined;
+  const forcePasswordChange = raw.forcePasswordChange === true;
 
   if (!name || !emailOrPhone || !password || !role) {
     return NextResponse.json(
@@ -107,6 +110,7 @@ export async function POST(request: Request) {
       role,
       siteId,
       apartmentNo,
+      mustChangePassword: forcePasswordChange,
     });
 
     const row = await d.db.select(publicUserColumns).from(users).where(eq(users.id, id)).limit(1);

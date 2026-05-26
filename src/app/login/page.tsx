@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
+import { browserApiUrl, getStoredApiBase, setStoredApiBase, getBrowserApiBase } from "@/lib/browser-api-base";
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
@@ -12,10 +13,17 @@ export default function LoginPage() {
   const [password, setPassword] = React.useState("");
   const [errorMsg, setErrorMsg] = React.useState("");
   const [setupBanner, setSetupBanner] = React.useState<{ kind: "ok" | "warn" | "err"; text: string } | null>(null);
+  const [apiOriginDraft, setApiOriginDraft] = React.useState("");
+  const [showApiOrigin, setShowApiOrigin] = React.useState(false);
+  const [apiSaveNote, setApiSaveNote] = React.useState("");
+
+  React.useEffect(() => {
+    setApiOriginDraft(getStoredApiBase());
+  }, []);
 
   React.useEffect(() => {
     let cancelled = false;
-    fetch("/api/setup/status")
+    fetch(browserApiUrl("/api/setup/status"))
       .then((r) => r.json().catch(() => null))
       .then((data) => {
         if (cancelled || !data || typeof data !== "object") return;
@@ -68,16 +76,26 @@ export default function LoginPage() {
     setErrorMsg("");
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(browserApiUrl("/api/auth/login"), {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          usernameOrPhone: usernameOrPhone.replace(/\s+/g, ""), 
-          password 
+        body: JSON.stringify({
+          usernameOrPhone: usernameOrPhone.replace(/\s+/g, ""),
+          password,
         }),
       });
 
-      const data: unknown = await response.json();
+      let data: unknown;
+      try {
+        data = await response.json();
+      } catch {
+        setErrorMsg(
+          "Sunucudan geçerli bir yanıt alınamadı. API adresini kontrol edin veya aynı origin üzerinden deneyin.",
+        );
+        setLoading(false);
+        return;
+      }
 
       if (!response.ok) {
         const rec =
@@ -93,6 +111,7 @@ export default function LoginPage() {
       }
 
       const ok = data as {
+        mustChangePassword?: boolean;
         user: { role: string; id: string; name: string; siteId?: string | null };
       };
 
@@ -102,9 +121,14 @@ export default function LoginPage() {
         return;
       }
 
-      // Başarılı, role göre yönlendir
       localStorage.setItem("user", JSON.stringify(ok.user));
-      
+
+      if (ok.mustChangePassword === true) {
+        router.push("/sifre-belirle");
+        setLoading(false);
+        return;
+      }
+
       if (ok.user.role === "SUPER_ADMIN") {
         router.push("/super-admin");
       } else if (ok.user.role === "ADMIN") {
@@ -112,8 +136,15 @@ export default function LoginPage() {
       } else {
         router.push("/dashboard");
       }
+      setLoading(false);
     } catch (error) {
-      setErrorMsg("Sunucuya bağlanılamadı.");
+      const isNetwork = error instanceof TypeError && /fetch|network|Failed to fetch/i.test(error.message);
+      const base = getBrowserApiBase();
+      setErrorMsg(
+        isNetwork ?
+          `Sunucuya ulaşılamadı (ağ). Köke istek: ${base || "(göreli — mevcut sekme)"}. NEXT_PUBLIC_SITE_URL veya giriş altındaki özel API adresini kontrol edin.`
+        : "İstek tamamlanamadı.",
+      );
       setLoading(false);
     }
   };
@@ -217,12 +248,12 @@ export default function LoginPage() {
               />
               <span className="ml-2">Beni Hatırla</span>
             </label>
-            <a
-              href="#"
+            <Link
+              href="/sifremi-unuttum"
               className="font-semibold hover:underline text-indigo-600 dark:text-indigo-400"
             >
-              Şifremi Unuttum
-            </a>
+              Şifremi unuttum (süper admin)
+            </Link>
           </div>
 
           <button
@@ -240,6 +271,43 @@ export default function LoginPage() {
             )}
           </button>
         </form>
+
+        <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800">
+          <button
+            type="button"
+            onClick={() => setShowApiOrigin((v) => !v)}
+            className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 w-full text-center py-1 hover:text-indigo-600 dark:hover:text-indigo-400"
+          >
+            {showApiOrigin ? "▼ Sunucu adresi (gelişmiş)" : "▸ Sunucu adresi (mobil / farklı domain)"}
+          </button>
+          {showApiOrigin && (
+            <div className="mt-2 space-y-2 px-1">
+              <p className="text-[10px] text-zinc-500 leading-snug">
+                Boş bırakırsanız tarayıcı adres çubuğundaki siteye göreli istek atılır (önerilir). Uygulama farklı bir
+                etki alanında açılıyorsa buraya kök yazın, örn: <code className="text-[10px]">https://siteyonetim.xxx.workers.dev</code>
+              </p>
+              <input
+                type="url"
+                placeholder="https://..."
+                value={apiOriginDraft}
+                onChange={(e) => setApiOriginDraft(e.target.value)}
+                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 py-2 px-3 text-xs bg-zinc-50 dark:bg-zinc-950"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setStoredApiBase(apiOriginDraft);
+                  setApiSaveNote("Kaydedildi.");
+                  void setTimeout(() => setApiSaveNote(""), 3000);
+                }}
+                className="w-full py-2 rounded-lg bg-zinc-200 dark:bg-zinc-800 text-xs font-bold"
+              >
+                API kökünü kaydet
+              </button>
+              {apiSaveNote ? <p className="text-[10px] text-emerald-600 font-semibold text-center">{apiSaveNote}</p> : null}
+            </div>
+          )}
+        </div>
 
         <p className="pt-6 border-t border-zinc-100 dark:border-zinc-800 text-center text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
           Giriş bilgileri yalnızca veritabanındaki hesaplara göredir. İlk kurulum için{" "}

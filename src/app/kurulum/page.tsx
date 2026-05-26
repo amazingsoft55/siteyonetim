@@ -76,8 +76,25 @@ export default function KurulumPage() {
           </p>
         </section>
 
+        <section className="rounded-2xl border border-violet-200/70 dark:border-violet-900/40 bg-violet-50/30 dark:bg-violet-950/15 p-6 space-y-2">
+          <h2 className="text-lg font-bold text-violet-900 dark:text-violet-100">3 · Şifre akışı (kalıcı şifre + e-posta)</h2>
+          <p className="text-sm text-violet-950/85 dark:text-violet-100/80">
+            D1&apos;de <code className="text-xs bg-white/60 dark:bg-zinc-900/50 px-1 rounded">drizzle/0004_password_flow.sql</code>{" "}
+            (veya güncel <code className="text-xs bg-white/60 dark:bg-zinc-900/50 px-1 rounded">full-schema.sql</code>) uygulayın:{" "}
+            <code className="text-xs">must_change_password</code> ve <code className="text-xs">password_reset_tokens</code>.
+          </p>
+          <ul className="text-sm list-disc pl-5 text-violet-950/90 dark:text-violet-100/85 space-y-1">
+            <li>
+              Süper yönetici şifre sıfırlama: <Link href="/sifremi-unuttum" className="font-semibold underline">/sifremi-unuttum</Link> —{" "}
+              <code className="text-[11px]">RESEND_API_KEY</code>, <code className="text-[11px]">EMAIL_FROM</code>,{" "}
+              <code className="text-[11px]">NEXT_PUBLIC_SITE_URL</code> zorunlu.
+            </li>
+            <li>İlk giriş şifresi zorlaması: kullanıcıda <code className="text-[11px]">must_change_password=1</code> veya panelde “İlk girişte kalıcı şifre” seçeneği.</li>
+          </ul>
+        </section>
+
         <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 space-y-3">
-          <h2 className="text-lg font-bold">3 · Yerel geliştirme ipuçları</h2>
+          <h2 className="text-lg font-bold">4 · Yerel geliştirme ipuçları</h2>
           <ul className="text-sm space-y-2 text-zinc-600 dark:text-zinc-400 list-disc pl-5">
             <li>Giriş 503 ise canlı bağlam özeti için: <Link href="/api/setup/status" className="font-semibold text-indigo-600 dark:text-indigo-400 underline">/api/setup/status</Link></li>
             <li>
@@ -90,7 +107,7 @@ export default function KurulumPage() {
         </section>
 
         <section className="rounded-2xl border border-amber-200/80 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 p-6 space-y-3">
-          <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">4 · “Site oluşturulamadı” / D1’de sorgu sayısı 0</h2>
+          <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">5 · “Site oluşturulamadı” / D1’de sorgu sayısı 0</h2>
           <p className="text-sm text-amber-950/90 dark:text-amber-100/85 leading-relaxed">
             Kod, veritabanını yalnızca <strong>Cloudflare Workers içinde env.DB ile</strong> görür (<code className="text-xs bg-white/70 dark:bg-zinc-900/60 px-1 rounded">wrangler.toml</code>{" "}
             içinde binding adı tam olarak <code className="text-xs px-1">DB</code> ve <code className="text-xs px-1">database_id</code> doğru olmalı).

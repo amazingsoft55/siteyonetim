@@ -17,6 +17,8 @@ export const users = sqliteTable("users", {
   siteId: text("site_id").references(() => sites.id),
   apartmentNo: text("apartment_no"),
   lastLoginAt: text("last_login_at"),
+  /** 1 = ilk girişte kalıcı şifre zorunlu (JWT’de mcp) */
+  mustChangePassword: integer("must_change_password", { mode: "boolean" }).notNull().default(false),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
@@ -62,6 +64,17 @@ export const adminSupportTickets = sqliteTable("admin_support_tickets", {
     .default("OPEN"),
   superAdminReply: text("super_admin_reply"),
   updatedAt: text("updated_at").default(sql`(CURRENT_TIMESTAMP)`),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+/** Süper yönetici şifre sıfırlama bağlantısı (token tek kullanımlık, süreli) */
+export const passwordResetTokens = sqliteTable("password_reset_tokens", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  token: text("token").notNull().unique(),
+  expiresAt: text("expires_at").notNull(),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 

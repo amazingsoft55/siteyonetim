@@ -21,6 +21,7 @@ type UserRow = {
   siteId: string | null;
   apartmentNo: string | null;
   createdAt: string | null;
+  mustChangePassword?: boolean;
 };
 
 function roleLabel(r: string) {
@@ -46,6 +47,7 @@ export default function SuperAdminUsersPage() {
   const [nuRole, setNuRole] = React.useState<"ADMIN" | "USER">("ADMIN");
   const [nuSite, setNuSite] = React.useState("");
   const [nuApt, setNuApt] = React.useState("");
+  const [nuForcePwChange, setNuForcePwChange] = React.useState(false);
 
   const [editOpen, setEditOpen] = React.useState<UserRow | null>(null);
   const [edName, setEdName] = React.useState("");
@@ -54,6 +56,7 @@ export default function SuperAdminUsersPage() {
   const [edRole, setEdRole] = React.useState<"SUPER_ADMIN" | "ADMIN" | "USER">("ADMIN");
   const [edSite, setEdSite] = React.useState("");
   const [edApt, setEdApt] = React.useState("");
+  const [edForcePwChange, setEdForcePwChange] = React.useState(false);
   const [edSaving, setEdSaving] = React.useState(false);
 
   const reload = React.useCallback(async () => {
@@ -104,6 +107,7 @@ export default function SuperAdminUsersPage() {
     setEdRole(u.role as "SUPER_ADMIN" | "ADMIN" | "USER");
     setEdSite(u.siteId ?? "");
     setEdApt(u.apartmentNo ?? "");
+    setEdForcePwChange(u.mustChangePassword === true);
     setErr("");
     setMsg("");
   }
@@ -149,6 +153,7 @@ export default function SuperAdminUsersPage() {
         role: nuRole,
         siteId: nuSite,
         apartmentNo: nuApt.trim() || undefined,
+        forcePasswordChange: nuForcePwChange,
       }),
     });
     const j: unknown = await res.json().catch(() => null);
@@ -162,6 +167,7 @@ export default function SuperAdminUsersPage() {
     setNuLogin("");
     setNuPass("");
     setNuApt("");
+    setNuForcePwChange(false);
     await reload();
   }
 
@@ -185,6 +191,7 @@ export default function SuperAdminUsersPage() {
     else payload.siteId = null;
     payload.apartmentNo =
       edApt.trim().length === 0 ? null : edApt.trim();
+    payload.forcePasswordChange = edForcePwChange;
 
     const res = await fetch(`/api/super-admin/users/${editOpen.id}`, {
       method: "PATCH",
@@ -405,6 +412,15 @@ export default function SuperAdminUsersPage() {
                   />
                 </div>
               </div>
+              <label className="flex items-start gap-2 text-xs text-zinc-600 dark:text-zinc-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={nuForcePwChange}
+                  onChange={(e) => setNuForcePwChange(e.target.checked)}
+                  className="mt-0.5 rounded border-zinc-300"
+                />
+                <span>İlk girişte kalıcı şifre ekranı göster (geçici şifre için önerilir)</span>
+              </label>
               <button
                 type="submit"
                 disabled={sites.length === 0}
@@ -426,6 +442,7 @@ export default function SuperAdminUsersPage() {
                 <th className="py-2 pr-2">Rol</th>
                 <th className="py-2 pr-2">Site</th>
                 <th className="py-2 pr-2">Daire</th>
+                <th className="py-2 pr-2">Durum</th>
                 <th className="py-2 pl-2 text-right w-36">İşlem</th>
               </tr>
             </thead>
@@ -437,6 +454,13 @@ export default function SuperAdminUsersPage() {
                   <td className="py-2.5 pr-2">{roleLabel(u.role)}</td>
                   <td className="py-2.5 pr-2">{siteNameOf(u.siteId)}</td>
                   <td className="py-2.5 pr-2">{u.apartmentNo ?? "—"}</td>
+                  <td className="py-2.5 pr-2">
+                    {u.mustChangePassword ?
+                      <span className="text-[10px] font-bold uppercase text-amber-700 dark:text-amber-400">
+                        Kalıcı şifre
+                      </span>
+                    : <span className="text-zinc-400">—</span>}
+                  </td>
                   <td className="py-2.5 pl-2 text-right space-x-1">
                     <button
                       type="button"
@@ -459,7 +483,7 @@ export default function SuperAdminUsersPage() {
               ))}
               {users.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-zinc-500">
+                  <td colSpan={7} className="py-8 text-center text-zinc-500">
                     Henüz kullanıcı yok. Süper yönetici hesabınız kurulum sırasında D1’e yazılmış olmalı; ardından buradan başka kullanıcılar oluşturulur.
                   </td>
                 </tr>
@@ -555,6 +579,15 @@ export default function SuperAdminUsersPage() {
                     </div>
                   </div>
                 )}
+                <label className="flex items-start gap-2 text-xs text-zinc-600 dark:text-zinc-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={edForcePwChange}
+                    onChange={(e) => setEdForcePwChange(e.target.checked)}
+                    className="mt-0.5 rounded border-zinc-300"
+                  />
+                  <span>Sonraki girişte kalıcı şifre ekranı göster</span>
+                </label>
                 <div className="flex gap-2 pt-3">
                   <button
                     type="button"
