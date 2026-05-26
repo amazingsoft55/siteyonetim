@@ -10,6 +10,7 @@ function forbidden() {
   return NextResponse.json({ error: "Yetkisiz." }, { status: 403 });
 }
 
+export async function GET() {
   const session = await getSession();
   if (!session || session.role !== "SUPER_ADMIN") return forbidden();
 

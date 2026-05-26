@@ -21,6 +21,7 @@ function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
 }
 
+type PatchBody = {
   name?: unknown;
   emailOrPhone?: unknown;
   password?: unknown;

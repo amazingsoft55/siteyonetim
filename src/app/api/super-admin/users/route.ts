@@ -11,6 +11,7 @@ function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
 }
 
+const publicUserColumns = {
   id: users.id,
   name: users.name,
   emailOrPhone: users.emailOrPhone,
