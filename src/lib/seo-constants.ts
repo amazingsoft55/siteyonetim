@@ -71,6 +71,15 @@ export function rootDefaultMetadata(): Metadata {
     keywords: defaultKeywords,
     applicationName: "Site Yönetimi",
     category: "business",
+    icons: {
+      icon: [
+        { url: "/icons/app-mark.svg", type: "image/svg+xml", sizes: "512x512" },
+        { url: "/icons/app-mark.svg", type: "image/svg+xml", sizes: "any" },
+        { url: "/logo.png", type: "image/png", sizes: "192x192" },
+        { url: "/logo.png", type: "image/png", sizes: "512x512" },
+      ],
+      apple: [{ url: "/logo.png", sizes: "180x180", type: "image/png" }],
+    },
     alternates: { canonical: siteUrl },
     robots: {
       index: true,

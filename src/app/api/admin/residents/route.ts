@@ -1,23 +1,23 @@
 import { NextResponse } from "next/server";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { getSession } from "@/lib/session";
-import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { users, payments } from "@/db/schema";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
 }
 
-/** Site sakinleri (USER) + ödenmemiş aidat toplamı — D1 canlı veri */
+/** Site sakinleri (USER) + ödenmemiş aidat toplamı */
 export async function GET() {
   const session = await getSession();
   if (!session || session.role !== "ADMIN" || !session.siteId) return forbidden();
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+  const d = acquireDatabase();
+  if (!d.ok) return databaseUnavailable();
 
   try {
     const usr = await d.db

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { sql } from "drizzle-orm";
-import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { pageVisitsDaily } from "@/db/schema";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 const ALLOWED = new Set(["/", "/iletisim", "/destek", "/hakkimizda"]);
 
@@ -27,8 +27,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Geçersiz gövde" }, { status: 400 });
   }
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+  const d = acquireDatabase();
+  if (!d.ok) return databaseUnavailable();
 
   const day = new Date().toISOString().slice(0, 10);
 

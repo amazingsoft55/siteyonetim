@@ -23,7 +23,7 @@ export default function AdminRequestsPage() {
     const res = await fetch("/api/requests", { credentials: "include" });
     const raw: unknown = await res.json().catch(() => null);
     if (!res.ok || !Array.isArray(raw)) {
-      setLoadErr("Talepler D1 üzerinden okunamadı. Oturumu ve site bağlamını kontrol edin.");
+      setLoadErr("Talepler veritabanından okunamıyor. Oturumu ve site bağlamını kontrol edin.");
       setRequests([]);
       return;
     }

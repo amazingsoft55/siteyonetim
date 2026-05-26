@@ -49,3 +49,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Yerel SQLite (tam paket drizzle/full-schema.sql ile)
+/data/*.db
+/data/*.db-wal
+/data/*.db-shm

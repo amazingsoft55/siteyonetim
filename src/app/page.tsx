@@ -55,7 +55,7 @@ export default function Home() {
             </h1>
             <p className="mt-6 text-lg leading-8 text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
               Aidat görünürlüğü, yönetim duyuruları, arıza ve talepler tek çatı altında. Sakinler şeffaflıkla takip eder;
-              yöneticiler D1 tabanlı panellerden operasyonu yürütür.
+              yöneticiler veritabanı destekli panellerden operasyonu yürütür.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6 flex-col sm:flex-row gap-y-4">
               <Link
@@ -75,7 +75,7 @@ export default function Home() {
             <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto text-left">
               {[
                 { title: "Rol bazlı paneller", sub: "Sakin, site yönetimi ve süper admin ayrımı.", icon: Shield },
-                { title: "Gerçek veri katmanı", sub: "Cloudflare D1 üzerinde kalıcı kayıtlar.", icon: Sparkles },
+                { title: "Gerçek veri katmanı", sub: "SQLite dosyasında kalıcı kayıtlar.", icon: Sparkles },
                 { title: "Hızlı bildirim", sub: "Duyuru ve talepler anında panele düşer.", icon: Megaphone },
               ].map((b) => (
                 <div

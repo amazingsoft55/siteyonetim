@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 /** Geriye uyum: kullanıcılar artık /api/admin/residents adresini kullanmalı. */
 export function GET() {

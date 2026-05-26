@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { desc, eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
-import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { adminSupportTickets } from "@/db/schema";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 function forbidden() {
   return NextResponse.json({ error: "Yetkisiz." }, { status: 403 });
@@ -22,8 +22,8 @@ export async function GET() {
   const session = await getSession();
   if (!session || session.role !== "ADMIN" || !session.siteId) return forbidden();
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+  const d = acquireDatabase();
+  if (!d.ok) return databaseUnavailable();
 
   const list = await d.db
     .select({
@@ -48,8 +48,8 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (!session || session.role !== "ADMIN" || !session.siteId) return forbidden();
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+  const d = acquireDatabase();
+  if (!d.ok) return databaseUnavailable();
 
   let raw: Body;
   try {

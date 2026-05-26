@@ -1,4 +1,4 @@
-/** Talep kayıtlarını sakla (D1 ENUM) ile arayüz (Türkçe) arasında köprü */
+/** Talep kayıtları: veritabanı durum sabitleri ile arayüz (Türkçe) arasında köprü */
 
 export type ClientRequestItem = {
   id: string;

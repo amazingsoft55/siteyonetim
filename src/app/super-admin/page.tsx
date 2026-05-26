@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { describeFailedResponse } from "@/lib/json-error";
+import { SuperMarkSvg } from "@/components/SiteLogo";
 
 type SiteRow = { id: string; name: string; address: string | null; createdAt: string | null };
 
@@ -193,16 +194,21 @@ export default function SuperAdminDashboard() {
       <header className="sticky top-0 z-50 border-b border-indigo-200/40 dark:border-indigo-900/40 bg-white/85 dark:bg-zinc-950/85 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto flex h-[4.25rem] items-center justify-between px-6 gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/25 shrink-0">
-              <Shield className="h-5 w-5" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-zinc-950 dark:bg-zinc-900 ring-2 ring-indigo-500/35 shadow-lg shadow-indigo-900/25 shrink-0 overflow-hidden">
+              <SuperMarkSvg width={40} height={40} className="h-9 w-9" alt="" />
             </div>
             <div className="min-w-0">
               <h1 className="text-lg sm:text-xl font-extrabold tracking-tight truncate">Süper yönetici merkezi</h1>
-              <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate flex items-center gap-2">
-                <span
-                  className={`inline-flex h-2 w-2 rounded-full ${dash ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}
-                />
-                {dash?.freshAt ? `Ölçüm: ${new Date(dash.freshAt).toLocaleString("tr-TR")}` : "Ölçüm bekleniyor…"}
+              <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 flex flex-col sm:flex-row sm:items-center sm:gap-x-2 gap-0.5 pt-0.5">
+                <span className="inline-flex items-center gap-2 truncate">
+                  <span
+                    className={`inline-flex h-2 w-2 shrink-0 rounded-full ${dash ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}
+                  />
+                  {dash?.freshAt ? `Ölçüm: ${new Date(dash.freshAt).toLocaleString("tr-TR")}` : "Ölçüm bekleniyor…"}
+                </span>
+                <span className="text-[10px] text-zinc-400 dark:text-zinc-500 truncate">
+                  Bu sekmede ana ekrana eklerseniz ayrı süper yönetici uygulaması (manifest) yüklenir.
+                </span>
               </p>
             </div>
           </div>
@@ -246,7 +252,7 @@ export default function SuperAdminDashboard() {
             <p className="font-semibold">{loadErr}</p>
             <div className="flex flex-wrap gap-3">
               <Link href="/kurulum" className="text-xs font-bold underline text-indigo-700 dark:text-indigo-400">
-                Kurulum ve D1 kontrolü
+                Kurulum ve veritabanı kontrolü
               </Link>
               <button type="button" onClick={refreshNow} className="text-xs font-bold underline">
                 Tekrar dene
@@ -257,10 +263,10 @@ export default function SuperAdminDashboard() {
 
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { href: "/super-admin/kullanicilar", title: "Siteler & kullanıcılar", desc: "D1 üzerinde hesap ve proje yönetimi", icon: Users },
+            { href: "/super-admin/kullanicilar", title: "Siteler & kullanıcılar", desc: "Hesap ve proje yönetimi", icon: Users },
             { href: "/super-admin/destek", title: "Destek talepleri", desc: "Yönetici destek kuyruğu", icon: Activity },
-            { href: "/kurulum", title: "Kurulum rehberi", desc: "D1, migrasyon ve ortam", icon: Gauge },
-            { href: "/api/setup/status", title: "Kurulum durumu API", desc: "Bağlama teşhisi (JSON)", icon: Cpu },
+            { href: "/kurulum", title: "Kurulum rehberi", desc: "Şema ve ortam değişkenleri", icon: Gauge },
+            { href: "/api/setup/status", title: "Kurulum durumu API", desc: "Sağlık ve teşhis (JSON)", icon: Cpu },
           ].map((c) => (
             <Link
               key={c.href}
@@ -293,12 +299,12 @@ export default function SuperAdminDashboard() {
             <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="relative overflow-hidden rounded-3xl border border-indigo-200/60 dark:border-indigo-900/50 bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-5 text-white shadow-xl shadow-indigo-900/20">
                 <Cpu className="absolute right-4 top-4 h-16 w-16 opacity-20" />
-                <p className="text-xs font-bold uppercase tracking-wider text-indigo-100/90">D1 yanıt süresi</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-indigo-100/90">Veritabanı yanıt süresi</p>
                 <p className="mt-2 text-3xl font-black tabular-nums">
                   {dash.dbLatencyMs != null ? `${dash.dbLatencyMs} ms` : "—"}
                 </p>
                 <p className="mt-2 text-[11px] leading-snug text-indigo-100/85 max-w-[18rem]">
-                  Cloudflare D1’e gidiş-dönüş gecikmesi; anlık ölçüm.
+                  SQLite gidiş-dönüş süresi (ms); örnek anlık ölçüm.
                 </p>
               </div>
 
@@ -412,7 +418,7 @@ export default function SuperAdminDashboard() {
                   icon: Building2,
                   title: "Siteler",
                   value: dash.totals.sites,
-                  subtitle: "D1 kayıtlı projeler",
+                  subtitle: "Kayıtlı projeler",
                 },
                 {
                   icon: Shield,
@@ -450,7 +456,7 @@ export default function SuperAdminDashboard() {
             </section>
 
             <div className="text-[11px] text-zinc-400">
-              Roller detayı (D1 gerçek):{" "}
+              Roller detayı (canlı veri):{" "}
               {Object.entries(dash.totals.byRole)
                 .filter(([, n]) => n > 0)
                 .map(([k, v]) => `${k}: ${v}`)
@@ -464,7 +470,7 @@ export default function SuperAdminDashboard() {
             <div className="space-y-2 min-w-0">
               <h2 className="text-lg font-black">Siteler tablosu</h2>
               <p className="text-xs text-zinc-500">
-                D1’den canlı liste. Arama tablo üzerinde süzme yapar ({filteredSites.length}/{sites.length}
+                SQLite’dan canlı liste. Arama tablo üzerinde süzme yapar ({filteredSites.length}/{sites.length}
                 site).
               </p>
             </div>

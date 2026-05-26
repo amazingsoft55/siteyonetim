@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const ALLOWED_PATHS = new Set(["/", "/iletisim", "/destek", "/hakkimizda"]);
 
-/** Herkese açık bilgi sayfalarında günlük ziyaret sinyali (D1; bot UA elenir). */
+/** Herkese açık sayfalarda günlük ziyaret sinyali (SQLite; bot UA elenir). */
 export function PublicVisitBeacon() {
   const pathname = usePathname();
 

@@ -33,7 +33,7 @@ export async function getSession(): Promise<SessionPayload | null> {
         typeof p.apartmentNo === "string" ? p.apartmentNo : p.apartmentNo === null ? null : undefined,
     };
   } catch {
-    /* Edge / Workers ortamında cookies() veya doğrulama nadiren istisna fırlatır; route 500'e düşmesin */
+    /* cookies()/JWT doğrulaması nadiren istisna fırlatabilir; route’un 500’e düşmesini engelle */
     return null;
   }
 }

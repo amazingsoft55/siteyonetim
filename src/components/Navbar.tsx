@@ -1,7 +1,7 @@
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PublicVisitBeacon } from "@/components/PublicVisitBeacon";
-import Image from "next/image";
 import Link from "next/link";
+import { SiteLogo } from "@/components/SiteLogo";
 
 export function Navbar() {
   return (
@@ -9,13 +9,13 @@ export function Navbar() {
       <PublicVisitBeacon />
       <div className="max-w-6xl mx-auto flex h-16 items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex items-center justify-center h-10 w-10 rounded-lg shadow-sm overflow-hidden">
-            <Image
-              src="/logo.png"
+          <div className="flex items-center justify-center h-10 w-10 shrink-0 rounded-lg shadow-sm overflow-hidden bg-white dark:bg-zinc-900 ring-1 ring-zinc-200/80 dark:ring-zinc-800">
+            <SiteLogo
+              width={36}
+              height={36}
+              rounded
+              className="rounded-md"
               alt="Site Yönetimi — apartman ve site yönetim platformu logosu"
-              width={40}
-              height={40}
-              className="object-cover"
             />
           </div>
           <span className="text-xl font-bold tracking-tight">Site Yönetimi</span>

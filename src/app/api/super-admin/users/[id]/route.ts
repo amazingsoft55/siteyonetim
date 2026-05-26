@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { getSession } from "@/lib/session";
-import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { users, payments, requests } from "@/db/schema";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 const publicCols = {
   id: users.id,
@@ -41,8 +41,8 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     return NextResponse.json({ error: "Kimlik eksik" }, { status: 400 });
   }
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+  const d = acquireDatabase();
+  if (!d.ok) return databaseUnavailable();
 
   const existing = await d.db.select().from(users).where(eq(users.id, targetId)).limit(1);
   if (!existing[0]) {
@@ -165,8 +165,8 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
     return NextResponse.json({ error: "Kendi hesabınızı silemezsiniz." }, { status: 403 });
   }
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+  const d = acquireDatabase();
+  if (!d.ok) return databaseUnavailable();
 
   const victim = await d.db.select().from(users).where(eq(users.id, targetId)).limit(1);
   if (!victim[0]) return NextResponse.json({ error: "Bulunamadı" }, { status: 404 });

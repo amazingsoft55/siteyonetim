@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { and, count, eq, gte, isNotNull } from "drizzle-orm";
 import { getSession } from "@/lib/session";
-import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import {
   sites,
   users,
@@ -13,7 +13,7 @@ import {
   platformPublicContact,
 } from "@/db/schema";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export async function GET() {
   try {
@@ -22,8 +22,8 @@ export async function GET() {
       return NextResponse.json({ error: "Bu özet için süper yönetici gereklidir." }, { status: 403 });
     }
 
-    const d = tryGetDb();
-    if (!d.ok) return jsonDbUnavailable(d.error);
+    const d = acquireDatabase();
+    if (!d.ok) return databaseUnavailable();
 
     const freshAt = new Date().toISOString();
   let dbLatencyMs: number | null = null;
@@ -157,7 +157,7 @@ export async function GET() {
         : "Bulut konsolundan Google PageSpeed Insights API anahtarı ekleyin (GOOGLE_PAGESPEED_API_KEY).",
       },
       platformExplain:
-        "Workers CPU yüzdesi kullanıcı uçundan okunmaz (Cloudflare sınırlaması); D1 yanıt süresi Lighthouse ve sayım verileri gerçektir.",
+        "Sunucu işlemci yüzdesi istemci üzerinden doğrudan ölçülemez; Lighthouse ve sayım metrikleri SQLite yanıt sürelerine dayanır.",
     };
 
     try {

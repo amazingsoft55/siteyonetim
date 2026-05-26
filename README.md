@@ -1,79 +1,89 @@
-This is a [Next.js](https://nextjs.org) application deployed on Cloudflare (**D1** veritabanı, `@cloudflare/next-on-pages`).
+# Site Yönetimi
 
-## İlk kurulum (özet)
+Modern [Next.js](https://nextjs.org/) (App Router) uygulaması — **SQLite** dosya veritabanı, **JWT** ile oturum, modern PWA katmanı için manifest’ler.
 
-Bu projede **giriş ve API’lar D1 gerektirir**. Boş veritabanında önce şema, sonra seed uygulanmalıdır.
+Sunucu API’leri `better-sqlite3` kullanır; barındırma modeli klasik bir **Node.js sürecidir** (`next build` → `next start`). Kalıcı disk üzerinde tek bir `.db` dosyası tutulur — sunucunun dosya sisteminin kalıcı olması beklenir (geçişken serverless görüntüleri için uygun değildir).
 
-1. **Şema** (tüm tablolar tek dosyada: `drizzle/full-schema.sql`):
+## Önkoşullar
+
+- Node.js LTS  
+- Projeyi ilk kez kurarken yerel araç zinciri gerekmez; `better-sqlite3` yaygün platformlar için ikili olarak dağıtılır
+
+## Şema ve deme süper kullanıcı
+
+Tüm DDL ve isteğe bağlı ilk yönetici kaydı **tek pakette**:
+
+- `drizzle/full-schema.sql`
+
+Uygulama:
 
 ```bash
-npm run db:apply:local
+npm install
+npm run db:apply
 ```
 
-Uzak D1 için: `npm run db:apply:remote`
+Dosya içinde `[C]` bölümü uygulanırsa deme oturumu:
 
-2. **İlk kurulum (seed)** — Cloudflare Secrets veya yerelde `.dev.vars` içinde tanımlayın (`env.example`):  
-   `INITIAL_SUPER_ADMIN_LOGIN`, `INITIAL_SUPER_ADMIN_PASSWORD` (≥8 karakter), `INITIAL_SITE_NAME`  
-   İsteğe bağlı: `INITIAL_SITE_ADDRESS`, `INITIAL_SUPER_ADMIN_NAME`  
-   Ardından tarayıcıda **`/api/seed`** (GET, bir kez). Yanıtta şifre dönmaz; giriş yalnızca tanımladığınız D1 kullanıcısı ile yapılır.
+| Alan | Değer |
+|------|-------|
+| Giriş (e‑posta) | `yonetici@demo.local` |
+| Şifre | `Admin123!` |
 
-3. **Giriş** — **`/login`** ile veritabanındaki kullanıcı. Süper yönetici paneli: **`/super-admin`**  
-   Yerel bağlantı teşhisi: **`/api/setup/status`** ve rehber: **`/kurulum`**.
+Üretimde bunları ilk girişten sonra panelden güvenli şekilde güncelleyin.
 
-Yerelde `npm run dev` sırasında D1 bağlamı için `next.config.mjs` içinde **`setupDevPlatform`** kullanılır (`@cloudflare/next-on-pages/next-dev`). Sorun çıkarsa ortam dosyasında `SKIP_DEV_PLATFORM=1` ile devre dışı bırakılabilir (D1 bağlanmaz; sadece teşhis).
+Şema yüklendiği hâlde tablolar boşsa `.env` değişkenleriyle **`GET /api/seed`** (bkz. `env.example`) de kullanılabilir.
 
-**D1 konsolunda sorgular 0:** Uygulama gerçekte bu D1 ile konuşmuyor olabilir (Workers dışında çalışan site, bağlama eksik veya bağlama adı `DB` değil). Ayrıntı: **`/kurulum`** bölüm 4 ve **`/api/setup/status`**.
-
-## Getting Started (geliştirme sunucusu)
+## Geliştirme
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Tarayıcı: http://localhost:3000  
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Giriş: `/login`
+- Süper yönetici: `/super-admin` (kurulum uygun rol ile)
+- Sağlık: `/api/setup/status`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font).
+## Ortam değişkenleri
 
-## Learn More
+`env.example` dosyasına bakın:
 
-To learn more about Next.js, take a look at the following resources:
+- **`DATABASE_PATH`** — boş ise `data/siteyonetim.db`
+- **`JWT_SECRET`** — üretimde zorunlu
+- **`NEXT_PUBLIC_SITE_URL`** — canonical, OG, SEO (üretim)
+- **`GOOGLE_PAGESPEED_API_KEY`**, **`RESEND_API_KEY`** — isteğe bağlı entegrasyonlar
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Mimari özeti (`src/`)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Bölüm | Açıklama |
+|-------|----------|
+| `server/database/access.ts` | Route’ların ortak bağlantı açması |
+| `server/database/meta.ts` | Teşhis meta verisi |
+| `db/schema.ts`, `db/index.ts` | Drizzle şeması ve SQLite bağlayıcı |
+| `app/api/**` | REST endpoint’leri (`runtime = "nodejs"`) |
 
-## Deploy on Vercel
+## Üretim
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run build
+npm run start
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`DATABASE_PATH` veya varsayılan `data/` klasörünü kalıcı volume veya dizine bağlayın.
 
-### Cloudflare (kısa)
+### PWA
 
-**Hata nedeni:** `npx wrangler deploy` bir **Worker ana dosyası** (`main`) veya **varlık dizini** (`[assets]`) ister; sadece `next build` **Next-on‑Pages çıktısı üretmez** (`.vercel/output/static`), bu yüzden önce **`npm run pages:build`** gerekir.
+Ana manifest `public/manifest.json`; süper yönetici için `manifest-super-admin.json` ve `/super-admin` layout kullanılıyor.
 
-- **Workers & Pages → Workers (Workers Builds)** — panelde Deploy varsayılanı `npx wrangler deploy`:
-  - **Build:** `npm run pages:build`
-  - **Deploy:** `npx wrangler deploy` (veya **`npm run deploy:workers`**)
-  - Hepsi tek satır: **`npm run cf:workers`**
+---
 
-  `wrangler.toml` içinde **`main = .vercel/output/static/_worker.js`** ve **`[assets]`** ile bu akış uyumludur (Cloudflare’nin Pages Functions → Workers geçiş modeli).
+## drizzle-kit
 
-- **Cloudflare Pages (Git ile classic Pages pipeline):**
-  - **Build:** `npm run pages:build`
-  - **Deploy:** **`npm run deploy:cf`** veya **`npm run cf:publish`**
+Geliştirici konsolu için yapı tanımı:
 
-- **Build alanını hiç dokunmadan düzeltmek:** Deploy = **`npm run cf:workers`** (önce **`pages:build`**, sonra **`wrangler deploy`**). Üretim görüntüsünde `next build` iki kez tetiklenebilir; daha temiz olan yukarıdaki “Build + Deploy” ayrımıdır.
+```bash
+npx drizzle-kit --help
+```
 
-### SEO ve ortam değişkenleri
-
-Üretimde **`NEXT_PUBLIC_SITE_URL`** kök adresinizi ayarlayın (bkz. `env.example`). Sitemap, robots, kanonik bağlantılar, Open Graph ve JSON-LD bu değişkene güvenir.
-
-### D1 şeması
-
-Tek paket: **`drizzle/full-schema.sql`**. İçinde isteğe bağlı **tam silme (DROP)** bloğu yorumda durur; sıfırlama için dosya başındaki uyarıya göre önce o bloğu çalıştırıp ardından şema (CREATE) kısmını yeniden uygulayın. Normal güncellemede varsayılan olarak yalnızca **CREATE IF NOT EXISTS** kısmı çalışır — `npm run db:apply:remote` / `db:apply:local`.
-
-**Yeni tablolar (ör. ziyaretçi iletişimi):** `platform_public_contact` dahil tüm DDL bu dosyada birleşiktir; başka `drizzle/*.sql` migrasyon dosyası kullanılmaz.
+`drizzle.config.ts` içindeki `url`, yerel SQLite dosyasıyla hizalıdır.

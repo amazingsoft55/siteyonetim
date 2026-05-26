@@ -4,7 +4,7 @@ import Link from "next/link";
 import * as React from "react";
 import { Search, ArrowRight, RefreshCw } from "lucide-react";
 
-/** /api/admin/residents D1 yanıtı */
+/** /api/admin/residents API yanıtı */
 type Resident = {
   id: string;
   name: string;
@@ -65,7 +65,7 @@ export default function ResidentsPage() {
             Sakin bakiyesi
           </h2>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2 max-w-xl leading-relaxed">
-            Veriler doğrudan <strong>Cloudflare D1</strong> üzerindeki kullanıcı ve ödeme kayıtlarından hesaplanır.
+            Veriler SQLite veritabanındaki kullanıcı ve ödeme kayıtlarından hesaplanır.
             Yeni hesap oluşturmak için <strong>Kullanıcılar</strong> sayfasını kullanın; tahsilat / borç güncellemesi için ödeme kaydı eklenir.
           </p>
         </div>

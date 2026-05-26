@@ -1,34 +1,32 @@
 import { NextResponse } from "next/server";
+import { existsSync } from "node:fs";
 import { count } from "drizzle-orm";
-import { tryGetDb } from "@/lib/cloudflare-db";
-import { resolveD1DisplayMeta } from "@/lib/d1-config";
+import { acquireDatabase } from "@/server/database/access";
+import { resolveSqliteDbPath } from "@/lib/database-path";
+import { getStorageMeta } from "@/server/database/meta";
 import { sites, users, adminSupportTickets } from "@/db/schema";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
-/** İlk kurulum ve teşhis: auth gerektirmez. */
+/** Sağlık kontrolü ve ilk kurulum metni: kimlik doğrulama gerektirmez. */
 export async function GET() {
-  const ctx = tryGetDb();
+  const sqliteFilePath = resolveSqliteDbPath();
+  const storage = getStorageMeta();
+
+  const ctx = acquireDatabase();
   if (!ctx.ok) {
-    const code =
-      ctx.error === "no-binding" ?
-        "NO_DB_BINDING"
-      : "NO_CLOUDFLARE_CONTEXT";
     return NextResponse.json(
       {
         ok: false,
-        code,
-        d1: resolveD1DisplayMeta(),
-        executeRemoteExample: `npx wrangler d1 execute siteyonetim-db --remote --file=./drizzle/full-schema.sql`,
-        message:
-          code === "NO_CLOUDFLARE_CONTEXT" ?
-            "Geliştirme ortamında Cloudflare bağlamı yok."
-          : "D1 bağlaması (env.DB) bulunamı.",
+        code: "DATABASE_UNAVAILABLE",
+        storage,
+        sqliteFilePath,
+        fileExistsOnDisk: existsSync(sqliteFilePath),
+        message: "SQLite dosyası açılamıyor veya yerel sürücü erişilemiyor.",
         steps: [
-          "next.config.mjs içinde NODE_ENV=development iken setupDevPlatform çalışır (SKIP_DEV_PLATFORM=1 ile kapatabilirsiniz).",
-          "wrangler.toml içinde binding adı tam olarak DB olmalı.",
-          `Şema: wrangler d1 execute siteyonetim-db --local --file=./drizzle/full-schema.sql`,
-          "İlk kayıt: .dev.vars veya Secrets ile INITIAL_SUPER_ADMIN_LOGIN, INITIAL_SUPER_ADMIN_PASSWORD, INITIAL_SITE_NAME tanımlayın; ardından GET /api/seed (şifre yanıtta dönmez).",
+          "`npm install` tamam olduğundan emin olun (`better-sqlite3` native derlemesi gerekebilir).",
+          "Şema ve deme yönetici için: `npm run db:apply` (`drizzle/full-schema.sql`).",
+          "İsteğe bağlı: `.env` içinde `DATABASE_PATH` ile dosya konumunu ayarlayın.",
         ],
       },
       { status: 503 },
@@ -48,9 +46,10 @@ export async function GET() {
       {
         ok: false,
         code: "SCHEMA_MISSING",
-        d1: resolveD1DisplayMeta(),
-        message: "`sites` / `users` tabloları okunamadı.",
-        hint: "drizzle/full-schema.sql dosyasını D1 üzerinde çalıştırın.",
+        storage,
+        sqliteFilePath,
+        message: "`sites` veya `users` tabloları okunamadı.",
+        hint: "`npm run db:apply` çalıştırın.",
       },
       { status: 500 },
     );
@@ -68,13 +67,15 @@ export async function GET() {
 
   return NextResponse.json({
     ok: true,
+    storage,
+    sqliteFilePath,
+    fileExistsOnDisk: existsSync(sqliteFilePath),
     code:
       needsSeed ? "NEEDS_SEED"
       : !hasSupportTicketsTable ?
         "NEEDS_OPTIONAL_SUPPORT_MIGRATION"
       : "READY",
     database: "connected",
-    d1: resolveD1DisplayMeta(),
     sitesCount,
     usersCount,
     needsSeed,
@@ -82,13 +83,13 @@ export async function GET() {
     ...(needsSeed ?
       {
         nextStep:
-          "Ortamda INITIAL_SUPER_ADMIN_LOGIN, INITIAL_SUPER_ADMIN_PASSWORD (≥8), INITIAL_SITE_NAME ayarlayıp GET /api/seed çağırın. Ayrıntı: /kurulum ve env.example.",
+          "`npm run db:apply` ile deme süper kullanıcı dahil şemayı yükleyin veya boş tabloda `.env` ile `/api/seed`.",
       }
     : {}),
     ...(hasSupportTicketsTable ? {}
     : {
         optionalNote:
-          "Destek talepleri tablosu dahil olmak için drizzle/full-schema.sql dosyası uzak D1'de tam uygulanmış olmalı.",
+          "Şema eksik tablolar içeriyorsa `drizzle/full-schema.sql` dosyasını yeniden `npm run db:apply` ile uygulayın.",
       }),
   });
 }

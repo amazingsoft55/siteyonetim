@@ -99,7 +99,7 @@ export default function DashboardPage() {
         </div>
         <div className="text-left sm:text-right">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs font-semibold">
-            <Shield className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" /> Güvenli oturum · D1 bağlı
+            <Shield className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" /> Güvenli oturum · SQLite
           </div>
         </div>
       </div>

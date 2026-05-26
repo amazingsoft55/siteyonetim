@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 
 /**
- * D1 / SQLite hatayı yapılandırılabilir yanıta çevirir (tarayıcı ve Cloudflare Logs’ta teşhis).
+ * SQLite hatalarını yapılandırılabilir API yanıtına çevirir.
  */
 export function jsonSqlError(
   cause: unknown,
   fallback =
-    "Veritabanı sorgusu başarısız. Uzak D1 üzerinde şema uyumunu doğrulayın (bkz. drizzle/full-schema.sql).",
+    "Veritabanı sorgusu başarısız. Şema için `npm run db:apply` veya drizzle/full-schema.sql dosyasına bakın.",
 ): NextResponse {
   const detail = cause instanceof Error ? cause.message : String(cause);
   const schemaLikelyStale =
@@ -15,7 +15,7 @@ export function jsonSqlError(
     /\bSQLITE_ERROR\b.*no such\b/i.test(detail);
 
   const error = schemaLikelyStale
-    ? "Veritabanı şeması güncel değil veya eksik tablo/sütun var. Çalıştırın: npx wrangler d1 execute siteyonetim-db --remote --file=./drizzle/full-schema.sql"
+    ? "Veritabanı şeması güncel değil veya eksik tablo/sütun var. Çalıştırın: npm run db:apply (kaynak: drizzle/full-schema.sql)"
     : fallback;
 
   return NextResponse.json(

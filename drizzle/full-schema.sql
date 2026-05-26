@@ -1,17 +1,17 @@
 -- =============================================================================
--- Site Yönetimi — TEK SQL PAKETİ (Cloudflare D1 / SQLite)
+-- Site Yönetimi — TEK SQL PAKETİ (SQLite uyumlu: yerel dosya veya uyumlu sağlayıcı)
 -- =============================================================================
--- Bu dosyada iki blok vardır:
+-- İki blok vardır:
 --
---   A) OPSİYONEL VERİTABANI SİLME (tam sıfırlama) — başlık `[A]` altındaki blok `/* ... */`
---      ile yorumlanmıştır. Tamamen sıfırlamak için önce bu yorum işaretlerini kaldırıp yalnızca DROP
---      satırlarını çalıştırın; ardından CREATE bölümünü tekrar uygulayın.
+--   A) OPSİYONEL DROP (tam sıfırlama) — `[A]` bloğu şu anda `/* ... */` ile kapalıdır.
 --
---   B) ŞEMA — CREATE IF NOT EXISTS (günlük kullanım; güvenli tekrar)
+--   B) ŞEMA — CREATE IF NOT EXISTS
 --
---   Örnek (yalnızca şema, veri korunur):
---     npx wrangler d1 execute siteyonetim-db --local --file=./drizzle/full-schema.sql
---     npx wrangler d1 execute siteyonetim-db --remote --file=./drizzle/full-schema.sql
+--   C) OPSİYONEL DEME VERİ — ilk süper yönetici (INSERT OR IGNORE; tekrar uygulanabilir)
+--
+--   Yerelde:
+--     npm run db:apply
+--
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -173,3 +173,37 @@ CREATE TABLE IF NOT EXISTS `platform_insights` (
   `json` text NOT NULL,
   `updated_at` text DEFAULT (CURRENT_TIMESTAMP)
 );
+
+-- -----------------------------------------------------------------------------
+-- [C] OPSİYONEL DEME — süper yönetici girişi (üretimde mutlaka değiştirin)
+-- -----------------------------------------------------------------------------
+-- Varsayılan giriş:  e‑posta/yeniden ad alanı olarak `yonetici@demo.local`
+-- Varsayılan şifre:  Admin123!
+-- Güvenlik: `password_hash` bcrypt ($2b$10$…) salt’lıdır; düz şifreyi saklamıyoruz.
+
+INSERT OR IGNORE INTO `sites` (`id`, `name`, `address`) VALUES (
+  'seed-site-001',
+  'Demo Sitesi',
+  NULL
+);
+
+INSERT OR IGNORE INTO `users` (
+  `id`,
+  `name`,
+  `email_or_phone`,
+  `password_hash`,
+  `role`,
+  `site_id`,
+  `apartment_no`,
+  `must_change_password`
+) VALUES (
+  'seed-super-admin-001',
+  'Demir Süper Yönetici',
+  'yonetici@demo.local',
+  '$2b$10$MuBfPOngwL5IPpP9ZyZkq.ePPoFSHDYnzIevjpoDbtYs7JDmONypC',
+  'SUPER_ADMIN',
+  NULL,
+  NULL,
+  0
+);
+

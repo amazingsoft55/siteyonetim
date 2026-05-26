@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
-import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { platformInsights } from "@/db/schema";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export const maxDuration = 60;
 
@@ -31,8 +31,8 @@ export async function POST() {
     );
   }
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+  const d = acquireDatabase();
+  if (!d.ok) return databaseUnavailable();
 
   const siteUrl = getPublicSiteUrl();
   const qs = new URLSearchParams({

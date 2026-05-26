@@ -563,7 +563,7 @@ function SuperAdminUsersPageInner() {
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-zinc-500">
                     {users.length === 0 ?
-                      "Henüz kullanıcı yok. Süper yönetici hesabınız kurulum sırasında D1’e yazılmış olmalı; ardından buradan başka kullanıcılar oluşturulur."
+                      "Henüz kullanıcı yok. Süper yöneticiniz kurulum sırasında veritabanına yazılmış olmalı; buradan diğer hesapları oluşturabilirsiniz."
                     : siteListFilterId.trim() ?
                       "Bu site için eşleşen kullanıcı bulunamadı."
                     : "Liste boş."}

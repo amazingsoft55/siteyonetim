@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import Image from "next/image";
+import { SiteLogo } from "@/components/SiteLogo";
 import { browserApiUrl, getStoredApiBase, setStoredApiBase, getBrowserApiBase } from "@/lib/browser-api-base";
 export default function LoginPage() {
   const router = useRouter();
@@ -46,14 +46,14 @@ export default function LoginPage() {
         if (d.needsSeed) {
           setSetupBanner({
             kind: "warn",
-            text: "Henüz ilk site ve süper yönetici oluşturulmamış. Barındırıcı hesabınızda ortam değişkenlerini tanımlayıp GET /api/seed çağrısı yapılmalıdır.",
+            text: "Henüz ilk site veya kullanıcı kaydı yok. `npm run db:apply` ile deme verisini yükleyin veya boş veritabanında `/api/seed` ve `.env` kullanın.",
           });
           return;
         }
         if (d.ok && d.hasSupportTicketsTable === false) {
           setSetupBanner({
             kind: "warn",
-            text: "Destek talepleri tablosu eksik olabilir. drizzle/full-schema.sql dosyasını D1 üzerinde çalıştırın.",
+            text: "Bazı şema tabloları eksik olabilir. `drizzle/full-schema.sql` dosyasını `npm run db:apply` ile yeniden uygulayın.",
           });
           return;
         }
@@ -159,7 +159,7 @@ export default function LoginPage() {
           <div
             className="flex h-20 w-20 items-center justify-center rounded-2xl mb-4 shadow-md transition-all transform hover:scale-105 shadow-indigo-600/20"
           >
-            <Image src="/logo.png" alt="Site Logo" width={80} height={80} className="rounded-2xl object-cover" />
+            <SiteLogo width={72} height={72} rounded className="rounded-2xl" alt="Site Yönetimi logosu" />
           </div>
           <h2 className="text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-zinc-50">
             Siteniz Yönetimde
@@ -203,7 +203,7 @@ export default function LoginPage() {
         {errorMsg && (
           <div className="p-3.5 text-sm rounded-xl bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800/50 animate-in fade-in duration-200 space-y-2">
             <p>{errorMsg}</p>
-            {(errorMsg.includes("D1") || errorMsg.includes("bağlantı")) && (
+            {(errorMsg.includes("DATABASE") || errorMsg.includes("bağlantı") || errorMsg.includes("SQLite")) && (
               <p className="text-xs text-red-600/90 dark:text-red-300/90">
                 Sunucu tarafı yapılandırma sorunu olabilir. Bilgi için sistem yöneticinize iletin (
                 <Link href="/kurulum" className="font-bold underline">

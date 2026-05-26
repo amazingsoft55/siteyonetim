@@ -82,7 +82,7 @@ export default function SuperAdminDestekPage() {
       setErr(
         readJsonError(
           j,
-          "İletişim mesajları okunamadı. Uzak D1’de platform_public_contact tablosu için şemayı uygulayın.",
+          "İletişim mesajları okunamadı. Şemada `platform_public_contact` tablosu için `npm run db:apply` çalıştırın.",
         ),
       );
       setAdminList(adminData);

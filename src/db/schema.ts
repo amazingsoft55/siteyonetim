@@ -54,7 +54,7 @@ export const requests = sqliteTable("requests", {
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-/** Site başına görünen iletişim / aidat metinleri (D1 kalıcı) */
+/** Site başına görünen iletişim / aidat metinleri (kalıcı SQLite) */
 export const siteSettings = sqliteTable("site_settings", {
   siteId: text("site_id")
     .primaryKey()

@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { browserApiUrl } from "@/lib/browser-api-base";
-import Image from "next/image";
+import { SiteLogo } from "@/components/SiteLogo";
 
 function ResetFormInner() {
   const [token, setToken] = React.useState("");
@@ -65,7 +65,7 @@ function ResetFormInner() {
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-[#0b0f19] px-4 py-12">
       <div className="w-full max-w-md p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl space-y-6">
         <div className="flex justify-center">
-          <Image src="/logo.png" alt="" width={64} height={64} className="rounded-xl" />
+          <SiteLogo width={64} height={64} rounded className="rounded-xl" alt="" />
         </div>
         <h1 className="text-xl font-black text-center text-zinc-900 dark:text-white">Şifreyi sıfırlayın</h1>
         {okMsg ?

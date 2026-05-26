@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { and, desc, eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
-import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { requests as residentRequests } from "@/db/schema";
 import { dbRequestToClient, uiStatusToDb, type ClientRequestItem } from "@/lib/request-ui";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
@@ -20,8 +20,8 @@ export async function GET(request: Request) {
   const session = await getSession();
   if (!session) return forbidden();
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+  const d = acquireDatabase();
+  if (!d.ok) return databaseUnavailable();
 
   const { searchParams } = new URL(request.url);
   const siteHint = searchParams.get("siteId");
@@ -77,8 +77,8 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (!session || session.role !== "USER") return forbidden();
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+  const d = acquireDatabase();
+  if (!d.ok) return databaseUnavailable();
 
   if (!session.siteId) return forbiddenScope();
 
@@ -131,8 +131,8 @@ export async function PUT(request: Request) {
   const session = await getSession();
   if (!session || session.role !== "ADMIN" || !session.siteId) return forbidden();
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+  const d = acquireDatabase();
+  if (!d.ok) return databaseUnavailable();
 
   let raw: PutBody;
   try {

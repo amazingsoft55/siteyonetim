@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { and, count, eq, gte } from "drizzle-orm";
 
-import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { platformPublicContact } from "@/db/schema";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -59,8 +59,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Mesajınız en az birkaç cümle olmalıdır." }, { status: 400 });
   }
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+  const d = acquireDatabase();
+  if (!d.ok) return databaseUnavailable();
 
   try {
     const sinceIso = new Date(Date.now() - 3600_000).toISOString();

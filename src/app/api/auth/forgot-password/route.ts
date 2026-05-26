@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
-import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { users, passwordResetTokens } from "@/db/schema";
 import { sendPasswordResetEmail } from "@/lib/send-email";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 type Body = { email?: unknown };
 
@@ -35,8 +35,8 @@ export async function POST(request: Request) {
     return generic;
   }
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+  const d = acquireDatabase();
+  if (!d.ok) return databaseUnavailable();
 
   try {
     const rows = await d.db

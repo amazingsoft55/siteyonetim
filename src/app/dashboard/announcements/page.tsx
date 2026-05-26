@@ -25,7 +25,7 @@ export default function ResidentAnnouncementsPage() {
       const j: unknown = await res.json().catch(() => null);
       if (!res.ok || !Array.isArray(j)) {
         if (!cancelled) {
-          setLoadErr("Duyurular sunucudan alınamadı. Oturumunuzu veya D1 bağlantısını kontrol edin.");
+          setLoadErr("Duyurular sunucudan alınamıyor. Oturumu veya veritabanı bağlantısını kontrol edin.");
           setAnnouncements([]);
         }
         return;

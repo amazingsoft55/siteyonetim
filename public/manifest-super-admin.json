@@ -1,23 +1,23 @@
 {
-  "id": "/",
-  "name": "Site Yönetimi",
-  "short_name": "Site Yönetim",
-  "description": "Apartman ve Site Yönetim Uygulaması — sakin ve yönetici paneli.",
-  "start_url": "/",
+  "id": "/super-admin/",
+  "name": "Site Yönetimi — Süper Yönetici",
+  "short_name": "SY Süper",
+  "description": "Platform süper yönetici konsolu — siteler, kullanıcılar ve operasyon.",
+  "start_url": "/super-admin",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#fafafa",
-  "theme_color": "#4f46e5",
-  "orientation": "portrait",
+  "background_color": "#0b0f19",
+  "theme_color": "#312e81",
+  "orientation": "any",
   "icons": [
     {
-      "src": "/icons/app-mark.svg",
+      "src": "/icons/super-mark.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icons/app-mark.svg",
+      "src": "/icons/super-mark.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "maskable"

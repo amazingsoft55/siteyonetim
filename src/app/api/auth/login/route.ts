@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { getRequestContext } from "@cloudflare/next-on-pages";
-import type { D1Database } from "@cloudflare/workers-types";
 import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -8,7 +6,7 @@ import * as bcrypt from "bcryptjs";
 import { signJwt } from "@/lib/auth";
 import { cookies } from "next/headers";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 type LoginBody = {
   usernameOrPhone?: unknown;
@@ -26,24 +24,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Lütfen kullanıcı adı ve şifre girin." }, { status: 400 });
     }
 
-    let dbBinding: D1Database | undefined;
+    let db: ReturnType<typeof getDb>;
     try {
-      const { env } = getRequestContext() as { env: { DB?: D1Database } };
-      dbBinding = env.DB;
+      db = getDb();
     } catch {
+      const { resolveSqliteDbPath } = await import("@/lib/database-path");
+      const sqliteFilePath = resolveSqliteDbPath();
       return NextResponse.json(
         {
-          error:
-            "Veritabanına bağlanılamıyor. Geliştirmede next.config.mjs içinde setupDevPlatform gerekir; D1 şeması ve ilk kullanıcı için /kurulum rehberine bakın.",
-          code: "NO_CLOUDFLARE_CONTEXT",
+          error: "Veritabanı dosyası açılamıyor. Şemayı `npm run db:apply` ile uygulayıp yeniden deneyin.",
+          code: "DATABASE_UNAVAILABLE",
+          sqliteFilePath,
           kurulumUrl: "/kurulum",
           setupStatusUrl: "/api/setup/status",
         },
         { status: 503 },
       );
     }
-
-    const db = getDb(dbBinding);
 
     const loginColumns = {
       id: users.id,
@@ -73,12 +70,11 @@ export async function POST(request: Request) {
     try {
       await db.update(users).set({ lastLoginAt: nowIso }).where(eq(users.id, user.id));
     } catch {
-      /* Kolon/tablonun eski şemada olmaması girişi engellemesin; migrasyon için /kurulum */
+      /* kolon/tablonun eksik olduğu ortamları yumuşatmak için */
     }
 
     const mustChangePassword = user.mustChangePassword === true;
 
-    // JWT oluştur (mcp: kalıcı şifre bekleniyor)
     const token = await signJwt({
       id: user.id,
       role: user.role,
@@ -88,14 +84,13 @@ export async function POST(request: Request) {
       mcp: mustChangePassword,
     });
 
-    // Cookie olarak ayarla (Next.js 15+: cookies() async)
     const cookieStore = await cookies();
     cookieStore.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24, // 1 gün
+      maxAge: 60 * 60 * 24,
     });
 
     return NextResponse.json({
@@ -109,7 +104,8 @@ export async function POST(request: Request) {
         apartmentNo: user.apartmentNo,
       },
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: "Sunucu hatası", details: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: "Sunucu hatası", details: msg }, { status: 500 });
   }
 }

@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { desc, eq, inArray } from "drizzle-orm";
 
 import { getSession } from "@/lib/session";
-import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { payments, users } from "@/db/schema";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
@@ -32,13 +32,13 @@ function toClientPayment(row: {
   };
 }
 
-/** Ödemeler — D1 (sakin veya site yöneticisi görünümü) */
+/** Ödemeler API (sakin veya site yöneticisi görünümü) */
 export async function GET() {
   const session = await getSession();
   if (!session) return forbidden();
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+  const d = acquireDatabase();
+  if (!d.ok) return databaseUnavailable();
 
   try {
     const order = desc(payments.createdAt);
@@ -86,8 +86,8 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (!session) return forbidden();
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+  const d = acquireDatabase();
+  if (!d.ok) return databaseUnavailable();
 
   let raw: AdminPostBody;
   try {

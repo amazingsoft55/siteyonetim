@@ -24,7 +24,7 @@ export function setStoredApiBase(value: string): void {
   }
 }
 
-/** Boş string = göreli istek (önerilen: aynı Workers domain’i). */
+/** Boş string = göreli istek (önerilen: uygulamanın kendi kökeni). */
 export function getBrowserApiBase(): string {
   const stored = getStoredApiBase();
   const env =

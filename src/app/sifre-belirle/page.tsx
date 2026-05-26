@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { browserApiUrl } from "@/lib/browser-api-base";
-import Image from "next/image";
+import { SiteLogo } from "@/components/SiteLogo";
 
 export default function SifreBelirlePage() {
   const router = useRouter();
@@ -57,7 +57,7 @@ export default function SifreBelirlePage() {
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-[#0b0f19] px-4">
       <div className="w-full max-w-md p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl space-y-6">
         <div className="flex justify-center">
-          <Image src="/logo.png" alt="" width={64} height={64} className="rounded-xl" />
+          <SiteLogo width={64} height={64} rounded className="rounded-xl" alt="" />
         </div>
         <div className="text-center space-y-1">
           <h1 className="text-xl font-black text-zinc-900 dark:text-white">Kalıcı şifre belirleyin</h1>
