@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import type { LucideIcon } from "lucide-react";
 import {
   ShieldCheck,
   Users,
@@ -12,7 +13,24 @@ import {
   Settings,
   LogOut,
   UserSquare2,
+  LifeBuoy,
 } from "lucide-react";
+
+const ADMIN_MENU: {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+  /** Sadece atanmış site yöneticisi (ADMIN); süper yönetici admin panelinde görünmez */
+  siteManagerOnly?: boolean;
+}[] = [
+  { name: "Özet Durum", href: "/admin", icon: LayoutDashboard },
+  { name: "Sakin Hesapları", href: "/admin/kullanicilar", icon: UserSquare2, siteManagerOnly: true },
+  { name: "Sakinler & Aidatlar", href: "/admin/residents", icon: Users },
+  { name: "Duyuru Yönetimi", href: "/admin/announcements", icon: Megaphone },
+  { name: "Arıza & Talepler", href: "/admin/requests", icon: Wrench },
+  { name: "Platform Destek", href: "/admin/destek", icon: LifeBuoy, siteManagerOnly: true },
+  { name: "Site Ayarları", href: "/admin/settings", icon: Settings },
+];
 
 export default function AdminLayout({
   children,
@@ -21,8 +39,9 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [managerRole, setManagerRole] = React.useState<string | null>(null);
+  const [navReady, setNavReady] = React.useState(false);
 
-  // Protect route
   React.useEffect(() => {
     const raw = localStorage.getItem("user");
     if (!raw) {
@@ -31,7 +50,10 @@ export default function AdminLayout({
     }
     try {
       const u = JSON.parse(raw) as { role?: string };
-      if (u.role !== "ADMIN" && u.role !== "SUPER_ADMIN") {
+      const r = u.role ?? null;
+      setManagerRole(r);
+      setNavReady(true);
+      if (r !== "ADMIN" && r !== "SUPER_ADMIN") {
         router.push("/dashboard");
       }
     } catch {
@@ -39,19 +61,17 @@ export default function AdminLayout({
     }
   }, [router]);
 
-  const isActive = (path: string) => pathname === path;
+  const menuItems = React.useMemo(() => {
+    return ADMIN_MENU.filter((item) => {
+      if (!item.siteManagerOnly) return true;
+      return navReady && managerRole === "ADMIN";
+    });
+  }, [navReady, managerRole]);
 
-  const menuItems = [
-    { name: "Özet Durum", href: "/admin", icon: LayoutDashboard },
-    { name: "Sakinler & Aidatlar", href: "/admin/residents", icon: Users },
-    { name: "Duyuru Yönetimi", href: "/admin/announcements", icon: Megaphone },
-    { name: "Arıza & Talepler", href: "/admin/requests", icon: Wrench },
-    { name: "Site Ayarları", href: "/admin/settings", icon: Settings },
-  ];
+  const isActive = (path: string) => pathname === path;
 
   return (
     <div className="flex h-screen bg-rose-50/10 dark:bg-[#0b0f19] flex-col sm:flex-row transition-colors duration-300">
-      {/* Sidebar for Desktop */}
       <aside className="hidden sm:flex flex-col w-64 border-r border-rose-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 h-full p-4 shrink-0">
         <div className="flex items-center gap-2.5 px-2 py-4 mb-6 border-b border-zinc-100 dark:border-zinc-800/80">
           <div className="h-10 w-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-600/10">
@@ -59,10 +79,12 @@ export default function AdminLayout({
           </div>
           <div>
             <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Yönetici Paneli</p>
-            <p className="text-xs text-rose-600 dark:text-rose-400 font-bold tracking-wide uppercase">Yetkili Erişim</p>
+            <p className="text-xs text-rose-600 dark:text-rose-400 font-bold tracking-wide uppercase">
+              Yetkili Erişim
+            </p>
           </div>
         </div>
-        
+
         <nav className="flex-1 space-y-1.5">
           {menuItems.map((item) => {
             const active = isActive(item.href);
@@ -82,13 +104,13 @@ export default function AdminLayout({
             );
           })}
         </nav>
-        
+
         <div className="mt-auto border-t border-zinc-100 dark:border-zinc-800/80 pt-4 flex justify-between items-center px-2">
           <ThemeToggle />
-          <button 
+          <button
+            type="button"
             onClick={() => {
-              document.cookie =
-                "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+              document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
               localStorage.removeItem("user");
               router.push("/login");
             }}
@@ -100,7 +122,6 @@ export default function AdminLayout({
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 overflow-y-auto pb-20 sm:pb-0">
         <div className="sm:hidden flex items-center justify-between p-4 border-b border-rose-200/50 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 sticky top-0 z-10">
           <div className="flex items-center gap-2">
@@ -111,12 +132,9 @@ export default function AdminLayout({
           </div>
           <ThemeToggle />
         </div>
-        <div className="h-full">
-          {children}
-        </div>
+        <div className="h-full">{children}</div>
       </main>
 
-      {/* Bottom Navigation for Mobile */}
       <nav className="sm:hidden fixed bottom-0 w-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200/60 dark:border-zinc-800/80 flex items-center justify-around pb-safe z-50">
         {menuItems.map((item) => {
           const active = isActive(item.href);

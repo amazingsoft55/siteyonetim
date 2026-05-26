@@ -54,16 +54,17 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     nextStatus = raw.status;
   }
 
-  let reply = curr[0].superAdminReply;
-  if (typeof raw.superAdminReply === "string") {
-    reply = clamp(raw.superAdminReply, 8000) || null;
+  let nextReply = curr[0].superAdminReply ?? null;
+  if ("superAdminReply" in raw && typeof raw.superAdminReply === "string") {
+    const c = clamp(raw.superAdminReply, 8000);
+    nextReply = c.length > 0 ? c : null;
   }
 
   const now = new Date().toISOString();
 
   await d.db
     .update(adminSupportTickets)
-    .set({ status: nextStatus, superAdminReply: reply, updatedAt: now })
+    .set({ status: nextStatus, superAdminReply: nextReply, updatedAt: now })
     .where(eq(adminSupportTickets.id, id));
 
   const out = await d.db.select().from(adminSupportTickets).where(eq(adminSupportTickets.id, id)).limit(1);

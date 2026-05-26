@@ -37,8 +37,7 @@ export function buildSoftwareApplicationJsonLd(): Record<string, unknown> {
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web, Android, iOS",
     description:
-      "Aidat işlemleri, duyurular ve arıza talepleri dahil yaşam alanı yönetimini tek uygulamada toplayan çözüm.",
-    offers: { "@type": "Offer", price: "0", priceCurrency: "TRY" },
+      "Aidat işlemleri, duyurular ve arıza talepleri dahil yaşam alanı yönetimini tek uygulamada toplayan yazılım.",
     url: siteUrl,
     inLanguage: "tr-TR",
   };
