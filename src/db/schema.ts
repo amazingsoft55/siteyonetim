@@ -48,3 +48,18 @@ export const requests = sqliteTable("requests", {
   status: text("status", { enum: ["OPEN", "IN_PROGRESS", "RESOLVED"] }).notNull().default("OPEN"),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
+
+/** Site yöneticisinden platform süper yöneticisine destek talebi */
+export const adminSupportTickets = sqliteTable("admin_support_tickets", {
+  id: text("id").primaryKey(),
+  siteId: text("site_id").notNull().references(() => sites.id),
+  adminUserId: text("admin_user_id").notNull().references(() => users.id),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  status: text("status", { enum: ["OPEN", "IN_PROGRESS", "RESOLVED"] })
+    .notNull()
+    .default("OPEN"),
+  superAdminReply: text("super_admin_reply"),
+  updatedAt: text("updated_at").default(sql`(CURRENT_TIMESTAMP)`),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+});

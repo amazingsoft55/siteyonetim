@@ -3,7 +3,16 @@
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { ShieldCheck, Users, Megaphone, LayoutDashboard, Wrench, Settings, LogOut } from "lucide-react";
+import {
+  ShieldCheck,
+  Users,
+  Megaphone,
+  LayoutDashboard,
+  Wrench,
+  Settings,
+  LogOut,
+  UserSquare2,
+} from "lucide-react";
 
 export default function AdminLayout({
   children,
@@ -15,8 +24,17 @@ export default function AdminLayout({
 
   // Protect route
   React.useEffect(() => {
-    const isAdmin = localStorage.getItem("admin");
-    if (!isAdmin) {
+    const raw = localStorage.getItem("user");
+    if (!raw) {
+      router.push("/login");
+      return;
+    }
+    try {
+      const u = JSON.parse(raw) as { role?: string };
+      if (u.role !== "ADMIN" && u.role !== "SUPER_ADMIN") {
+        router.push("/dashboard");
+      }
+    } catch {
       router.push("/login");
     }
   }, [router]);
@@ -69,7 +87,9 @@ export default function AdminLayout({
           <ThemeToggle />
           <button 
             onClick={() => {
-              localStorage.removeItem("admin");
+              document.cookie =
+                "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+              localStorage.removeItem("user");
               router.push("/login");
             }}
             className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 font-bold hover:underline"

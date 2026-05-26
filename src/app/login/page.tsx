@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ShieldCheck, User } from "lucide-react";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 export default function LoginPage() {
   const router = useRouter();
@@ -67,15 +67,9 @@ export default function LoginPage() {
     }
   };
 
-  // Seed ile aynı demo hesapları: /api/seed (user-1 sakini, admin-1 yöneticisi)
-  const fillDemoResident = () => {
-    setUsernameOrPhone("5555555555");
-    setPassword("123456");
-    setErrorMsg("");
-  };
-
-  const fillDemoAdmin = () => {
-    setUsernameOrPhone("admin");
+  // Minimal seed (/api/seed): tek süper yönetici; diğer hesaplar süper admin panelinden açılır.
+  const fillDemoSuperAdmin = () => {
+    setUsernameOrPhone("superadmin");
     setPassword("admin123");
     setErrorMsg("");
   };
@@ -120,7 +114,7 @@ export default function LoginPage() {
                 value={usernameOrPhone}
                 onChange={(e) => setUsernameOrPhone(e.target.value)}
                 className="w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 py-3 px-4 text-zinc-950 dark:text-zinc-50 focus:ring-2 outline-none bg-zinc-50 dark:bg-zinc-950/50 transition-all focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Örn: 555 555 55 55 veya admin"
+                placeholder="E‑posta veya telefon numarası"
               />
             </div>
             <div>
@@ -171,27 +165,23 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Demo Fast Login Helpers */}
+        {/* İlk kurulum için hızlı doldurma */}
         <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800">
-          <p className="text-center text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-3">
-            Hızlı Demo Girişi
+          <p className="text-center text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">
+            Hızlı doldur
           </p>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={fillDemoResident}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold hover:bg-indigo-100/50 dark:hover:bg-indigo-950/40 transition-colors"
-            >
-              <User className="h-3.5 w-3.5" />
-              Test Sakini
-            </button>
-            <button
-              onClick={fillDemoAdmin}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 text-xs font-bold hover:bg-rose-100/50 dark:hover:bg-rose-950/40 transition-colors"
-            >
-              <ShieldCheck className="h-3.5 w-3.5" />
-              Test Yöneticisi
-            </button>
-          </div>
+          <p className="text-center text-[11px] text-zinc-500 dark:text-zinc-400 mb-3 leading-relaxed px-2">
+            <code className="text-[11px]">/api/seed</code> çalıştırdıktan sonra süper yöneticiyi kullanın;
+            site yöneticileri ve sakini süper panelden oluşturun.
+          </p>
+          <button
+            type="button"
+            onClick={fillDemoSuperAdmin}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 text-xs font-bold hover:bg-indigo-100/50 dark:hover:bg-indigo-950/40 transition-colors"
+          >
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Süper yönetici (seed)
+          </button>
         </div>
 
       </div>
