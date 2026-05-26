@@ -18,7 +18,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { readJsonError } from "@/lib/json-error";
+import { describeFailedResponse } from "@/lib/json-error";
 
 type SiteRow = { id: string; name: string; address: string | null; createdAt: string | null };
 
@@ -71,25 +71,51 @@ export default function SuperAdminDashboard() {
         fetch("/api/super-admin/dashboard", fetchOpts),
         fetch("/api/super-admin/sites", fetchOpts),
       ]);
+      const dashText = await dr.text();
       if (!dr.ok) {
-        const j: unknown = await dr.json().catch(() => null);
-        setLoadErr(readJsonError(j, "Özet yüklenemedi."));
+        setLoadErr(describeFailedResponse(dr.status, dashText, "Özet yüklenemedi."));
         setDash(null);
         return;
       }
-      const dJson = (await dr.json()) as DashboardPayload;
+
+      let dJson: DashboardPayload;
+      try {
+        dJson = JSON.parse(dashText) as DashboardPayload;
+      } catch {
+        setLoadErr(`Özet JSON okunamadı [HTTP ${dr.status}].`);
+        setDash(null);
+        return;
+      }
+      if (dJson && typeof dJson === "object" && dJson.ok === false) {
+        setLoadErr(
+          describeFailedResponse(
+            dr.status,
+            dashText,
+            "Özet API başarısız.",
+          ),
+        );
+        setDash(null);
+        return;
+      }
       setDash(dJson);
 
+      const sitesText = await sr.text();
       if (!sr.ok) {
-        const j: unknown = await sr.json().catch(() => null);
-        setLoadErr(readJsonError(j, "Siteler yüklenemedi (özet geldi)."));
+        setLoadErr(describeFailedResponse(sr.status, sitesText, "Siteler yüklenemedi (özet geldi)."));
         setSites([]);
         return;
       }
-      const sJson = (await sr.json()) as SiteRow[];
+      let sJson: unknown;
+      try {
+        sJson = JSON.parse(sitesText) as unknown;
+      } catch {
+        setLoadErr("Siteler listesi JSON olarak okunamadı.");
+        setSites([]);
+        return;
+      }
       setSites(Array.isArray(sJson) ? sJson : []);
     } catch {
-      setLoadErr("Bağlantı hatası. Ağı ve D1 bağlamını kontrol edin.");
+      setLoadErr("Bağlantı hatası (ağ veya tarayıcı isteği koparıldı). Tekrar deneyin.");
       setDash(null);
     }
   }, []);
@@ -120,9 +146,9 @@ export default function SuperAdminDashboard() {
     setLoadErr("");
     try {
       const res = await fetch("/api/super-admin/insights/pagespeed", { method: "POST", credentials: "include" });
-      const j: unknown = await res.json().catch(() => null);
+      const bodyText = await res.text().catch(() => "");
       if (!res.ok) {
-        setLoadErr(readJsonError(j, "Lighthouse güncellenemedi."));
+        setLoadErr(describeFailedResponse(res.status, bodyText, "Lighthouse güncellenemedi."));
       } else {
         await loadAll();
       }

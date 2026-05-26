@@ -18,6 +18,22 @@ export function readJsonError(payload: unknown, fallback: string): string {
   return formatApiError(payload, fallback);
 }
 
+/** `Response.text()` gövdesi + HTTP kodu ile kullanıcıya okunabilir hata (JSON / düz metin CF sayfası). */
+export function describeFailedResponse(status: number, bodyText: string, fallback: string): string {
+  const trimmed = bodyText.trim();
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    try {
+      return formatApiError(JSON.parse(trimmed) as unknown, `${fallback} [HTTP ${status}]`);
+    } catch {
+      /* aşağı düz metin */
+    }
+  }
+  const snippet = trimmed.length > 220 ? `${trimmed.slice(0, 220)}…` : trimmed;
+  return snippet ?
+      `${fallback} [HTTP ${status}] — ${snippet}`
+    : `${fallback} [HTTP ${status}]`;
+}
+
 export function readJsonNotice(payload: unknown): string | undefined {
   if (
     typeof payload === "object" &&
