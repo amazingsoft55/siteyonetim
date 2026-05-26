@@ -7,7 +7,10 @@ import * as bcrypt from "bcryptjs";
 
 export const runtime = "edge";
 
-/** Tek seferlik kurulum: 1 demo site + süper admin. Diğer tüm kullanıcılar panele eklenir. */
+/**
+ * Tek seferlik kurulum: boş DB'de ilk site + süper yönetici.
+ * Sabit kullanıcı/şifre yok — değerler yalnızca sunucu ortamından okunur.
+ */
 export async function GET() {
   try {
     let dbBinding: D1Database | undefined;
@@ -32,31 +35,61 @@ export async function GET() {
     if (existingSites.length > 0) {
       return NextResponse.json({
         message: "Veritabanı zaten kurulu.",
-        hint: 'Süper admin panelinden site ve kullanıcı ekleyebilirsiniz. Giriş: /login (ör. süper kullanıcı: "superadmin" / Şifre: kurulum sırasında belirlendi)',
+        hint: "Giriş için D1 kayıtlı kullanıcı adı ve şifrenizi kullanın. Yeni site ve kullanıcılar süper yönetici panelinden eklenir.",
       });
     }
 
-    const siteId = "site-1";
+    const login = process.env.INITIAL_SUPER_ADMIN_LOGIN?.trim() ?? "";
+    const pass = process.env.INITIAL_SUPER_ADMIN_PASSWORD ?? "";
+    const siteName = process.env.INITIAL_SITE_NAME?.trim() ?? "";
+    const siteAddress = process.env.INITIAL_SITE_ADDRESS?.trim() || null;
+    const adminName = process.env.INITIAL_SUPER_ADMIN_NAME?.trim() || "Sistem yöneticisi";
+
+    const missing: string[] = [];
+    if (!login) missing.push("INITIAL_SUPER_ADMIN_LOGIN");
+    if (!pass || pass.length < 8) missing.push("INITIAL_SUPER_ADMIN_PASSWORD (en az 8 karakter)");
+    if (!siteName) missing.push("INITIAL_SITE_NAME");
+
+    if (missing.length > 0) {
+      return NextResponse.json(
+        {
+          error: "İlk kurulum için ortam değişkenleri eksik veya şifre çok kısa.",
+          required: [
+            "INITIAL_SUPER_ADMIN_LOGIN — oturum (e‑posta veya telefon), D1 kullanıcı satırına yazılır",
+            "INITIAL_SUPER_ADMIN_PASSWORD — en az 8 karakter, yalnızca sunucuda",
+            "INITIAL_SITE_NAME — ilk site adı",
+          ],
+          optional: ["INITIAL_SITE_ADDRESS", "INITIAL_SUPER_ADMIN_NAME"],
+          missingEnvHints: missing,
+          kurulumUrl: "/kurulum",
+        },
+        { status: 400 },
+      );
+    }
+
+    const siteId = crypto.randomUUID();
+    const userId = crypto.randomUUID();
+
     await db.insert(sites).values({
       id: siteId,
-      name: "Gül Apartmanı",
-      address: "Çankaya, Ankara",
+      name: siteName,
+      address: siteAddress ?? undefined,
     });
 
-    const superAdminPassword = await bcrypt.hash("admin123", 10);
+    const passwordHash = await bcrypt.hash(pass, 10);
     await db.insert(users).values({
-      id: "superadmin",
-      name: "Sistem Süper Yöneticisi",
-      emailOrPhone: "superadmin",
-      passwordHash: superAdminPassword,
+      id: userId,
+      name: adminName,
+      emailOrPhone: login,
+      passwordHash,
       role: "SUPER_ADMIN",
     });
 
     return NextResponse.json({
       message:
-        'Kurulum tamamlandı: 1 örnek site + süper yönetici. Giriş: kullanıcı "superadmin" / şifre "admin123" (anında değiştirin). Yöneticiler ve sakin kullanıcılar: Süper Admin → Kullanıcılar.',
+        "Kurulum tamamlandı: ilk site ve süper yönetici D1'e kaydedildi. Giriş için tanımladığınız INITIAL_SUPER_ADMIN_LOGIN ve şifre ile /login üzerinden oturum açın. Şifre yanıtta ve loglarda yer almaz.",
       siteId,
-      superAdminLogin: "superadmin",
+      userId,
     });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);

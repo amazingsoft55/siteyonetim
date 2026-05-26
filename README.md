@@ -12,9 +12,12 @@ npm run db:apply:local
 
 Uzak D1 için: `npm run db:apply:remote`
 
-2. **Süper admin seed** — tarayıcıda açın: **`/api/seed`** (bir kez çalıştırılır).
+2. **İlk kurulum (seed)** — Cloudflare Secrets veya yerelde `.dev.vars` içinde tanımlayın (`env.example`):  
+   `INITIAL_SUPER_ADMIN_LOGIN`, `INITIAL_SUPER_ADMIN_PASSWORD` (≥8 karakter), `INITIAL_SITE_NAME`  
+   İsteğe bağlı: `INITIAL_SITE_ADDRESS`, `INITIAL_SUPER_ADMIN_NAME`  
+   Ardından tarayıcıda **`/api/seed`** (GET, bir kez). Yanıtta şifre dönmaz; giriş yalnızca tanımladığınız D1 kullanıcısı ile yapılır.
 
-3. **Giriş** — varsayılan: `superadmin` / `admin123` (anında değiştirin). Panel: **`/super-admin`**  
+3. **Giriş** — **`/login`** ile veritabanındaki kullanıcı. Süper yönetici paneli: **`/super-admin`**  
    Yerel bağlantı teşhisi: **`/api/setup/status`** ve rehber: **`/kurulum`**.
 
 Yerelde `npm run dev` sırasında D1 bağlamı için `next.config.mjs` içinde **`setupDevPlatform`** kullanılır (`@cloudflare/next-on-pages/next-dev`). Sorun çıkarsa ortam dosyasında `SKIP_DEV_PLATFORM=1` ile devre dışı bırakılabilir (D1 bağlanmaz; sadece teşhis).

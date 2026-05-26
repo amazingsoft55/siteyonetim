@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { PresenceHeartbeat } from "@/components/PresenceHeartbeat";
 import { Home, CreditCard, Megaphone, Wrench, User, LogOut } from "lucide-react";
 
 export default function DashboardLayout({
@@ -32,6 +33,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-zinc-50 dark:bg-[#0b0f19] flex-col sm:flex-row transition-colors duration-300">
+      <PresenceHeartbeat />
       {/* Sidebar for Desktop */}
       <aside className="hidden sm:flex flex-col w-64 border-r border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 h-full p-4">
         <div className="flex items-center gap-3 px-2 py-4 mb-6 border-b border-zinc-100 dark:border-zinc-800/80">

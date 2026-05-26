@@ -1,4 +1,4 @@
-import { sqliteTable, text, real } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real, primaryKey } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 
 export const sites = sqliteTable("sites", {
@@ -16,6 +16,7 @@ export const users = sqliteTable("users", {
   role: text("role", { enum: ["SUPER_ADMIN", "ADMIN", "USER"] }).notNull().default("USER"),
   siteId: text("site_id").references(() => sites.id),
   apartmentNo: text("apartment_no"),
+  lastLoginAt: text("last_login_at"),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
@@ -62,4 +63,33 @@ export const adminSupportTickets = sqliteTable("admin_support_tickets", {
   superAdminReply: text("super_admin_reply"),
   updatedAt: text("updated_at").default(sql`(CURRENT_TIMESTAMP)`),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+/** Çevrimiçi yaklaşımı: kimlik doğrulamalı sayfadan periyodik ping */
+export const userPresence = sqliteTable("user_presence", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id),
+  lastPath: text("last_path"),
+  lastPingAt: text("last_ping_at").notNull(),
+});
+
+/** Herkese açık sayfa görüntülemeleri (tarayıcı beacon; gündüz/partition bazlı sayım) */
+export const pageVisitsDaily = sqliteTable(
+  "page_visits_daily",
+  {
+    day: text("day").notNull(),
+    pathname: text("pathname").notNull(),
+    cnt: integer("cnt").notNull().default(1),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.day, t.pathname] }),
+  }),
+);
+
+/** PageSpeed Lighthouse önbelleği (JSON) */
+export const platformInsights = sqliteTable("platform_insights", {
+  key: text("key").primaryKey(),
+  json: text("json").notNull(),
+  updatedAt: text("updated_at").default(sql`(CURRENT_TIMESTAMP)`),
 });

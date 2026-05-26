@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { PresenceHeartbeat } from "@/components/PresenceHeartbeat";
 import type { LucideIcon } from "lucide-react";
 import {
   ShieldCheck,
@@ -72,6 +73,7 @@ export default function AdminLayout({
 
   return (
     <div className="flex h-screen bg-rose-50/10 dark:bg-[#0b0f19] flex-col sm:flex-row transition-colors duration-300">
+      <PresenceHeartbeat />
       <aside className="hidden sm:flex flex-col w-64 border-r border-rose-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 h-full p-4 shrink-0">
         <div className="flex items-center gap-2.5 px-2 py-4 mb-6 border-b border-zinc-100 dark:border-zinc-800/80">
           <div className="h-10 w-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-600/10">

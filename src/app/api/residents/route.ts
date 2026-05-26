@@ -104,11 +104,6 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "ID parametresi eksik." }, { status: 400 });
     }
 
-    // Do not allow deleting Ahmet Yılmaz (id: 1) for demo security
-    if (id === 1) {
-      return NextResponse.json({ error: "Bu sakin demo güvenliği için silinemez." }, { status: 403 });
-    }
-
     db.residents = db.residents.filter(r => r.id !== id);
     await writeDb(db);
 

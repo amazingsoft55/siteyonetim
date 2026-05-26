@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Veritabanına bağlanılamıyor. Geliştirmede next.config.mjs içinde setupDevPlatform gerekir; sonra D1 şemasını ve /api/seed adımlarını uygulayın.",
+            "Veritabanına bağlanılamıyor. Geliştirmede next.config.mjs içinde setupDevPlatform gerekir; D1 şeması ve ilk kullanıcı için /kurulum rehberine bakın.",
           code: "NO_CLOUDFLARE_CONTEXT",
           kurulumUrl: "/kurulum",
           setupStatusUrl: "/api/setup/status",
@@ -57,6 +57,9 @@ export async function POST(request: Request) {
     if (!isValidPassword) {
       return NextResponse.json({ error: "Hatalı giriş bilgileri." }, { status: 401 });
     }
+
+    const nowIso = new Date().toISOString();
+    await db.update(users).set({ lastLoginAt: nowIso }).where(eq(users.id, user.id));
 
     // JWT oluştur
     const token = await signJwt({

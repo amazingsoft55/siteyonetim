@@ -9,7 +9,7 @@ const base = getPublicSiteUrl();
 export const metadata: Metadata = {
   title: "Kurulum ve veritabanı",
   description:
-    "Site Yönetimi: D1 şeması, yerel geliştirme, süper yönetici seed ve sık yapılan hataların çözümü.",
+    "Site Yönetimi: D1 şeması, yerel geliştirme, ilk kullanıcı (ortam + seed) ve sık yapılan hataların çözümü.",
   alternates: { canonical: `${base}/kurulum` },
   robots: { index: true, follow: true },
 };
@@ -46,23 +46,34 @@ export default function KurulumPage() {
         </section>
 
         <section className="rounded-2xl border border-indigo-200/70 dark:border-indigo-900/50 bg-indigo-50/40 dark:bg-indigo-950/20 p-6 space-y-3">
-          <h2 className="text-lg font-bold text-indigo-900 dark:text-indigo-100">2 · Süper admin ve örnek site (seed)</h2>
+          <h2 className="text-lg font-bold text-indigo-900 dark:text-indigo-100">2 · İlk site ve süper yönetici (seed)</h2>
+          <p className="text-sm text-indigo-950/80 dark:text-indigo-100/85">
+            Kodda sabit kullanıcı veya şifre yok. Yerelde <code className="text-xs bg-white/60 dark:bg-zinc-900/60 px-1 rounded">.dev.vars</code>,
+            üretimde Cloudflare <strong>Secrets</strong> ile şu değişkenleri tanımlayın (bkz. <code>env.example</code>):
+          </p>
+          <ul className="text-sm list-disc pl-5 space-y-1 text-indigo-900/90 dark:text-indigo-200/90 font-mono text-xs sm:text-sm">
+            <li>INITIAL_SUPER_ADMIN_LOGIN</li>
+            <li>INITIAL_SUPER_ADMIN_PASSWORD (en az 8 karakter)</li>
+            <li>INITIAL_SITE_NAME</li>
+            <li className="list-none pl-0 text-indigo-800/80 dark:text-indigo-300/80 font-sans text-xs">
+              İsteğe bağlı: INITIAL_SITE_ADDRESS, INITIAL_SUPER_ADMIN_NAME
+            </li>
+          </ul>
           <p className="text-sm text-indigo-950/80 dark:text-indigo-100/85">
             Şema uygulandıktan sonra tarayıcıda{" "}
             <Link href="/api/seed" className="font-bold underline">
               GET /api/seed
             </Link>{" "}
-            adresini açın. İlk kez oluşturur: örnek site + süper admin.
+            çağrısı ilk siteyi ve süper yöneticiyi D1&apos;e yazar. Yanıtta şifre dönmez; giriş için yalnızca sizin
+            belirlediğiniz oturum adı ve şifre geçerlidir.
           </p>
-          <ul className="text-sm list-disc pl-5 space-y-1 text-indigo-900/90 dark:text-indigo-200/90">
-            <li>
-              Varsayılan giriş (hemen üretimde değiştirin): <strong>superadmin</strong> / <strong>admin123</strong>
-            </li>
-            <li>
-              Panele sonra <Link href="/super-admin/kullanicilar" className="underline font-semibold">Siteler ve kullanıcılar</Link> ile
-              yönetici ve sakin hesapları açın.
-            </li>
-          </ul>
+          <p className="text-sm text-indigo-950/80 dark:text-indigo-100/85">
+            Ardından{" "}
+            <Link href="/super-admin/kullanicilar" className="underline font-semibold">
+              Siteler ve kullanıcılar
+            </Link>{" "}
+            üzerinden diğer yönetici ve sakin hesaplarını oluşturun.
+          </p>
         </section>
 
         <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 space-y-3">

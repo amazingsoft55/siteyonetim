@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `role` text NOT NULL DEFAULT 'USER',
   `site_id` text,
   `apartment_no` text,
+  `last_login_at` text,
   `created_at` text DEFAULT (CURRENT_TIMESTAMP),
   FOREIGN KEY (`site_id`) REFERENCES `sites`(`id`)
 );
@@ -75,3 +76,23 @@ CREATE TABLE IF NOT EXISTS `admin_support_tickets` (
 
 CREATE INDEX IF NOT EXISTS `idx_admin_support_site` ON `admin_support_tickets` (`site_id`);
 CREATE INDEX IF NOT EXISTS `idx_admin_support_status` ON `admin_support_tickets` (`status`);
+
+CREATE TABLE IF NOT EXISTS `user_presence` (
+  `user_id` text PRIMARY KEY NOT NULL,
+  `last_path` text,
+  `last_ping_at` text NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `page_visits_daily` (
+  `day` text NOT NULL,
+  `pathname` text NOT NULL,
+  `cnt` integer NOT NULL DEFAULT 1,
+  PRIMARY KEY (`day`, `pathname`)
+);
+
+CREATE TABLE IF NOT EXISTS `platform_insights` (
+  `key` text PRIMARY KEY NOT NULL,
+  `json` text NOT NULL,
+  `updated_at` text DEFAULT (CURRENT_TIMESTAMP)
+);

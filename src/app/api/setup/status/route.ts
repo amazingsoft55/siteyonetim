@@ -25,7 +25,7 @@ export async function GET() {
           "next.config.mjs içinde NODE_ENV=development iken setupDevPlatform çalışır (SKIP_DEV_PLATFORM=1 ile kapatabilirsiniz).",
           "wrangler.toml içinde binding adı tam olarak DB olmalı.",
           `Şema: wrangler d1 execute siteyonetim-db --local --file=./drizzle/full-schema.sql`,
-          "Örnek veri: Tarayıcıda GET /api/seed ardından /login → superadmin / admin123",
+          "İlk kayıt: .dev.vars veya Secrets ile INITIAL_SUPER_ADMIN_LOGIN, INITIAL_SUPER_ADMIN_PASSWORD, INITIAL_SITE_NAME tanımlayın; ardından GET /api/seed (şifre yanıtta dönmez).",
         ],
       },
       { status: 503 },
@@ -74,7 +74,12 @@ export async function GET() {
     usersCount,
     needsSeed,
     hasSupportTicketsTable,
-    ...(needsSeed ? { nextStep: "/api/seed (GET) adresini tarayıcıda açın." } : {}),
+    ...(needsSeed ?
+      {
+        nextStep:
+          "Ortamda INITIAL_SUPER_ADMIN_LOGIN, INITIAL_SUPER_ADMIN_PASSWORD (≥8), INITIAL_SITE_NAME ayarlayıp GET /api/seed çağırın. Ayrıntı: /kurulum ve env.example.",
+      }
+    : {}),
     ...(hasSupportTicketsTable ? {}
     : {
         optionalNote:

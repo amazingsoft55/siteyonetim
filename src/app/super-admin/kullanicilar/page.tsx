@@ -460,7 +460,7 @@ export default function SuperAdminUsersPage() {
               {users.length === 0 && !loading && (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-zinc-500">
-                    Henüz kullanıcı yok. Seed ile süper admin gelir.
+                    Henüz kullanıcı yok. Süper yönetici hesabınız kurulum sırasında D1’e yazılmış olmalı; ardından buradan başka kullanıcılar oluşturulur.
                   </td>
                 </tr>
               )}

@@ -66,20 +66,8 @@ export async function loginUser(payload: any) {
       body: JSON.stringify(payload)
     });
   } catch (error) {
-    // Client-side authentication fallback
-    const { usernameOrPhone, password, isAdmin } = payload;
-    if (isAdmin) {
-      if (usernameOrPhone.toLowerCase() === "admin" && password === "admin123") {
-        return { success: true, role: "admin", name: "Yönetici" };
-      }
-      throw new Error("Hatalı yönetici bilgileri! (Demo: admin / admin123)");
-    } else {
-      const cleaned = usernameOrPhone.replace(/\D/g, "");
-      if (cleaned === "5555555555" && password === "123456") {
-        return { success: true, role: "user", name: "Ahmet Yılmaz" };
-      }
-      throw new Error("Hatalı sakin bilgileri! (Demo: 555 555 5555 / 123456)");
-    }
+    const msg = error instanceof Error ? error.message : "Giriş başarısız.";
+    throw new Error(msg);
   }
 }
 
