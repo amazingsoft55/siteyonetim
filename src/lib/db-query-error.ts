@@ -9,7 +9,10 @@ export function jsonSqlError(
     "Veritabanı sorgusu başarısız. Uzak D1 üzerinde şema uyumunu doğrulayın (bkz. drizzle/full-schema.sql).",
 ): NextResponse {
   const detail = cause instanceof Error ? cause.message : String(cause);
-  const schemaLikelyStale = /no such table|no such column/i.test(detail);
+  const schemaLikelyStale =
+    /no such table|no such column/i.test(detail) ||
+    /\bSQLite error:?\s*no such\b/i.test(detail) ||
+    /\bSQLITE_ERROR\b.*no such\b/i.test(detail);
 
   const error = schemaLikelyStale
     ? "Veritabanı şeması güncel değil veya eksik tablo/sütun var. Çalıştırın: npx wrangler d1 execute siteyonetim-db --remote --file=./drizzle/full-schema.sql"

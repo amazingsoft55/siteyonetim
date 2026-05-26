@@ -15,15 +15,16 @@ import {
 export const runtime = "edge";
 
 export async function GET() {
-  const session = await getSession();
-  if (!session || session.role !== "SUPER_ADMIN") {
-    return NextResponse.json({ error: "Bu özet için süper yönetici gereklidir." }, { status: 403 });
-  }
+  try {
+    const session = await getSession();
+    if (!session || session.role !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Bu özet için süper yönetici gereklidir." }, { status: 403 });
+    }
 
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
+    const d = tryGetDb();
+    if (!d.ok) return jsonDbUnavailable(d.error);
 
-  const freshAt = new Date().toISOString();
+    const freshAt = new Date().toISOString();
   let dbLatencyMs: number | null = null;
   try {
     const t0 = Date.now();
@@ -114,35 +115,80 @@ export async function GET() {
     pageSpeedCache = null;
   }
 
-  const psiKey = !!process.env.GOOGLE_PAGESPEED_API_KEY?.trim();
+    const psiKey = !!process.env.GOOGLE_PAGESPEED_API_KEY?.trim();
 
-  return NextResponse.json({
-    ok: true,
-    freshAt,
-    dbLatencyMs,
-    presenceWindowMinutes: 3,
-    totals: { sites: sitesCount, users: totalUsers, byRole },
-    live: {
-      onlineAuthenticatedUsersApprox: onlineUsers,
-      distinctLoginsLast24h: logins24h,
-    },
-    publicSite: {
-      pageViewsTrackedTodayUtc: publicViewsToday,
-      coverage:
-        "Yalnızca / · /iletisim · /hakkimizda · /kurulum; bot UA filtrelenir; oturumsuz kullanıcılar dahil.",
-    },
-    operations: {
-      openAdminSupportTickets: openSupport,
-      openResidentRequests: openResidentReq,
-    },
-    pageSpeed: {
-      configured: psiKey,
-      cached: pageSpeedCache,
-      analyzeHint: psiKey ?
-        'POST /api/super-admin/insights/pagespeed (UI’deki “Lighthouse güncelle” düğmesi)'
-      : "Bulut konsolundan Google PageSpeed Insights API anahtarı ekleyin (GOOGLE_PAGESPEED_API_KEY).",
-    },
-    platformExplain:
-      "Workers CPU yüzdesi kullanıcı uçundan okunmaz (Cloudflare sınırlaması); D1 yanıt süresi Lighthouse ve sayım verileri gerçektir.",
-  });
+    const body = {
+      ok: true,
+      freshAt,
+      dbLatencyMs,
+      presenceWindowMinutes: 3,
+      totals: { sites: sitesCount, users: totalUsers, byRole },
+      live: {
+        onlineAuthenticatedUsersApprox: onlineUsers,
+        distinctLoginsLast24h: logins24h,
+      },
+      publicSite: {
+        pageViewsTrackedTodayUtc: publicViewsToday,
+        coverage:
+          "Yalnızca / · /iletisim · /hakkimizda · /kurulum; bot UA filtrelenir; oturumsuz kullanıcılar dahil.",
+      },
+      operations: {
+        openAdminSupportTickets: openSupport,
+        openResidentRequests: openResidentReq,
+      },
+      pageSpeed: {
+        configured: psiKey,
+        cached: pageSpeedCache,
+        analyzeHint: psiKey ?
+          'POST /api/super-admin/insights/pagespeed (UI’deki “Lighthouse güncelle” düğmesi)'
+        : "Bulut konsolundan Google PageSpeed Insights API anahtarı ekleyin (GOOGLE_PAGESPEED_API_KEY).",
+      },
+      platformExplain:
+        "Workers CPU yüzdesi kullanıcı uçundan okunmaz (Cloudflare sınırlaması); D1 yanıt süresi Lighthouse ve sayım verileri gerçektir.",
+    };
+
+    try {
+      return NextResponse.json(body);
+    } catch (serializeErr) {
+      const msg = serializeErr instanceof Error ? serializeErr.message : String(serializeErr);
+      return NextResponse.json(
+        {
+          ok: true,
+          freshAt,
+          dbLatencyMs,
+          presenceWindowMinutes: 3,
+          totals: { sites: sitesCount, users: totalUsers, byRole },
+          live: {
+            onlineAuthenticatedUsersApprox: onlineUsers,
+            distinctLoginsLast24h: logins24h,
+          },
+          publicSite: {
+            pageViewsTrackedTodayUtc: publicViewsToday,
+            coverage: body.publicSite.coverage,
+          },
+          operations: body.operations,
+          pageSpeed: {
+            configured: psiKey,
+            cached: null,
+            analyzeHint: `Önbellek serileştirilemedi: ${msg}`,
+          },
+          platformExplain: body.platformExplain,
+        },
+        { status: 200 },
+      );
+    }
+  } catch (e) {
+    const detail = e instanceof Error ? e.message : String(e);
+    console.error("[api/super-admin/dashboard GET]", detail);
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Özet oluşturulamadı (beklenmeyen sunucu hatası).",
+        code: "DASHBOARD_UNHANDLED",
+        detail,
+        kurulumUrl: "/kurulum",
+      },
+      { status: 500 },
+    );
+  }
 }

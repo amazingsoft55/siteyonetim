@@ -66,7 +66,11 @@ export default function SuperAdminDashboard() {
   const loadAll = React.useCallback(async () => {
     setLoadErr("");
     try {
-      const [dr, sr] = await Promise.all([fetch("/api/super-admin/dashboard"), fetch("/api/super-admin/sites")]);
+      const fetchOpts = { credentials: "include" as const };
+      const [dr, sr] = await Promise.all([
+        fetch("/api/super-admin/dashboard", fetchOpts),
+        fetch("/api/super-admin/sites", fetchOpts),
+      ]);
       if (!dr.ok) {
         const j: unknown = await dr.json().catch(() => null);
         setLoadErr(readJsonError(j, "Özet yüklenemedi."));

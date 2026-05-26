@@ -38,7 +38,7 @@ export default function SuperAdminDestekPage() {
 
   async function reload() {
     setErr("");
-    const res = await fetch("/api/super-admin/support-tickets");
+    const res = await fetch("/api/super-admin/support-tickets", { credentials: "include" });
     if (!res.ok) {
       const j: unknown = await res.json().catch(() => null);
       setErr(readJsonError(j, "Liste alınamadı."));
@@ -75,6 +75,7 @@ export default function SuperAdminDestekPage() {
     setErr("");
     const res = await fetch(`/api/super-admin/support-tickets/${active.id}`, {
       method: "PATCH",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status, superAdminReply: reply }),
     });

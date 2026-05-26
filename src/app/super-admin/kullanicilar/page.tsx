@@ -61,9 +61,10 @@ export default function SuperAdminUsersPage() {
 
   const reload = React.useCallback(async () => {
     setErr("");
+    const cred = { credentials: "include" as const };
     const [sr, ur] = await Promise.all([
-      fetch("/api/super-admin/sites"),
-      fetch("/api/super-admin/users"),
+      fetch("/api/super-admin/sites", cred),
+      fetch("/api/super-admin/users", cred),
     ]);
     if (!sr.ok) {
       const j: unknown = await sr.json().catch(() => null);
@@ -118,6 +119,7 @@ export default function SuperAdminUsersPage() {
     setMsg("");
     const res = await fetch("/api/super-admin/sites", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: newSiteName.trim(),
@@ -145,6 +147,7 @@ export default function SuperAdminUsersPage() {
     }
     const res = await fetch("/api/super-admin/users", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: nuName.trim(),
@@ -195,6 +198,7 @@ export default function SuperAdminUsersPage() {
 
     const res = await fetch(`/api/super-admin/users/${editOpen.id}`, {
       method: "PATCH",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
@@ -220,7 +224,7 @@ export default function SuperAdminUsersPage() {
       return;
     setErr("");
     setMsg("");
-    const res = await fetch(`/api/super-admin/users/${u.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/super-admin/users/${u.id}`, { method: "DELETE", credentials: "include" });
     const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
       setErr(readJsonError(j, "Silinemedi."));

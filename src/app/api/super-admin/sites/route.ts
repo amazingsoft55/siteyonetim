@@ -12,17 +12,31 @@ function forbidden() {
 }
 
 export async function GET() {
-  const session = await getSession();
-  if (!session || session.role !== "SUPER_ADMIN") return forbidden();
-
-  const d = tryGetDb();
-  if (!d.ok) return jsonDbUnavailable(d.error);
-
   try {
-    const list = await d.db.select().from(sites);
-    return NextResponse.json(list);
+    const session = await getSession();
+    if (!session || session.role !== "SUPER_ADMIN") return forbidden();
+
+    const d = tryGetDb();
+    if (!d.ok) return jsonDbUnavailable(d.error);
+
+    try {
+      const list = await d.db.select().from(sites);
+      return NextResponse.json(list);
+    } catch (e) {
+      return jsonSqlError(e, "Siteler listelenemedi.");
+    }
   } catch (e) {
-    return jsonSqlError(e, "Siteler listelenemedi.");
+    const detail = e instanceof Error ? e.message : String(e);
+    console.error("[api/super-admin/sites GET]", detail);
+    return NextResponse.json(
+      {
+        error: "Siteler listelenemedi (beklenmeyen sunucu hatası).",
+        code: "UNHANDLED",
+        detail,
+        kurulumUrl: "/kurulum",
+      },
+      { status: 500 },
+    );
   }
 }
 
