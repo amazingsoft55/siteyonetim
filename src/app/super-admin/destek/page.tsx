@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { readJsonError } from "@/lib/json-error";
 import { ArrowLeft, LifeBuoy } from "lucide-react";
 
 type Row = {
@@ -39,8 +40,8 @@ export default function SuperAdminDestekPage() {
     setErr("");
     const res = await fetch("/api/super-admin/support-tickets");
     if (!res.ok) {
-      const j = await res.json().catch(() => ({}));
-      setErr(typeof j?.error === "string" ? j.error : "Liste alınamadı.");
+      const j: unknown = await res.json().catch(() => null);
+      setErr(readJsonError(j, "Liste alınamadı."));
       return;
     }
     const j = (await res.json()) as Row[];
@@ -77,10 +78,10 @@ export default function SuperAdminDestekPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status, superAdminReply: reply }),
     });
-    const j = await res.json().catch(() => ({}));
+    const j: unknown = await res.json().catch(() => null);
     setSaving(false);
     if (!res.ok) {
-      setErr(typeof j?.error === "string" ? j.error : "Kaydedilemedi.");
+      setErr(readJsonError(j, "Kaydedilemedi."));
       return;
     }
     setMsg("Güncellendi.");

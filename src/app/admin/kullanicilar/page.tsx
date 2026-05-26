@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { readJsonError, readJsonNotice } from "@/lib/json-error";
 import { Pencil, Trash2 } from "lucide-react";
 
 type UserRow = {
@@ -35,8 +36,8 @@ export default function AdminResidentsAccountsPage() {
     setErr("");
     const res = await fetch("/api/admin/users");
     if (!res.ok) {
-      const j = await res.json().catch(() => ({}));
-      setErr(typeof j?.error === "string" ? j.error : "Liste alınamadı.");
+      const j: unknown = await res.json().catch(() => null);
+      setErr(readJsonError(j, "Liste alınamadı."));
       return;
     }
     const j = (await res.json()) as UserRow[];
@@ -79,9 +80,9 @@ export default function AdminResidentsAccountsPage() {
         apartmentNo: nuApt.trim() || undefined,
       }),
     });
-    const j = await res.json().catch(() => ({}));
+    const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
-      setErr(typeof j?.error === "string" ? j.error : "Oluşturulamadı.");
+      setErr(readJsonError(j, "Oluşturulamadı."));
       return;
     }
     void j;
@@ -115,13 +116,14 @@ export default function AdminResidentsAccountsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const j = await res.json().catch(() => ({}));
+    const j: unknown = await res.json().catch(() => null);
     setEdSaving(false);
     if (!res.ok) {
-      setErr(typeof j?.error === "string" ? j.error : "Güncellenemedi.");
+      setErr(readJsonError(j, "Güncellenemedi."));
       return;
     }
-    if (typeof j?.notice === "string") setMsg(j.notice);
+    const n = readJsonNotice(j);
+    if (n) setMsg(n);
     else setMsg("Kaydedildi.");
     setEditOpen(null);
     await reload();
@@ -131,9 +133,9 @@ export default function AdminResidentsAccountsPage() {
     if (!window.confirm(`${u.name} silinsin mi?`)) return;
     setErr("");
     const res = await fetch(`/api/admin/users/${u.id}`, { method: "DELETE" });
-    const j = await res.json().catch(() => ({}));
+    const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
-      setErr(typeof j?.error === "string" ? j.error : "Silinemedi.");
+      setErr(readJsonError(j, "Silinemedi."));
       return;
     }
     void j;

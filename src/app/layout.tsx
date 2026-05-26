@@ -53,7 +53,6 @@ export default function RootLayout({
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-background text-foreground">
         {jsonLdBlocks.map((data, i) => (
           <script
-            // eslint-disable-next-line react/no-danger
             key={i}
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}

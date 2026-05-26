@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { readJsonError, readJsonNotice } from "@/lib/json-error";
 import { Shield, ArrowLeft, LogOut, Trash2, Pencil } from "lucide-react";
 
 type SiteRow = {
@@ -55,28 +56,28 @@ export default function SuperAdminUsersPage() {
   const [edApt, setEdApt] = React.useState("");
   const [edSaving, setEdSaving] = React.useState(false);
 
-  async function reload() {
+  const reload = React.useCallback(async () => {
     setErr("");
     const [sr, ur] = await Promise.all([
       fetch("/api/super-admin/sites"),
       fetch("/api/super-admin/users"),
     ]);
     if (!sr.ok) {
-      const j = await sr.json().catch(() => ({}));
-      setErr(typeof j?.error === "string" ? j.error : "Siteler alınamadı.");
+      const j: unknown = await sr.json().catch(() => null);
+      setErr(readJsonError(j, "Siteler alınamadı."));
       return;
     }
     if (!ur.ok) {
-      const j = await ur.json().catch(() => ({}));
-      setErr(typeof j?.error === "string" ? j.error : "Kullanıcılar alınamadı.");
+      const j: unknown = await ur.json().catch(() => null);
+      setErr(readJsonError(j, "Kullanıcılar alınamadı."));
       return;
     }
     const sJson = (await sr.json()) as SiteRow[];
     const uJson = (await ur.json()) as UserRow[];
     setSites(Array.isArray(sJson) ? sJson : []);
     setUsers(Array.isArray(uJson) ? uJson : []);
-    if (!nuSite && sJson?.[0]?.id) setNuSite(sJson[0].id);
-  }
+    setNuSite((curr) => (!curr && sJson?.[0]?.id ? sJson[0].id : curr));
+  }, []);
 
   React.useEffect(() => {
     let alive = true;
@@ -88,7 +89,7 @@ export default function SuperAdminUsersPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [reload]);
 
   const siteNameOf = React.useCallback(
     (id: string | null) => sites.find((s) => s.id === id)?.name ?? "—",
@@ -119,9 +120,9 @@ export default function SuperAdminUsersPage() {
         address: newSiteAddr.trim() || undefined,
       }),
     });
-    const j = await res.json().catch(() => ({}));
+    const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
-      setErr(typeof j?.error === "string" ? j.error : "Site oluşturulamadı.");
+      setErr(readJsonError(j, "Site oluşturulamadı."));
       return;
     }
     setMsg("Site eklendi.");
@@ -150,9 +151,9 @@ export default function SuperAdminUsersPage() {
         apartmentNo: nuApt.trim() || undefined,
       }),
     });
-    const j = await res.json().catch(() => ({}));
+    const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
-      setErr(typeof j?.error === "string" ? j.error : "Kullanıcı oluşturulamadı.");
+      setErr(readJsonError(j, "Kullanıcı oluşturulamadı."));
       return;
     }
     void j;
@@ -190,13 +191,14 @@ export default function SuperAdminUsersPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const j = await res.json().catch(() => ({}));
+    const j: unknown = await res.json().catch(() => null);
     setEdSaving(false);
     if (!res.ok) {
-      setErr(typeof j?.error === "string" ? j.error : "Kayıt güncellenemedi.");
+      setErr(readJsonError(j, "Kayıt güncellenemedi."));
       return;
     }
-    if (typeof j?.notice === "string") setMsg(j.notice);
+    const n = readJsonNotice(j);
+    if (n) setMsg(n);
     else setMsg("Güncellendi.");
     setEditOpen(null);
     await reload();
@@ -212,9 +214,9 @@ export default function SuperAdminUsersPage() {
     setErr("");
     setMsg("");
     const res = await fetch(`/api/super-admin/users/${u.id}`, { method: "DELETE" });
-    const j = await res.json().catch(() => ({}));
+    const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
-      setErr(typeof j?.error === "string" ? j.error : "Silinemedi.");
+      setErr(readJsonError(j, "Silinemedi."));
       return;
     }
     setMsg("Silindi.");

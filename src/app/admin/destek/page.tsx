@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { readJsonError } from "@/lib/json-error";
 
 type Row = {
   id: string;
@@ -31,8 +32,8 @@ export default function AdminDestekPage() {
     setErr("");
     const res = await fetch("/api/admin/support-tickets");
     if (!res.ok) {
-      const j = await res.json().catch(() => ({}));
-      setErr(typeof j?.error === "string" ? j.error : "Liste alınamadı.");
+      const j: unknown = await res.json().catch(() => null);
+      setErr(readJsonError(j, "Liste alınamadı."));
       setList([]);
       return;
     }
@@ -62,10 +63,10 @@ export default function AdminDestekPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subject: subject.trim(), body: body.trim() }),
     });
-    const j = await res.json().catch(() => ({}));
+    const j: unknown = await res.json().catch(() => null);
     setSending(false);
     if (!res.ok) {
-      setErr(typeof j?.error === "string" ? j.error : "Gönderilemedi.");
+      setErr(readJsonError(j, "Gönderilemedi."));
       return;
     }
     setMsg("Destek talebiniz platform yöneticilerine iletildi.");
