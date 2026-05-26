@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { jsonSqlError } from "@/lib/db-query-error";
 import { sites } from "@/db/schema";
 
 export const runtime = "edge";
@@ -17,8 +18,12 @@ export async function GET() {
   const d = tryGetDb();
   if (!d.ok) return jsonDbUnavailable(d.error);
 
-  const list = await d.db.select().from(sites);
-  return NextResponse.json(list);
+  try {
+    const list = await d.db.select().from(sites);
+    return NextResponse.json(list);
+  } catch (e) {
+    return jsonSqlError(e, "Siteler listelenemedi.");
+  }
 }
 
 type SiteBody = { name?: unknown; address?: unknown };
@@ -50,7 +55,11 @@ export async function POST(request: Request) {
       ? crypto.randomUUID()
       : `site-${Date.now()}`;
 
-  await d.db.insert(sites).values({ id, name, address });
-  const row = await d.db.select().from(sites).where(eq(sites.id, id)).limit(1);
-  return NextResponse.json(row[0]);
+  try {
+    await d.db.insert(sites).values({ id, name, address });
+    const row = await d.db.select().from(sites).where(eq(sites.id, id)).limit(1);
+    return NextResponse.json(row[0]);
+  } catch (e) {
+    return jsonSqlError(e, "Site kaydedilemedi.");
+  }
 }

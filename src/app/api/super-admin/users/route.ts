@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { getSession } from "@/lib/session";
 import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { jsonSqlError } from "@/lib/db-query-error";
 import { users } from "@/db/schema";
 
 export const runtime = "edge";
@@ -28,8 +29,12 @@ export async function GET() {
   const d = tryGetDb();
   if (!d.ok) return jsonDbUnavailable(d.error);
 
-  const list = await d.db.select(publicUserColumns).from(users);
-  return NextResponse.json(list);
+  try {
+    const list = await d.db.select(publicUserColumns).from(users);
+    return NextResponse.json(list);
+  } catch (e) {
+    return jsonSqlError(e, "Kullanıcılar listelenemedi.");
+  }
 }
 
 type CreateBody = {
@@ -83,26 +88,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "ADMIN ve USER için geçerli bir site seçin." }, { status: 400 });
   }
 
-  const dup = await d.db.select().from(users).where(eq(users.emailOrPhone, emailOrPhone)).limit(1);
-  if (dup.length) {
-    return NextResponse.json({ error: "Bu e‑posta/telefon zaten kayıtlı." }, { status: 409 });
+  try {
+    const dup = await d.db.select().from(users).where(eq(users.emailOrPhone, emailOrPhone)).limit(1);
+    if (dup.length) {
+      return NextResponse.json({ error: "Bu e‑posta/telefon zaten kayıtlı." }, { status: 409 });
+    }
+
+    const id =
+      typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `u-${Date.now()}`;
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    await d.db.insert(users).values({
+      id,
+      name,
+      emailOrPhone,
+      passwordHash,
+      role,
+      siteId,
+      apartmentNo,
+    });
+
+    const row = await d.db.select(publicUserColumns).from(users).where(eq(users.id, id)).limit(1);
+
+    return NextResponse.json(row[0]);
+  } catch (e) {
+    return jsonSqlError(e, "Kullanıcı oluşturulamadı.");
   }
-
-  const id =
-    typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `u-${Date.now()}`;
-  const passwordHash = await bcrypt.hash(password, 10);
-
-  await d.db.insert(users).values({
-    id,
-    name,
-    emailOrPhone,
-    passwordHash,
-    role,
-    siteId,
-    apartmentNo,
-  });
-
-  const row = await d.db.select(publicUserColumns).from(users).where(eq(users.id, id)).limit(1);
-
-  return NextResponse.json(row[0]);
 }
+

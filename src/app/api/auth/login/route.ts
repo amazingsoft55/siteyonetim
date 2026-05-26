@@ -45,7 +45,17 @@ export async function POST(request: Request) {
 
     const db = getDb(dbBinding);
 
-    const userList = await db.select().from(users).where(eq(users.emailOrPhone, usernameOrPhone)).limit(1);
+    const loginColumns = {
+      id: users.id,
+      name: users.name,
+      emailOrPhone: users.emailOrPhone,
+      passwordHash: users.passwordHash,
+      role: users.role,
+      siteId: users.siteId,
+      apartmentNo: users.apartmentNo,
+    };
+
+    const userList = await db.select(loginColumns).from(users).where(eq(users.emailOrPhone, usernameOrPhone)).limit(1);
     const user = userList[0];
 
     if (!user) {
@@ -59,7 +69,11 @@ export async function POST(request: Request) {
     }
 
     const nowIso = new Date().toISOString();
-    await db.update(users).set({ lastLoginAt: nowIso }).where(eq(users.id, user.id));
+    try {
+      await db.update(users).set({ lastLoginAt: nowIso }).where(eq(users.id, user.id));
+    } catch {
+      /* Kolon/tablonun eski şemada olmaması girişi engellemesin; migrasyon için /kurulum */
+    }
 
     // JWT oluştur
     const token = await signJwt({

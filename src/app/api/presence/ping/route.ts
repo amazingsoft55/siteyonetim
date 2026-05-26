@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { jsonSqlError } from "@/lib/db-query-error";
 import { userPresence } from "@/db/schema";
 
 export const runtime = "edge";
@@ -32,11 +33,11 @@ export async function POST(request: Request) {
       .insert(userPresence)
       .values({ userId: session.id, lastPath: pathStr, lastPingAt: now })
       .onConflictDoUpdate({
-        target: userPresence.userId,
+        target: [userPresence.userId],
         set: { lastPath: pathStr, lastPingAt: now },
       });
-  } catch {
-    return NextResponse.json({ error: "Presence kaydı başarısız." }, { status: 500 });
+  } catch (e) {
+    return jsonSqlError(e, "Presence (çevrimiçi sinyali) kaydedilemedi.");
   }
 
   return NextResponse.json({ ok: true });
