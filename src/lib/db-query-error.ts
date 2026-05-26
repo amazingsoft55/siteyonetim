@@ -12,7 +12,7 @@ export function jsonSqlError(
   const schemaLikelyStale = /no such table|no such column/i.test(detail);
 
   const error = schemaLikelyStale
-    ? "Veritabanı şeması güncel değil veya eksik migrasyon var. Çalıştırın: npx wrangler d1 execute siteyonetim-db --remote --file=./drizzle/full-schema.sql (veya 0003_dashboard_metrics.sql)."
+    ? "Veritabanı şeması güncel değil veya eksik tablo/sütun var. Çalıştırın: npx wrangler d1 execute siteyonetim-db --remote --file=./drizzle/full-schema.sql"
     : fallback;
 
   return NextResponse.json(

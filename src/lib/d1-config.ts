@@ -18,7 +18,7 @@ export function resolveD1DisplayMeta(): {
   let fromWorkerName: string | undefined;
 
   try {
-    const { env } = getRequestContext() as { env: Record<string, unknown> };
+    const env = getRequestContext().env as unknown as Record<string, unknown>;
     if (typeof env.D1_DATABASE_ID === "string" && env.D1_DATABASE_ID.trim()) {
       fromWorkerId = env.D1_DATABASE_ID.trim();
     }

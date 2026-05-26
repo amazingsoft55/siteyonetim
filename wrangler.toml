@@ -17,7 +17,7 @@ directory = ".vercel/output/static"
 binding = "DB"
 database_name = "siteyonetim-db"
 database_id = "c8b48f81-826f-4e7e-a1f9-580afa5321b5"
-migrations_dir = "drizzle"
+migrations_dir = "drizzle"  # yalnızca full-schema.sql (tek şema dosyası)
 
 # Teşhis (/api/setup/status): panodaki UUID ile aynı (bağlantı hâlâ [[d1_databases]] üzerinden env.DB)
 [vars]

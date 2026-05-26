@@ -88,7 +88,7 @@ export async function GET() {
     ...(hasSupportTicketsTable ? {}
     : {
         optionalNote:
-          "Destek talepleri için drizzle/0002_admin_support_tickets.sql veya full-schema.sql içeriğini zaten çalıştırdıysanız bekleyebilir.",
+          "Destek talepleri tablosu dahil olmak için drizzle/full-schema.sql dosyası uzak D1'de tam uygulanmış olmalı.",
       }),
   });
 }

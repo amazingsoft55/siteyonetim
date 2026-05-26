@@ -79,9 +79,8 @@ export default function KurulumPage() {
         <section className="rounded-2xl border border-violet-200/70 dark:border-violet-900/40 bg-violet-50/30 dark:bg-violet-950/15 p-6 space-y-2">
           <h2 className="text-lg font-bold text-violet-900 dark:text-violet-100">3 · Şifre akışı (kalıcı şifre + e-posta)</h2>
           <p className="text-sm text-violet-950/85 dark:text-violet-100/80">
-            D1&apos;de <code className="text-xs bg-white/60 dark:bg-zinc-900/50 px-1 rounded">drizzle/0004_password_flow.sql</code>{" "}
-            (veya güncel <code className="text-xs bg-white/60 dark:bg-zinc-900/50 px-1 rounded">full-schema.sql</code>) uygulayın:{" "}
-            <code className="text-xs">must_change_password</code> ve <code className="text-xs">password_reset_tokens</code>.
+            D1&apos;de <code className="text-xs bg-white/60 dark:bg-zinc-900/50 px-1 rounded">drizzle/full-schema.sql</code> ile şema oluşturulur; içinde{" "}
+            <code className="text-xs">must_change_password</code> sütunu ve <code className="text-xs">password_reset_tokens</code> tablosu yer alır.
           </p>
           <ul className="text-sm list-disc pl-5 text-violet-950/90 dark:text-violet-100/85 space-y-1">
             <li>

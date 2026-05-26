@@ -72,10 +72,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 Üretimde **`NEXT_PUBLIC_SITE_URL`** kök adresinizi ayarlayın (bkz. `env.example`). Sitemap, robots, kanonik bağlantılar, Open Graph ve JSON-LD bu değişkene güvenir.
 
-### D1: platform destek talepleri tablosu
+### D1 şeması
 
-Yöneticilerden süper admin’e talepler için `drizzle/0002_admin_support_tickets.sql` dosyasını D1 üzerinde çalıştırın:
-
-```bash
-npx wrangler d1 execute siteyonetim-db --remote --file=./drizzle/0002_admin_support_tickets.sql
-```
+Tüm tablolar (destek talepleri, dashboard ölçümleri, şifre akışı dahil) yalnızca `drizzle/full-schema.sql` içindedir — yukarıdaki **`npm run db:apply:remote`** ile uygulanır.

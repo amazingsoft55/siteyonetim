@@ -53,7 +53,7 @@ export default function LoginPage() {
         if (d.ok && d.hasSupportTicketsTable === false) {
           setSetupBanner({
             kind: "warn",
-            text: "Destek talepleri tablosu eksik olabilir. full-schema.sql veya 0002 migrasyonunu uygulayın.",
+            text: "Destek talepleri tablosu eksik olabilir. drizzle/full-schema.sql dosyasını D1 üzerinde çalıştırın.",
           });
           return;
         }
