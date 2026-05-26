@@ -1,15 +1,24 @@
 // Client-side Data Service
 // Performs API calls to the Next.js backend, with transparent fallback to localStorage for mobile/Capacitor static environments.
 
+function parseApiError(payload: unknown, status: number): string {
+  if (payload !== null && typeof payload === "object" && "error" in payload) {
+    const e = (payload as { error?: unknown }).error;
+    if (typeof e === "string" && e.trim().length > 0) return e;
+  }
+  return `HTTP error ${status}`;
+}
+
 // Helper to check if API is available
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   try {
     const res = await fetch(url, options);
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || `HTTP error ${res.status}`);
+      const errData: unknown = await res.json().catch(() => ({}));
+      throw new Error(parseApiError(errData, res.status));
     }
-    return await res.json();
+    const body: unknown = await res.json();
+    return body as T;
   } catch (error) {
     // Re-throw to let caller handle fallback if needed
     throw error;
