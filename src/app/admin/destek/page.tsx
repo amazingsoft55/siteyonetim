@@ -30,7 +30,7 @@ export default function AdminDestekPage() {
 
   async function reload() {
     setErr("");
-    const res = await fetch("/api/admin/support-tickets");
+    const res = await fetch("/api/admin/support-tickets", { credentials: "include" });
     if (!res.ok) {
       const j: unknown = await res.json().catch(() => null);
       setErr(readJsonError(j, "Liste alınamadı."));
@@ -60,6 +60,7 @@ export default function AdminDestekPage() {
     setMsg("");
     const res = await fetch("/api/admin/support-tickets", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subject: subject.trim(), body: body.trim() }),
     });

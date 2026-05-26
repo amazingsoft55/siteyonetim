@@ -4,6 +4,7 @@ import { getSession } from "@/lib/session";
 import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { announcements } from "@/db/schema";
+import { announcementToClient } from "@/lib/announcement-ui";
 
 export const runtime = "edge";
 
@@ -14,25 +15,6 @@ function forbidden() {
 async function forbiddenScope() {
   return NextResponse.json({ error: "Site bilgisi yok." }, { status: 400 });
 }
-
-export function announcementToClient(row: {
-  id: string;
-  title: string;
-  content: string;
-  category: string | null;
-  createdAt: string | null;
-}) {
-  return {
-    id: row.id,
-    title: row.title,
-    date: row.createdAt ? new Date(row.createdAt).toLocaleDateString("tr-TR") : "",
-    content: row.content,
-    category: row.category?.trim() || "Genel",
-    isNew: false as const,
-  };
-}
-
-/** Duyurular: D1 kalıcı kayıt */
 export async function GET(request: Request) {
   const session = await getSession();
   if (!session) return forbidden();

@@ -3,6 +3,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { MapPin, Phone, Mail } from "lucide-react";
 import { getPublicSiteUrl } from "@/lib/site-url";
+import { PublicContactForm } from "@/components/PublicContactForm";
 
 const iletisimCanonical = `${getPublicSiteUrl()}/iletisim`;
 
@@ -73,27 +74,7 @@ export default function Iletisim() {
             </div>
           </div>
 
-          {/* Form */}
-          <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800">
-            <h2 className="text-2xl font-bold mb-6">Mesaj Gönderin</h2>
-            <form className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Ad Soyad</label>
-                <input type="text" className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 py-2.5 px-4 focus:ring-2 focus:ring-indigo-600 outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">E-Posta</label>
-                <input type="email" className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 py-2.5 px-4 focus:ring-2 focus:ring-indigo-600 outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Mesajınız</label>
-                <textarea rows={4} className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 py-2.5 px-4 focus:ring-2 focus:ring-indigo-600 outline-none resize-none"></textarea>
-              </div>
-              <button type="button" className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-colors">
-                Gönder
-              </button>
-            </form>
-          </div>
+          <PublicContactForm defaultSource="iletisim" headline="Mesaj gönderin" />
         </div>
       </main>
       <Footer />

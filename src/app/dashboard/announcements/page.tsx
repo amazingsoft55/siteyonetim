@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Megaphone, Search, Calendar, ChevronRight } from "lucide-react";
+import { Megaphone, Search, Calendar } from "lucide-react";
 
 interface Announcement {
-  id: number;
+  id: string;
   title: string;
   date: string;
   content: string;
@@ -15,20 +15,26 @@ interface Announcement {
 export default function ResidentAnnouncementsPage() {
   const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
   const [search, setSearch] = React.useState("");
+  const [loadErr, setLoadErr] = React.useState("");
 
   React.useEffect(() => {
-    const stored = localStorage.getItem("site_announcements");
-    if (stored) {
-      setAnnouncements(JSON.parse(stored));
-    } else {
-      const defaults: Announcement[] = [
-        { id: 1, title: "Havuz Bakımı Hakkında", date: "24 Mayıs 2026", content: "Açık havuzumuz 1 Haziran itibariyle kullanıma açılacaktır. Havuz kurallarına dikkat etmenizi rica ederiz.", category: "Genel", isNew: true },
-        { id: 2, title: "Mayıs Ayı Ortak Gider Bildirimi", date: "20 Mayıs 2026", content: "Ortak alan elektrik faturalarındaki artış nedeniyle Haziran ayı aidatlarına %5 enflasyon farkı yansıtılmıştır.", category: "Mali", isNew: false },
-        { id: 3, title: "Asansör Periyodik Bakımı", date: "15 Nisan 2026", content: "A Blok asansörleri periyodik bakım nedeniyle yarın 10:00 - 12:00 saatleri arasında geçici olarak servis dışı kalacaktır.", category: "Teknik", isNew: false }
-      ];
-      localStorage.setItem("site_announcements", JSON.stringify(defaults));
-      setAnnouncements(defaults);
-    }
+    let cancelled = false;
+    (async () => {
+      setLoadErr("");
+      const res = await fetch("/api/announcements", { credentials: "include" });
+      const j: unknown = await res.json().catch(() => null);
+      if (!res.ok || !Array.isArray(j)) {
+        if (!cancelled) {
+          setLoadErr("Duyurular sunucudan alınamadı. Oturumunuzu veya D1 bağlantısını kontrol edin.");
+          setAnnouncements([]);
+        }
+        return;
+      }
+      if (!cancelled) setAnnouncements(j as Announcement[]);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const filtered = announcements.filter(a => 
@@ -66,10 +72,18 @@ export default function ResidentAnnouncementsPage() {
         </div>
       </div>
 
+      {loadErr && (
+        <div className="rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/25 p-4 text-sm text-amber-950 dark:text-amber-100">
+          {loadErr}
+        </div>
+      )}
+
       <div className="space-y-4">
         {filtered.length === 0 ? (
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-3xl p-12 text-center text-zinc-500">
-            Aramanızla eşleşen duyuru bulunamadı.
+            {!loadErr && announcements.length === 0
+              ? "Henüz yayınlanmış duyuru yok."
+              : "Aramanızla eşleşen duyuru bulunamadı."}
           </div>
         ) : (
           filtered.map((a) => (

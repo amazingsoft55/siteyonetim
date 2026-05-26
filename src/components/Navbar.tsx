@@ -25,8 +25,8 @@ export function Navbar() {
             <Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
               Ana Sayfa
             </Link>
-            <Link href="/kurulum" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-              Kurulum
+            <Link href="/destek" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+              Destek
             </Link>
             <Link href="/hakkimizda" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
               Hakkımızda

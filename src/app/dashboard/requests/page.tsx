@@ -18,43 +18,48 @@ export default function ResidentRequestsPage() {
   const [title, setTitle] = React.useState("");
   const [category, setCategory] = React.useState("Arıza");
   const [description, setDescription] = React.useState("");
+  const [loadErr, setLoadErr] = React.useState("");
+
+  async function reload() {
+    setLoadErr("");
+    const res = await fetch("/api/requests", { credentials: "include" });
+    const j: unknown = await res.json().catch(() => null);
+    if (!res.ok || !Array.isArray(j)) {
+      setLoadErr("Talepler yüklenemedi.");
+      setRequests([]);
+      return;
+    }
+    setRequests(j as RequestItem[]);
+  }
 
   React.useEffect(() => {
-    const stored = localStorage.getItem("site_requests");
-    if (stored) {
-      setRequests(JSON.parse(stored));
-    } else {
-      const defaults: RequestItem[] = [
-        { id: "REQ-1002", title: "B Blok Asansör Titremesi", category: "Arıza", description: "B blok asansörü yukarı çıkarken 3. kat civarında çok fazla titreme yapıyor.", date: "24.05.2026", status: "İşlemde" },
-        { id: "REQ-1001", title: "Otopark Alanı Temizliği", category: "Temizlik", description: "-2. kat otopark alanında çok fazla toz birikmiş durumda, genel bir temizlik rica olunur.", date: "18.05.2026", status: "Çözüldü" }
-      ];
-      localStorage.setItem("site_requests", JSON.stringify(defaults));
-      setRequests(defaults);
-    }
+    void reload();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !description) return;
 
-    const newReq: RequestItem = {
-      id: `REQ-${Math.floor(1000 + Math.random() * 9000)}`,
-      title,
-      category,
-      description,
-      date: new Date().toLocaleDateString("tr-TR"),
-      status: "Bekliyor",
-    };
+    const res = await fetch("/api/requests", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+        category,
+        description,
+      }),
+    });
+    if (!res.ok) {
+      alert("Talep gönderilemedi.");
+      return;
+    }
 
-    const updated = [newReq, ...requests];
-    localStorage.setItem("site_requests", JSON.stringify(updated));
-    setRequests(updated);
-
-    // Reset form
     setTitle("");
     setDescription("");
     setShowForm(false);
-    alert("Talebiniz başarıyla yönetime iletildi!");
+    await reload();
+    alert("Talebiniz yönetime iletildi.");
   };
 
   const getStatusIcon = (status: string) => {
@@ -99,6 +104,12 @@ export default function ResidentRequestsPage() {
           </button>
         )}
       </div>
+
+      {loadErr && (
+        <div className="rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/25 p-4 text-sm text-amber-950 dark:text-amber-100">
+          {loadErr}
+        </div>
+      )}
 
       {showForm && (
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-3xl p-6 sm:p-8 shadow-sm relative animate-in fade-in slide-in-from-top-4 duration-300">

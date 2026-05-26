@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description:
     "Site Yönetimi: D1 şeması, yerel geliştirme, ilk kullanıcı (ortam + seed) ve sık yapılan hataların çözümü.",
   alternates: { canonical: `${base}/kurulum` },
-  robots: { index: true, follow: true },
+  robots: { index: false, follow: false },
 };
 
 export default function KurulumPage() {

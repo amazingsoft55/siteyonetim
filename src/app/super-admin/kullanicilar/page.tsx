@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { readJsonError, readJsonNotice } from "@/lib/json-error";
 import { Shield, ArrowLeft, LogOut, Trash2, Pencil } from "lucide-react";
 
@@ -31,7 +32,22 @@ function roleLabel(r: string) {
 }
 
 export default function SuperAdminUsersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-zinc-50 dark:bg-[#0b0f19] flex items-center justify-center text-sm font-medium text-zinc-500">
+          Yükleniyor…
+        </div>
+      }
+    >
+      <SuperAdminUsersPageInner />
+    </Suspense>
+  );
+}
+
+function SuperAdminUsersPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [sites, setSites] = React.useState<SiteRow[]>([]);
   const [users, setUsers] = React.useState<UserRow[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -48,6 +64,7 @@ export default function SuperAdminUsersPage() {
   const [nuSite, setNuSite] = React.useState("");
   const [nuApt, setNuApt] = React.useState("");
   const [nuForcePwChange, setNuForcePwChange] = React.useState(false);
+  const [siteListFilterId, setSiteListFilterId] = React.useState("");
 
   const [editOpen, setEditOpen] = React.useState<UserRow | null>(null);
   const [edName, setEdName] = React.useState("");
@@ -94,6 +111,13 @@ export default function SuperAdminUsersPage() {
       alive = false;
     };
   }, [reload]);
+
+  React.useEffect(() => {
+    const sid = searchParams.get("siteId")?.trim();
+    if (!sid) return;
+    setSiteListFilterId(sid);
+    setNuSite(sid);
+  }, [searchParams]);
 
   const siteNameOf = React.useCallback(
     (id: string | null) => sites.find((s) => s.id === id)?.name ?? "—",
@@ -240,7 +264,18 @@ export default function SuperAdminUsersPage() {
     router.push("/login");
   }
 
-  const adminCount = users.filter((u) => u.role === "ADMIN").length;
+  const visibleUsers = React.useMemo(
+    () =>
+      siteListFilterId.trim().length === 0
+        ? users
+        : users.filter((u) => u.siteId === siteListFilterId.trim()),
+    [users, siteListFilterId],
+  );
+
+  const adminTotal = React.useMemo(
+    () => users.filter((u) => u.role === "ADMIN").length,
+    [users],
+  );
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-[#0b0f19] text-zinc-900 dark:text-zinc-100">
@@ -258,7 +293,13 @@ export default function SuperAdminUsersPage() {
             <div className="min-w-0">
               <h1 className="text-lg font-bold tracking-tight truncate">Siteler & kullanıcılar</h1>
               <p className="text-xs text-zinc-500 truncate">
-                {loading ? "Yükleniyor…" : `${sites.length} site · ${adminCount} yönetici · ${users.length} toplam hesap`}
+                {loading ?
+                  "Yükleniyor…"
+                : `${sites.length} site · ${adminTotal} yönetici · ${users.length} toplam hesap${
+                    siteListFilterId.trim() ?
+                      ` · Liste: ${siteNameOf(siteListFilterId.trim())} (${visibleUsers.length})`
+                    : ""
+                  }`}
               </p>
             </div>
           </div>
@@ -437,7 +478,40 @@ export default function SuperAdminUsersPage() {
         </div>
 
         <section className="bg-white dark:bg-zinc-900/50 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60 p-6 shadow-sm overflow-x-auto">
-          <h2 className="font-bold mb-4">Tüm kullanıcılar</h2>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+            <div>
+              <h2 className="font-bold">Tüm kullanıcılar</h2>
+              <p className="text-xs text-zinc-500 mt-1">
+                {siteListFilterId.trim() ?
+                  `Yalnızca “${siteNameOf(siteListFilterId.trim())}” kayıtları gösteriliyor.`
+                : "Filtreyi kullanarak belirli bir siteye göre listeleyebilirsiniz."}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="text-xs font-semibold text-zinc-500 uppercase whitespace-nowrap">Site filtresi</label>
+              <select
+                className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-3 py-2 text-sm font-medium min-w-[12rem]"
+                value={siteListFilterId}
+                onChange={(e) => setSiteListFilterId(e.target.value)}
+              >
+                <option value="">Tüm siteler ({users.length})</option>
+                {sites.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+              {siteListFilterId.trim() ? (
+                <button
+                  type="button"
+                  onClick={() => setSiteListFilterId("")}
+                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 underline"
+                >
+                  Filtreyi kaldır
+                </button>
+              ) : null}
+            </div>
+          </div>
           <table className="w-full text-left border-collapse min-w-[640px]">
             <thead>
               <tr className="border-b border-zinc-200 dark:border-zinc-700 text-xs uppercase text-zinc-500">
@@ -451,7 +525,7 @@ export default function SuperAdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
+              {visibleUsers.map((u) => (
                 <tr key={u.id} className="border-b border-zinc-100 dark:border-zinc-800 text-sm">
                   <td className="py-2.5 pr-2 font-medium">{u.name}</td>
                   <td className="py-2.5 pr-2 text-zinc-600 dark:text-zinc-400">{u.emailOrPhone}</td>
@@ -485,10 +559,14 @@ export default function SuperAdminUsersPage() {
                   </td>
                 </tr>
               ))}
-              {users.length === 0 && !loading && (
+              {visibleUsers.length === 0 && !loading && (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-zinc-500">
-                    Henüz kullanıcı yok. Süper yönetici hesabınız kurulum sırasında D1’e yazılmış olmalı; ardından buradan başka kullanıcılar oluşturulur.
+                    {users.length === 0 ?
+                      "Henüz kullanıcı yok. Süper yönetici hesabınız kurulum sırasında D1’e yazılmış olmalı; ardından buradan başka kullanıcılar oluşturulur."
+                    : siteListFilterId.trim() ?
+                      "Bu site için eşleşen kullanıcı bulunamadı."
+                    : "Liste boş."}
                   </td>
                 </tr>
               )}

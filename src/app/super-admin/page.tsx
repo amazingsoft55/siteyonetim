@@ -30,7 +30,11 @@ type DashboardPayload = {
   totals: { sites: number; users: number; byRole: Record<string, number> };
   live: { onlineAuthenticatedUsersApprox: number; distinctLoginsLast24h: number };
   publicSite: { pageViewsTrackedTodayUtc: number; coverage: string };
-  operations: { openAdminSupportTickets: number; openResidentRequests: number };
+  operations: {
+    openAdminSupportTickets: number;
+    openResidentRequests: number;
+    openPublicContactMessages?: number;
+  };
   pageSpeed: {
     configured: boolean;
     cached: Record<string, unknown> | null;
@@ -62,6 +66,15 @@ export default function SuperAdminDashboard() {
   const [busy, setBusy] = React.useState(false);
   const [psiBusy, setPsiBusy] = React.useState(false);
   const [tick, setTick] = React.useState(0);
+  const [siteQ, setSiteQ] = React.useState("");
+
+  const filteredSites = React.useMemo(
+    () =>
+      sites.filter((s) =>
+        `${s.name} ${s.address ?? ""}`.toLowerCase().includes(siteQ.trim().toLowerCase()),
+      ),
+    [sites, siteQ],
+  );
 
   const loadAll = React.useCallback(async () => {
     setLoadErr("");
@@ -242,6 +255,31 @@ export default function SuperAdminDashboard() {
           </div>
         )}
 
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { href: "/super-admin/kullanicilar", title: "Siteler & kullanıcılar", desc: "D1 üzerinde hesap ve proje yönetimi", icon: Users },
+            { href: "/super-admin/destek", title: "Destek talepleri", desc: "Yönetici destek kuyruğu", icon: Activity },
+            { href: "/kurulum", title: "Kurulum rehberi", desc: "D1, migrasyon ve ortam", icon: Gauge },
+            { href: "/api/setup/status", title: "Kurulum durumu API", desc: "Bağlama teşhisi (JSON)", icon: Cpu },
+          ].map((c) => (
+            <Link
+              key={c.href}
+              href={c.href}
+              className="group rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/50 p-4 shadow-sm hover:border-indigo-300 dark:hover:border-indigo-800 transition-colors flex gap-3"
+            >
+              <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 h-fit shrink-0">
+                <c.icon className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-black text-zinc-900 dark:text-zinc-50 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                  {c.title}
+                </p>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">{c.desc}</p>
+              </div>
+            </Link>
+          ))}
+        </section>
+
         {!dash && !loadErr && (
           <div className="grid gap-4 md:grid-cols-4 animate-pulse">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -349,6 +387,10 @@ export default function SuperAdminDashboard() {
                   </h3>
                   <ul className="mt-4 space-y-3 text-sm">
                     <li className="flex justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                      <span className="text-zinc-600 dark:text-zinc-400">Açık iletişim / ziyaretçi</span>
+                      <span className="font-bold">{dash.operations.openPublicContactMessages ?? 0}</span>
+                    </li>
+                    <li className="flex justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2">
                       <span className="text-zinc-600 dark:text-zinc-400">Açık yönetici destek</span>
                       <span className="font-bold">{dash.operations.openAdminSupportTickets}</span>
                     </li>
@@ -418,11 +460,29 @@ export default function SuperAdminDashboard() {
         )}
 
         <div className="rounded-3xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 shadow-sm overflow-hidden">
-          <div className="flex flex-wrap justify-between gap-3 p-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-950/40">
-            <h2 className="text-lg font-black">Siteler tablosu</h2>
-            <Link href="/super-admin/kullanicilar" className="text-sm font-bold text-indigo-600 dark:text-indigo-400 inline-flex items-center gap-1">
-              Tam yönetim <ArrowRight className="h-4 w-4" />
-            </Link>
+          <div className="flex flex-col gap-4 p-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-950/40 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-2 min-w-0">
+              <h2 className="text-lg font-black">Siteler tablosu</h2>
+              <p className="text-xs text-zinc-500">
+                D1’den canlı liste. Arama tablo üzerinde süzme yapar ({filteredSites.length}/{sites.length}
+                site).
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center w-full lg:w-auto">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
+                <input
+                  type="search"
+                  value={siteQ}
+                  onChange={(e) => setSiteQ(e.target.value)}
+                  placeholder="Site veya adres ara…"
+                  className="w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 py-2.5 pl-10 pr-3 text-sm"
+                />
+              </div>
+              <Link href="/super-admin/kullanicilar" className="inline-flex shrink-0 items-center justify-center gap-1 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 rounded-2xl">
+                Tam yönetim <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[600px]">
@@ -435,14 +495,17 @@ export default function SuperAdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {sites.map((s) => (
+                {filteredSites.map((s) => (
                   <tr key={s.id} className="border-b border-zinc-50 dark:border-zinc-900 hover:bg-indigo-50/40 dark:hover:bg-zinc-800/30">
                     <td className="py-3 px-4 font-semibold">{s.name}</td>
                     <td className="py-3 px-4 text-sm text-zinc-500">{s.address ?? "—"}</td>
                     <td className="py-3 px-4 text-sm text-zinc-500">{s.createdAt ?? "—"}</td>
                     <td className="py-3 px-4">
-                      <Link href="/super-admin/kullanicilar" className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
-                        Yönet
+                      <Link
+                        href={`/super-admin/kullanicilar?siteId=${encodeURIComponent(s.id)}`}
+                        className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                      >
+                        İnsanları yönet
                       </Link>
                     </td>
                   </tr>
@@ -451,6 +514,13 @@ export default function SuperAdminDashboard() {
                   <tr>
                     <td colSpan={4} className="py-12 px-4 text-center text-zinc-500 text-sm">
                       Henüz site yok. Kullanıcılar sayfasından ekleyebilirsiniz.
+                    </td>
+                  </tr>
+                )}
+                {sites.length > 0 && filteredSites.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-12 px-4 text-center text-zinc-500 text-sm">
+                      Aramanıza uyan site yok.
                     </td>
                   </tr>
                 )}

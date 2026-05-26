@@ -4,7 +4,7 @@ import * as React from "react";
 import { PlusCircle, Megaphone, Trash2, Calendar, X } from "lucide-react";
 
 interface Announcement {
-  id: number;
+  id: string;
   title: string;
   date: string;
   content: string;
@@ -18,53 +18,58 @@ export default function AnnouncementsPage() {
   const [title, setTitle] = React.useState("");
   const [category, setCategory] = React.useState("Genel");
   const [content, setContent] = React.useState("");
+  const [loadErr, setLoadErr] = React.useState("");
+
+  async function reload() {
+    setLoadErr("");
+    const res = await fetch("/api/announcements", { credentials: "include" });
+    const data: unknown = await res.json().catch(() => null);
+    if (!res.ok || !Array.isArray(data)) {
+      setLoadErr("Duyurular alınamadı.");
+      setAnnouncements([]);
+      return;
+    }
+    setAnnouncements(data as Announcement[]);
+  }
 
   React.useEffect(() => {
-    const stored = localStorage.getItem("site_announcements");
-    if (stored) {
-      setAnnouncements(JSON.parse(stored));
-    } else {
-      const defaults: Announcement[] = [
-        { id: 1, title: "Havuz Bakımı Hakkında", date: "24 Mayıs 2026", content: "Açık havuzumuz 1 Haziran itibariyle kullanıma açılacaktır. Havuz kurallarına dikkat etmenizi rica ederiz.", category: "Genel", isNew: true },
-        { id: 2, title: "Mayıs Ayı Ortak Gider Bildirimi", date: "20 Mayıs 2026", content: "Ortak alan elektrik faturalarındaki artış nedeniyle Haziran ayı aidatlarına %5 enflasyon farkı yansıtılmıştır.", category: "Mali", isNew: false },
-        { id: 3, title: "Asansör Periyodik Bakımı", date: "15 Nisan 2026", content: "A Blok asansörleri periyodik bakım nedeniyle yarın 10:00 - 12:00 saatleri arasında geçici olarak servis dışı kalacaktır.", category: "Teknik", isNew: false }
-      ];
-      localStorage.setItem("site_announcements", JSON.stringify(defaults));
-      setAnnouncements(defaults);
-    }
+    void reload();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !content) return;
 
-    const newAnn: Announcement = {
-      id: Date.now(),
-      title,
-      date: new Date().toLocaleDateString("tr-TR"),
-      content,
-      category,
-      isNew: true
-    };
+    const res = await fetch("/api/announcements", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, content, category }),
+    });
+    if (!res.ok) {
+      alert("Duyuru kaydedilemedi.");
+      return;
+    }
 
-    // Prepend new announcement
-    const updated = [newAnn, ...announcements];
-    localStorage.setItem("site_announcements", JSON.stringify(updated));
-    setAnnouncements(updated);
-
-    // Reset Form
     setTitle("");
     setContent("");
     setCategory("Genel");
     setShowForm(false);
-    alert("Duyuru başarıyla yayınlandı!");
+    await reload();
+    alert("Duyuru yayınlandı.");
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Bu duyuruyu silmek istediğinize emin misiniz?")) return;
-    const filtered = announcements.filter(a => a.id !== id);
-    localStorage.setItem("site_announcements", JSON.stringify(filtered));
-    setAnnouncements(filtered);
+    const res = await fetch(`/api/announcements?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (!res.ok) {
+      alert("Silinemedi.");
+      return;
+    }
+    await reload();
   };
 
   const getCategoryColor = (cat?: string) => {
@@ -86,6 +91,7 @@ export default function AnnouncementsPage() {
         <div>
           <h2 className="text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-zinc-50">Duyuru Yönetimi</h2>
           <p className="text-zinc-500 dark:text-zinc-400 mt-1">Kat malikleri ve sakinlerin panolarına yeni duyurular yayınlayın.</p>
+          {loadErr ? <p className="mt-2 text-sm font-semibold text-rose-600 dark:text-rose-400">{loadErr}</p> : null}
         </div>
         {!showForm && (
           <button 

@@ -67,6 +67,23 @@ export const siteSettings = sqliteTable("site_settings", {
   updatedAt: text("updated_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
+/** Ziyaretçi / iletişim ve genel destek formu — kimlik gerektirmez (süper yönetici panelinde görünür) */
+export const platformPublicContact = sqliteTable("platform_public_contact", {
+  id: text("id").primaryKey(),
+  source: text("source").notNull().default("iletisim"),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  status: text("status", { enum: ["OPEN", "IN_PROGRESS", "RESOLVED"] })
+    .notNull()
+    .default("OPEN"),
+  superAdminReply: text("super_admin_reply"),
+  updatedAt: text("updated_at").default(sql`(CURRENT_TIMESTAMP)`),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
 /** Site yöneticisinden platform süper yöneticisine destek talebi */
 export const adminSupportTickets = sqliteTable("admin_support_tickets", {
   id: text("id").primaryKey(),

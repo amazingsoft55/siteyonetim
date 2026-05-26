@@ -74,4 +74,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ### D1 şeması
 
-Tüm tablolar (destek talepleri, dashboard ölçümleri, şifre akışı dahil) yalnızca `drizzle/full-schema.sql` içindedir — yukarıdaki **`npm run db:apply:remote`** ile uygulanır.
+Tek paket: **`drizzle/full-schema.sql`**. İçinde isteğe bağlı **tam silme (DROP)** bloğu yorumda durur; sıfırlama için dosya başındaki uyarıya göre önce o bloğu çalıştırıp ardından şema (CREATE) kısmını yeniden uygulayın. Normal güncellemede varsayılan olarak yalnızca **CREATE IF NOT EXISTS** kısmı çalışır — `npm run db:apply:remote` / `db:apply:local`.
+
+**Yeni tablolar (ör. ziyaretçi iletişimi):** `platform_public_contact` dahil tüm DDL bu dosyada birleşiktir; başka `drizzle/*.sql` migrasyon dosyası kullanılmaz.

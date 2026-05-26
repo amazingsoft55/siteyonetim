@@ -21,6 +21,7 @@ function isPublicApiPath(path: string): boolean {
   if (path === "/api/setup/status") return true;
   if (path === "/api/seed") return true;
   if (path === "/api/telemetry/pageview") return true;
+  if (path === "/api/public/contact") return true;
   return false;
 }
 

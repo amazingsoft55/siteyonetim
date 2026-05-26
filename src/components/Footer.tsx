@@ -7,8 +7,8 @@ export function Footer() {
       <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
         <p className="text-center sm:text-left">© {y} Site Yönetimi. Tüm hakları saklıdır.</p>
         <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 font-medium">
-          <Link href="/kurulum" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            Kurulum
+          <Link href="/destek" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+            Destek
           </Link>
           <Link href="/hakkimizda" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             Hakkımızda

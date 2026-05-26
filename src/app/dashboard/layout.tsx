@@ -13,6 +13,21 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [asideName, setAsideName] = React.useState("Sakin");
+  const [asideMeta, setAsideMeta] = React.useState("");
+
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem("user");
+      if (!raw) return;
+      const u = JSON.parse(raw) as { name?: string; apartmentNo?: string | null };
+      if (typeof u.name === "string" && u.name.trim()) setAsideName(u.name.trim());
+      const apt = typeof u.apartmentNo === "string" ? u.apartmentNo.trim() : "";
+      setAsideMeta(apt ? `Daire ${apt}` : "Kayıtlı sakin");
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   // Protect route
   React.useEffect(() => {
@@ -41,8 +56,8 @@ export default function DashboardLayout({
             <User className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200">Ahmet Yılmaz</p>
-            <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">Daire 14 / Blok A</p>
+            <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200">{asideName}</p>
+            <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">{asideMeta}</p>
           </div>
         </div>
         

@@ -10,6 +10,7 @@ import {
   platformInsights,
   adminSupportTickets,
   requests,
+  platformPublicContact,
 } from "@/db/schema";
 
 export const runtime = "edge";
@@ -105,6 +106,17 @@ export async function GET() {
     openResidentReq = 0;
   }
 
+  let openPublicContact = 0;
+  try {
+    const [pc] = await d.db
+      .select({ c: count() })
+      .from(platformPublicContact)
+      .where(eq(platformPublicContact.status, "OPEN"));
+    openPublicContact = pc?.c ?? 0;
+  } catch {
+    openPublicContact = 0;
+  }
+
   let pageSpeedCache: Record<string, unknown> | null = null;
   try {
     const row = await d.db.select().from(platformInsights).where(eq(platformInsights.key, "pagespeed")).limit(1);
@@ -130,11 +142,12 @@ export async function GET() {
       publicSite: {
         pageViewsTrackedTodayUtc: publicViewsToday,
         coverage:
-          "Yalnızca / · /iletisim · /hakkimizda · /kurulum; bot UA filtrelenir; oturumsuz kullanıcılar dahil.",
+          "Yalnızca ana sayfa, iletişim, destek ve hakkımızda; oturumsuz kullanıcılar dahil (bot/elence elenir).",
       },
       operations: {
         openAdminSupportTickets: openSupport,
         openResidentRequests: openResidentReq,
+        openPublicContactMessages: openPublicContact,
       },
       pageSpeed: {
         configured: psiKey,

@@ -15,22 +15,44 @@ interface Payment {
 export default function ResidentPaymentsPage() {
   const [payments, setPayments] = React.useState<Payment[]>([]);
   const [selectedPayment, setSelectedPayment] = React.useState<Payment | null>(null);
+  const [loadErr, setLoadErr] = React.useState("");
+  const [residentName, setResidentName] = React.useState("Sakin");
+  const [apartmentMeta, setApartmentMeta] = React.useState("");
 
   React.useEffect(() => {
-    // Load payments from localStorage or set defaults
-    const stored = localStorage.getItem("resident_payments");
-    if (stored) {
-      setPayments(JSON.parse(stored));
-    } else {
-      const defaults = [
-        { id: "PAY-8729", period: "Nisan 2026", amount: 1250, date: "10.04.2026", status: "Başarılı", type: "Kredi Kartı" },
-        { id: "PAY-8610", period: "Mart 2026", amount: 1250, date: "11.03.2026", status: "Başarılı", type: "Kredi Kartı" },
-        { id: "PAY-8501", period: "Şubat 2026", amount: 1250, date: "15.02.2026", status: "Başarılı", type: "Havale/EFT" },
-      ];
-      localStorage.setItem("resident_payments", JSON.stringify(defaults));
-      setPayments(defaults);
+    try {
+      const raw = localStorage.getItem("user");
+      if (raw) {
+        const u = JSON.parse(raw) as { name?: string; apartmentNo?: string | null };
+        if (typeof u?.name === "string" && u.name.trim()) setResidentName(u.name.trim());
+        const apt = typeof u.apartmentNo === "string" ? u.apartmentNo.trim() : "";
+        setApartmentMeta(apt ? `Daire ${apt}` : "—");
+      }
+    } catch {
+      /* ignore */
     }
+
+    let cancelled = false;
+    (async () => {
+      setLoadErr("");
+      const res = await fetch("/api/payments", { credentials: "include" });
+      const j: unknown = await res.json().catch(() => null);
+      if (!res.ok || !Array.isArray(j)) {
+        if (!cancelled) {
+          setLoadErr("Ödeme kayıtları yüklenemedi.");
+          setPayments([]);
+        }
+        return;
+      }
+      if (!cancelled) setPayments(j as Payment[]);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  const totalPaid = payments.filter((p) => p.status === "Tamamlandı").reduce((a, p) => a + p.amount, 0);
+  const debt = payments.filter((p) => p.status === "Bekliyor").reduce((a, p) => a + p.amount, 0);
 
   const handlePrint = (payment: Payment) => {
     alert(`${payment.id} numaralı dekont yazıcıya gönderiliyor...`);
@@ -49,12 +71,18 @@ export default function ResidentPaymentsPage() {
         </div>
       </div>
 
+      {loadErr && (
+        <div className="rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/25 p-4 text-sm text-amber-950 dark:text-amber-100">
+          {loadErr}
+        </div>
+      )}
+
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 p-5 rounded-2xl shadow-sm">
           <p className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Toplam Ödenen</p>
           <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">
-            {(payments.reduce((acc, curr) => acc + curr.amount, 0)).toLocaleString("tr-TR")} ₺
+            {totalPaid.toLocaleString("tr-TR")} ₺
           </p>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 p-5 rounded-2xl shadow-sm">
@@ -64,9 +92,15 @@ export default function ResidentPaymentsPage() {
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 p-5 rounded-2xl shadow-sm flex items-center justify-between">
           <div>
             <p className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Güncel Borç</p>
-            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">0 ₺</p>
+            <p
+              className={`text-2xl font-black mt-1 ${debt > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}`}
+            >
+              {debt.toLocaleString("tr-TR")} ₺
+            </p>
           </div>
-          <span className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">
+          <span
+            className={`p-2 rounded-xl ${debt > 0 ? "bg-amber-50 dark:bg-amber-950/20 text-amber-600" : "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400"}`}
+          >
             <CheckCircle2 className="h-5 w-5" />
           </span>
         </div>
@@ -102,7 +136,13 @@ export default function ResidentPaymentsPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-zinc-900 dark:text-zinc-100">{p.period}</span>
-                        <span className="px-2 py-0.5 text-[10px] bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-full font-medium">
+                        <span
+                          className={`px-2 py-0.5 text-[10px] rounded-full font-medium ${
+                            p.status === "Bekliyor"
+                              ? "bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400"
+                              : "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400"
+                          }`}
+                        >
                           {p.status}
                         </span>
                       </div>
@@ -150,11 +190,11 @@ export default function ResidentPaymentsPage() {
             <div className="space-y-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-zinc-500">Üye Adı Soyadı</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100">Ahmet Yılmaz</span>
+                <span className="font-semibold text-zinc-900 dark:text-zinc-100">{residentName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-500">Blok / Daire</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100">A Blok - Daire 14</span>
+                <span className="text-zinc-500">Daire bilgisi</span>
+                <span className="font-semibold text-zinc-900 dark:text-zinc-100">{apartmentMeta}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-500">Ödeme Dönemi</span>
@@ -170,7 +210,9 @@ export default function ResidentPaymentsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-500">Durum</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">{selectedPayment.status}</span>
+                <span className={`font-bold ${selectedPayment.status === "Bekliyor" ? "text-amber-600" : "text-emerald-600 dark:text-emerald-400"}`}>
+                  {selectedPayment.status}
+                </span>
               </div>
               <div className="flex justify-between border-t border-zinc-100 dark:border-zinc-800/80 pt-4 text-base">
                 <span className="font-bold text-zinc-900 dark:text-zinc-100">Toplam Tutar</span>

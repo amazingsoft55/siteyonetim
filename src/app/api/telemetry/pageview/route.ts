@@ -5,7 +5,7 @@ import { pageVisitsDaily } from "@/db/schema";
 
 export const runtime = "edge";
 
-const ALLOWED = new Set(["/", "/iletisim", "/hakkimizda", "/kurulum"]);
+const ALLOWED = new Set(["/", "/iletisim", "/destek", "/hakkimizda"]);
 
 type Body = { pathname?: unknown };
 

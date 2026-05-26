@@ -46,7 +46,7 @@ export default function LoginPage() {
         if (d.needsSeed) {
           setSetupBanner({
             kind: "warn",
-            text: "Henüz ilk site ve süper yönetici oluşturulmamış. Ortam değişkenleri tanımlandıktan sonra GET /api/seed kullanın (/kurulum).",
+            text: "Henüz ilk site ve süper yönetici oluşturulmamış. Barındırıcı hesabınızda ortam değişkenlerini tanımlayıp GET /api/seed çağrısı yapılmalıdır.",
           });
           return;
         }
@@ -112,7 +112,7 @@ export default function LoginPage() {
 
       const ok = data as {
         mustChangePassword?: boolean;
-        user: { role: string; id: string; name: string; siteId?: string | null };
+        user: { role: string; id: string; name: string; siteId?: string | null; apartmentNo?: string | null };
       };
 
       if (!ok?.user || typeof ok.user.role !== "string") {
@@ -178,15 +178,18 @@ export default function LoginPage() {
               href="/kurulum"
               className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 dark:text-indigo-400 underline underline-offset-2"
             >
-              Kurulum rehberine git →
+              Teknik kurulum rehberi (barındırıcı) →
             </Link>
           </div>
         )}
         {setupBanner && setupBanner.kind === "warn" && (
           <div className="p-3.5 text-sm rounded-xl bg-amber-50/90 text-amber-900 border border-amber-200/80 dark:bg-amber-950/35 dark:text-amber-100 dark:border-amber-800/60 space-y-1">
             <p>{setupBanner.text}</p>
+            <p className="text-[11px] opacity-95">
+              Yukarıdaki uyarıları yalnızca sistemi kuran teknik ek görür; sitenize tanımlı kullanıcılar için geçerli değildir.
+            </p>
             <Link href="/kurulum" className="text-xs font-bold underline text-indigo-700 dark:text-indigo-400">
-              Adım adım talimatlar
+              Teknik kurulum rehberi (yalnızca barındırıcı)
             </Link>
           </div>
         )}
@@ -201,9 +204,13 @@ export default function LoginPage() {
           <div className="p-3.5 text-sm rounded-xl bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800/50 animate-in fade-in duration-200 space-y-2">
             <p>{errorMsg}</p>
             {(errorMsg.includes("D1") || errorMsg.includes("bağlantı")) && (
-              <Link href="/kurulum" className="text-xs font-bold underline">
-                Kurulum sayfasına git
-              </Link>
+              <p className="text-xs text-red-600/90 dark:text-red-300/90">
+                Sunucu tarafı yapılandırma sorunu olabilir. Bilgi için sistem yöneticinize iletin (
+                <Link href="/kurulum" className="font-bold underline">
+                  teknik rehber
+                </Link>
+                ).
+              </p>
             )}
           </div>
         )}
@@ -310,11 +317,11 @@ export default function LoginPage() {
         </div>
 
         <p className="pt-6 border-t border-zinc-100 dark:border-zinc-800 text-center text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-          Giriş bilgileri yalnızca veritabanındaki hesaplara göredir. İlk kurulum için{" "}
-          <Link href="/kurulum" className="font-bold text-indigo-600 dark:text-indigo-400 underline">
-            Kurulum
+          Platforma giriş, size atanmış kullanıcı hesabıyla yapılır. Ürün veya satış için{" "}
+          <Link href="/destek" className="font-bold text-indigo-600 dark:text-indigo-400 underline">
+            destek
           </Link>{" "}
-          sayfasına bakın.
+          sayfamızı kullanın.
         </p>
 
       </div>

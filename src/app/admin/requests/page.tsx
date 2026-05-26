@@ -16,31 +16,37 @@ export default function AdminRequestsPage() {
   const [requests, setRequests] = React.useState<RequestItem[]>([]);
   const [search, setSearch] = React.useState("");
   const [filterStatus, setFilterStatus] = React.useState("Hepsi");
+  const [loadErr, setLoadErr] = React.useState("");
+
+  async function loadRequests() {
+    setLoadErr("");
+    const res = await fetch("/api/requests", { credentials: "include" });
+    const raw: unknown = await res.json().catch(() => null);
+    if (!res.ok || !Array.isArray(raw)) {
+      setLoadErr("Talepler D1 üzerinden okunamadı. Oturumu ve site bağlamını kontrol edin.");
+      setRequests([]);
+      return;
+    }
+    setRequests(raw as RequestItem[]);
+  }
 
   React.useEffect(() => {
-    const stored = localStorage.getItem("site_requests");
-    if (stored) {
-      setRequests(JSON.parse(stored));
-    } else {
-      const defaults: RequestItem[] = [
-        { id: "REQ-1002", title: "B Blok Asansör Titremesi", category: "Arıza", description: "B blok asansörü yukarı çıkarken 3. kat civarında çok fazla titreme yapıyor.", date: "24.05.2026", status: "İşlemde" },
-        { id: "REQ-1001", title: "Otopark Alanı Temizliği", category: "Temizlik", description: "-2. kat otopark alanında çok fazla toz birikmiş durumda, genel bir temizlik rica olunur.", date: "18.05.2026", status: "Çözüldü" }
-      ];
-      localStorage.setItem("site_requests", JSON.stringify(defaults));
-      setRequests(defaults);
-    }
+    void loadRequests();
   }, []);
 
-  const updateStatus = (id: string, newStatus: "Bekliyor" | "İşlemde" | "Çözüldü") => {
-    const updated = requests.map(r => {
-      if (r.id === id) {
-        return { ...r, status: newStatus };
-      }
-      return r;
+  const updateStatus = async (id: string, newStatus: "Bekliyor" | "İşlemde" | "Çözüldü") => {
+    const res = await fetch("/api/requests", {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status: newStatus }),
     });
-    localStorage.setItem("site_requests", JSON.stringify(updated));
-    setRequests(updated);
-    alert(`${id} numaralı talebin durumu "${newStatus}" olarak güncellendi.`);
+    if (!res.ok) {
+      alert("Durum güncellenemedi.");
+      return;
+    }
+    await loadRequests();
+    alert(`Talep ${id.slice(0, 8)}… durumu "${newStatus}" olarak kaydedildi.`);
   };
 
   const getStatusIcon = (status: string) => {
@@ -82,6 +88,7 @@ export default function AdminRequestsPage() {
       <div>
         <h2 className="text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-zinc-50">Arıza & Talepler</h2>
         <p className="text-zinc-500 dark:text-zinc-400 mt-1">Sakinlerden gelen bildirimleri takip edin, iş atamalarını yapın ve çözün.</p>
+        {loadErr && <p className="text-sm text-rose-600 dark:text-rose-400 mt-2 font-semibold">{loadErr}</p>}
       </div>
 
       {/* Filters */}
@@ -142,10 +149,6 @@ export default function AdminRequestsPage() {
                   <h4 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50 mt-1.5">{req.title}</h4>
                   <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-1 leading-relaxed max-w-xl">{req.description}</p>
                   
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs text-zinc-400 font-semibold">Gönderen:</span>
-                    <span className="text-xs text-zinc-600 dark:text-zinc-300 font-bold">Ahmet Yılmaz (A Blok - D14)</span>
-                  </div>
                 </div>
               </div>
 
@@ -161,7 +164,8 @@ export default function AdminRequestsPage() {
                   
                   {req.status !== "Bekliyor" && (
                     <button 
-                      onClick={() => updateStatus(req.id, "Bekliyor")}
+                      type="button"
+                      onClick={() => void updateStatus(req.id, "Bekliyor")}
                       className="px-2.5 py-1.5 text-xs font-bold rounded-lg border border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 dark:border-amber-900/40 dark:text-amber-400 dark:bg-amber-950/20 dark:hover:bg-amber-950/40 transition-colors cursor-pointer"
                     >
                       Beklet
@@ -169,7 +173,8 @@ export default function AdminRequestsPage() {
                   )}
                   {req.status !== "İşlemde" && (
                     <button 
-                      onClick={() => updateStatus(req.id, "İşlemde")}
+                      type="button"
+                      onClick={() => void updateStatus(req.id, "İşlemde")}
                       className="px-2.5 py-1.5 text-xs font-bold rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 dark:border-blue-900/40 dark:text-blue-400 dark:bg-blue-950/20 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
                     >
                       İşleme Al
@@ -177,7 +182,8 @@ export default function AdminRequestsPage() {
                   )}
                   {req.status !== "Çözüldü" && (
                     <button 
-                      onClick={() => updateStatus(req.id, "Çözüldü")}
+                      type="button"
+                      onClick={() => void updateStatus(req.id, "Çözüldü")}
                       className="px-2.5 py-1.5 text-xs font-bold rounded-lg border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:border-emerald-900/40 dark:text-emerald-400 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer"
                     >
                       Çözüldü

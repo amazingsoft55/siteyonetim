@@ -1,18 +1,43 @@
 -- =============================================================================
--- TEK ŞEMA DOSYASI (projede başka drizzle/*.sql yok — tüm tablolar burada)
+-- Site Yönetimi — TEK SQL PAKETİ (Cloudflare D1 / SQLite)
 -- =============================================================================
--- Boş D1 / yerel SQLite: bu dosyayı bir kez çalıştırın.
+-- Bu dosyada iki blok vardır:
 --
---   Yerel: npx wrangler d1 execute siteyonetim-db --local --file=./drizzle/full-schema.sql
---   Uzak:   npx wrangler d1 execute siteyonetim-db --remote --file=./drizzle/full-schema.sql
+--   A) OPSİYONEL VERİTABANI SİLME (tam sıfırlama) — başlık `[A]` altındaki blok `/* ... */`
+--      ile yorumlanmıştır. Tamamen sıfırlamak için önce bu yorum işaretlerini kaldırıp yalnızca DROP
+--      satırlarını çalıştırın; ardından CREATE bölümünü tekrar uygulayın.
 --
--- Cloudflare konsolu / D1 Studio: Dosyanın tamamını kopyalayıp yapıştırabilirsiniz.
--- DDL çoğunlukla IF NOT EXISTS kullanır (tekrar çalıştırmada güvenli).
+--   B) ŞEMA — CREATE IF NOT EXISTS (günlük kullanım; güvenli tekrar)
 --
--- Eski bir D1’de sütun eksikse: D1 Studio’dan ilgili ALTER veya yedek → yeni DB + bu dosya.
+--   Örnek (yalnızca şema, veri korunur):
+--     npx wrangler d1 execute siteyonetim-db --local --file=./drizzle/full-schema.sql
+--     npx wrangler d1 execute siteyonetim-db --remote --file=./drizzle/full-schema.sql
 -- =============================================================================
 
--- --- sites & users ---
+-- -----------------------------------------------------------------------------
+-- [A] TÜM TABLOLARI SİL (sıfırlama) — varsayılan: devre dışı (bloğu kullanmak için açın)
+-- -----------------------------------------------------------------------------
+/*
+PRAGMA foreign_keys = OFF;
+DROP TABLE IF EXISTS `page_visits_daily`;
+DROP TABLE IF EXISTS `platform_insights`;
+DROP TABLE IF EXISTS `user_presence`;
+DROP TABLE IF EXISTS `password_reset_tokens`;
+DROP TABLE IF EXISTS `payments`;
+DROP TABLE IF EXISTS `announcements`;
+DROP TABLE IF EXISTS `requests`;
+DROP TABLE IF EXISTS `admin_support_tickets`;
+DROP TABLE IF EXISTS `platform_public_contact`;
+DROP TABLE IF EXISTS `site_settings`;
+DROP TABLE IF EXISTS `users`;
+DROP TABLE IF EXISTS `sites`;
+PRAGMA foreign_keys = ON;
+*/
+
+-- -----------------------------------------------------------------------------
+-- [B] ŞEMA OLUŞTUR
+-- -----------------------------------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS `sites` (
   `id` text PRIMARY KEY NOT NULL,
   `name` text NOT NULL,
@@ -36,7 +61,6 @@ CREATE TABLE IF NOT EXISTS `users` (
 
 CREATE UNIQUE INDEX IF NOT EXISTS `users_email_or_phone_unique` ON `users` (`email_or_phone`);
 
--- --- password_reset_tokens ---
 CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
   `id` text PRIMARY KEY NOT NULL,
   `user_id` text NOT NULL,
@@ -48,7 +72,6 @@ CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
 
 CREATE INDEX IF NOT EXISTS `idx_password_reset_tokens_user` ON `password_reset_tokens` (`user_id`);
 
--- --- payments, announcements, requests ---
 CREATE TABLE IF NOT EXISTS `payments` (
   `id` text PRIMARY KEY NOT NULL,
   `user_id` text NOT NULL,
@@ -97,7 +120,23 @@ CREATE TABLE IF NOT EXISTS `site_settings` (
   FOREIGN KEY (`site_id`) REFERENCES `sites`(`id`)
 );
 
--- --- admin_support_tickets ---
+CREATE TABLE IF NOT EXISTS `platform_public_contact` (
+  `id` text PRIMARY KEY NOT NULL,
+  `source` text NOT NULL DEFAULT 'iletisim',
+  `name` text NOT NULL,
+  `email` text NOT NULL,
+  `phone` text,
+  `subject` text NOT NULL,
+  `body` text NOT NULL,
+  `status` text NOT NULL DEFAULT 'OPEN',
+  `super_admin_reply` text,
+  `updated_at` text DEFAULT (CURRENT_TIMESTAMP),
+  `created_at` text DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE INDEX IF NOT EXISTS `idx_platform_public_contact_status` ON `platform_public_contact` (`status`);
+CREATE INDEX IF NOT EXISTS `idx_platform_public_contact_created` ON `platform_public_contact` (`created_at`);
+
 CREATE TABLE IF NOT EXISTS `admin_support_tickets` (
   `id` text PRIMARY KEY NOT NULL,
   `site_id` text NOT NULL,
@@ -115,7 +154,6 @@ CREATE TABLE IF NOT EXISTS `admin_support_tickets` (
 CREATE INDEX IF NOT EXISTS `idx_admin_support_site` ON `admin_support_tickets` (`site_id`);
 CREATE INDEX IF NOT EXISTS `idx_admin_support_status` ON `admin_support_tickets` (`status`);
 
--- --- dashboard: presence, visits, platform_insights ---
 CREATE TABLE IF NOT EXISTS `user_presence` (
   `user_id` text PRIMARY KEY NOT NULL,
   `last_path` text,

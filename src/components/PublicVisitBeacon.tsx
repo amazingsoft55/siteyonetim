@@ -3,7 +3,7 @@
 import * as React from "react";
 import { usePathname } from "next/navigation";
 
-const ALLOWED_PATHS = new Set(["/", "/iletisim", "/hakkimizda", "/kurulum"]);
+const ALLOWED_PATHS = new Set(["/", "/iletisim", "/destek", "/hakkimizda"]);
 
 /** Herkese açık bilgi sayfalarında günlük ziyaret sinyali (D1; bot UA elenir). */
 export function PublicVisitBeacon() {

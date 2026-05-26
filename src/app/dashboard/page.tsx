@@ -4,12 +4,21 @@ import * as React from "react";
 import { CreditCard, CheckCircle2, AlertCircle, Megaphone, Wrench, Shield } from "lucide-react";
 
 interface Announcement {
-  id: number;
+  id: string;
   title: string;
   date: string;
   content: string;
   category?: string;
   isNew?: boolean;
+}
+
+interface PaymentRow {
+  id: string;
+  period: string;
+  amount: number;
+  date: string;
+  status: string;
+  type: string;
 }
 
 interface RequestItem {
@@ -22,45 +31,59 @@ interface RequestItem {
 }
 
 export default function DashboardPage() {
-  const [balance, setBalance] = React.useState(1250);
+  const [balance, setBalance] = React.useState(0);
+  const [residentName, setResidentName] = React.useState("Sakin");
   const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
   const [activeRequests, setActiveRequests] = React.useState<RequestItem[]>([]);
 
   React.useEffect(() => {
-    // 1. Sync Balance
-    const storedBalance = localStorage.getItem("resident_balance");
-    if (storedBalance !== null) {
-      setBalance(Number(storedBalance));
-    } else {
-      localStorage.setItem("resident_balance", "1250");
-      setBalance(1250);
+    try {
+      const raw = localStorage.getItem("user");
+      if (raw) {
+        const u = JSON.parse(raw) as { name?: string };
+        if (typeof u?.name === "string" && u.name.trim()) setResidentName(u.name.trim());
+      }
+    } catch {
+      /* ignore */
     }
 
-    // 2. Sync Announcements
-    const storedAnn = localStorage.getItem("site_announcements");
-    if (storedAnn) {
-      setAnnouncements(JSON.parse(storedAnn).slice(0, 3)); // show top 3
-    } else {
-      const defaultAnn: Announcement[] = [
-        { id: 1, title: "Havuz Bakımı Hakkında", date: "24 Mayıs 2026", content: "Açık havuzumuz 1 Haziran itibariyle kullanıma açılacaktır. Havuz kurallarına dikkat etmenizi rica ederiz.", category: "Genel", isNew: true },
-        { id: 2, title: "Mayıs Ayı Ortak Gider Bildirimi", date: "20 Mayıs 2026", content: "Ortak alan elektrik faturalarındaki artış nedeniyle Haziran ayı aidatlarına %5 enflasyon farkı yansıtılmıştır.", category: "Mali", isNew: false }
-      ];
-      localStorage.setItem("site_announcements", JSON.stringify(defaultAnn));
-      setAnnouncements(defaultAnn);
-    }
+    let cancelled = false;
+    (async () => {
+      const opts = { credentials: "include" as const };
 
-    // 3. Sync Requests
-    const storedReq = localStorage.getItem("site_requests");
-    if (storedReq) {
-      const allReq: RequestItem[] = JSON.parse(storedReq);
-      setActiveRequests(allReq.filter(r => r.status !== "Çözüldü"));
-    } else {
-      const defaultReq: RequestItem[] = [
-        { id: "REQ-1002", title: "B Blok Asansör Titremesi", category: "Arıza", description: "B blok asansörü yukarı çıkarken 3. kat civarında çok fazla titreme yapıyor.", date: "24.05.2026", status: "İşlemde" }
-      ];
-      localStorage.setItem("site_requests", JSON.stringify(defaultReq));
-      setActiveRequests(defaultReq);
-    }
+      try {
+        const [annRes, reqRes, payRes] = await Promise.all([
+          fetch("/api/announcements", opts),
+          fetch("/api/requests", opts),
+          fetch("/api/payments", opts),
+        ]);
+
+        if (!cancelled && annRes.ok) {
+          const j: unknown = await annRes.json();
+          const list = Array.isArray(j) ? (j as Announcement[]) : [];
+          setAnnouncements(list.slice(0, 3));
+        }
+
+        if (!cancelled && reqRes.ok) {
+          const j: unknown = await reqRes.json();
+          const allReq = Array.isArray(j) ? (j as RequestItem[]) : [];
+          setActiveRequests(allReq.filter((r) => r.status !== "Çözüldü"));
+        }
+
+        if (!cancelled && payRes.ok) {
+          const j: unknown = await payRes.json();
+          const plist = Array.isArray(j) ? (j as PaymentRow[]) : [];
+          const unpaid = plist.filter((p) => p.status === "Bekliyor").reduce((a, p) => a + Number(p.amount), 0);
+          setBalance(Number.isFinite(unpaid) ? Math.round(unpaid * 100) / 100 : 0);
+        }
+      } catch {
+        /* ağ kopması */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -70,13 +93,13 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-zinc-50 flex items-center gap-2">
-            Merhaba Ahmet Yılmaz,
+            Merhaba {residentName},
           </h2>
           <p className="text-zinc-500 dark:text-zinc-400 mt-1">Görünüşe göre bugün sitenizde her şey yolunda.</p>
         </div>
         <div className="text-left sm:text-right">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs font-semibold">
-            <Shield className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" /> A Blok / Daire 14
+            <Shield className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" /> Güvenli oturum · D1 bağlı
           </div>
         </div>
       </div>

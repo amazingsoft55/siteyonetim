@@ -34,7 +34,7 @@ export default function AdminResidentsAccountsPage() {
 
   async function reload() {
     setErr("");
-    const res = await fetch("/api/admin/users");
+    const res = await fetch("/api/admin/users", { credentials: "include" });
     if (!res.ok) {
       const j: unknown = await res.json().catch(() => null);
       setErr(readJsonError(j, "Liste alınamadı."));
@@ -72,6 +72,7 @@ export default function AdminResidentsAccountsPage() {
     setMsg("");
     const res = await fetch("/api/admin/users", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: nuName.trim(),
@@ -132,7 +133,7 @@ export default function AdminResidentsAccountsPage() {
   async function del(u: UserRow) {
     if (!window.confirm(`${u.name} silinsin mi?`)) return;
     setErr("");
-    const res = await fetch(`/api/admin/users/${u.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/users/${u.id}`, { method: "DELETE", credentials: "include" });
     const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
       setErr(readJsonError(j, "Silinemedi."));

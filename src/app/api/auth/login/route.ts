@@ -106,6 +106,7 @@ export async function POST(request: Request) {
         name: user.name,
         role: user.role,
         siteId: user.siteId,
+        apartmentNo: user.apartmentNo,
       },
     });
   } catch (error: any) {
