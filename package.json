@@ -9,7 +9,8 @@
     "build:next": "next build",
     "start": "next start",
     "build:mobile": "next build && npx cap sync",
-    "lint": "eslint"
+    "lint": "eslint",
+    "deploy:noop": "node -e \"console.log('[siteyonetim] Workers deploy skipped; use Node hosting. See README.');\""
   },
   "dependencies": {
     "@capacitor/android": "^8.3.4",
@@ -50,6 +51,8 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.18",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.95.0",
+    "@opennextjs/cloudflare": "^1.19.11"
   }
 }
