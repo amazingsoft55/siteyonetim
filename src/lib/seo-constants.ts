@@ -22,7 +22,7 @@ export function buildOrganizationJsonLd(): Record<string, unknown> {
     "@type": "Organization",
     name,
     url: siteUrl,
-    logo: `${siteUrl}/logo.png`,
+    logo: `${siteUrl}/icons/app-mark.svg`,
     description:
       "Apartman ve site yöneticileri ile sakinler için aidat, duyuru ve talep süreçlerini tek yerden yöneten güvenli dijital platform.",
     knowsAbout: defaultKeywords.slice(0, 6),
@@ -75,10 +75,8 @@ export function rootDefaultMetadata(): Metadata {
       icon: [
         { url: "/icons/app-mark.svg", type: "image/svg+xml", sizes: "512x512" },
         { url: "/icons/app-mark.svg", type: "image/svg+xml", sizes: "any" },
-        { url: "/logo.png", type: "image/png", sizes: "192x192" },
-        { url: "/logo.png", type: "image/png", sizes: "512x512" },
       ],
-      apple: [{ url: "/logo.png", sizes: "180x180", type: "image/png" }],
+      apple: [{ url: "/icons/app-mark.svg", sizes: "180x180", type: "image/svg+xml" }],
     },
     alternates: { canonical: siteUrl },
     robots: {
@@ -93,7 +91,7 @@ export function rootDefaultMetadata(): Metadata {
       siteName: "Site Yönetimi",
       title: title.default,
       description,
-      images: [{ url: "/logo.png", width: 512, height: 512, alt: "Site Yönetimi" }],
+      images: [{ url: "/icons/app-mark.svg", width: 512, height: 512, alt: "Site Yönetimi" }],
     },
     twitter: {
       card: "summary_large_image",

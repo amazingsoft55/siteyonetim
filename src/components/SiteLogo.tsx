@@ -1,4 +1,9 @@
+"use client";
+
 import * as React from "react";
+
+const PNG = "/logo.png";
+const FALLBACK_MARK = "/icons/app-mark.svg";
 
 type Props = {
   width?: number;
@@ -9,8 +14,8 @@ type Props = {
 };
 
 /**
- * PWA yüklemede basit <img> kullanır; böylece manifest’ten yüklenirken proxy yoluna takılmaz.
- * statik public kökünden doğrudan img ile yüklenir.
+ * Varsayılan: `public/logo.png` varsa kullanılır; yoksa (404/boş) repodaki vektör işareti yüklenir.
+ * Statik PNG yerine doğrudan vektör isterseniz `SiteMarkSvg` kullanın.
  */
 export function SiteLogo({
   width = 40,
@@ -19,24 +24,27 @@ export function SiteLogo({
   alt = "Site Yönetimi logosu",
   rounded = false,
 }: Props) {
+  const [src, setSrc] = React.useState<string>(PNG);
+
   return (
     <img
-      src="/logo.png"
+      src={src}
       alt={alt}
       width={width}
       height={height}
       decoding="async"
       fetchPriority="high"
+      onError={() => setSrc(FALLBACK_MARK)}
       className={[rounded ? "rounded-xl object-cover" : "object-contain", className].filter(Boolean).join(" ")}
     />
   );
 }
 
-/** Ana PWA için vektör yedek (boyut bildirimi: any — tarayıcı ölçekler) */
+/** Ana PWA için vektör işareti */
 export function SiteMarkSvg({ width = 40, height = 40, className = "", alt }: Props & { alt?: string }) {
   return (
     <img
-      src="/icons/app-mark.svg"
+      src={FALLBACK_MARK}
       alt={alt ?? "Site Yönetimi işareti"}
       width={width}
       height={height}

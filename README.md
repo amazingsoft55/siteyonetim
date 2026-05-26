@@ -77,7 +77,7 @@ npm run start
 **`npm run build` bu projede başarılı olur;** sorun çoğu zaman ikinci adımda çıkar:
 
 - Pipeline’ınız **`npx wrangler deploy`** çalıştırıyorsa: Bu repo **standalone Next (`next start`) + disk üstü SQLite** içindir. Workers ortamında **kalıcı dosya SQLite** beklenen şekilde çalışmaz; Wrangler da sık sık **OpenNext** ile özel çıktı ister (`opennextjs-cloudflare build`).
-- **`Cannot find package 'wrangler'`** hatası: `@opennextjs/cloudflare migrate` sırasında **`wrangler` projenin `node_modules` içinde beklenir.** Repoda **`wrangler` bir devDependency** olarak tanımlıdır (`npm ci` dahil kurulmalıdır). **`package-lock.json` her zaman commit edilmeli** — aksi hâlde CI’da `npm ci` “package.json and package-lock.json are not in sync” ile durur.
+- **`Cannot find package 'wrangler'`** (`@opennextjs/cloudflare migrate` sırasında): `wrangler` bu projede **`dependencies`** içindedir — bazı ortamlarda `npm ci --omit=dev` veya üretim modu yüzünden `devDependencies` yüklenmezdi; böyle çözülür. **`package-lock.json` her zaman repo ile birlikte commit edilmelidir.**
 - Yukarısı düzelse bile **`better-sqlite3` ile dosya tabanlı SQLite**, Workers ortamında **güvenilir şekilde üretime uygun değildir.** Bu repo için **Önerilen:** Cloudflare **Deploy / production branch command** alanından **`npx wrangler deploy`’u kaldırın** — yalnızca `npm run build` kullanın — ve gerçek servisi **`npm run start`** veren kalıcı diski olan bir Node sunucunda çalıştırın. Geçici yeşil pipeline için Deploy komutu: **`npm run deploy:noop`** (yayınlamaz, yalnızca adımı geçirir).
 
 **Ne yapmalı?**
@@ -89,7 +89,7 @@ npm run start
 
 ### PWA
 
-Ana manifest `public/manifest.json`; süper yönetici için `manifest-super-admin.json` ve `/super-admin` layout kullanılıyor.
+Ana manifest `public/manifest.json`; süper yönetici için `manifest-super-admin.json` ve `/super-admin` layout kullanılıyor. Raster logo isterseniz isteğe bağlı olarak `public/logo.png` ekleyin — arayüzde `SiteLogo` önce bunu dener; yoksa `public/icons/app-mark.svg` yüklenir.
 
 ---
 
