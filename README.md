@@ -72,6 +72,20 @@ npm run start
 
 `DATABASE_PATH` veya varsayılan `data/` klasörünü kalıcı volume veya dizine bağlayın.
 
+### Cloudflare Workers / Pages ve `wrangler deploy`
+
+**`npm run build` bu projede başarılı olur;** sorun çoğu zaman ikinci adımda çıkar:
+
+- Pipeline’ınız **`npx wrangler deploy`** çalıştırıyorsa: Bu repo **standalone Next (`next start`) + disk üstü SQLite** içindir. Workers ortamında **kalıcı dosya SQLite** beklenen şekilde çalışmaz; Wrangler da sık sık **OpenNext** ile özel çıktı ister (`opennextjs-cloudflare build`).
+- Günlük oluşan **`Cannot find package 'wrangler'`** (`@opennextjs/cloudflare` migrate sırasında) hatası: `wrangler` proje **`dependencies` / `devDependencies`** içinde yoksa veya `npm ci` yalın kurulum yapıyorsa npx ile geçici yüklenen Wrangler ile alt süreçler uyuşmaz.
+
+**Ne yapmalı?**
+
+| Hedef | Öneri |
+|--------|--------|
+| SQLite + mevcut kod | **Cloudflare’e `wrangler deploy` bağlamayın.** Node barındırıcı (kalıcı disk): ör. VPS, Railway/Render ile volume, Fly.io volume, Docker host. Kurulum: `npm ci`, `npm run build`, ilk deploy’da bir kez `npm run db:apply` veya doğrudan SQLite dosyanızı kopyalayın, sonra `npm run start`. |
+| Mutlaka Cloudflare | Mimariyi değiştirmeniz gerekir: **OpenNext + Cloudflare** dokümantasyonuna göre derleme + **D1/Turso/Postgres** gibi Worker uyumlu veri katmanı. Bu repodaki `better-sqlite3` tek başına Workers’ta uygun değildir. |
+
 ### PWA
 
 Ana manifest `public/manifest.json`; süper yönetici için `manifest-super-admin.json` ve `/super-admin` layout kullanılıyor.
