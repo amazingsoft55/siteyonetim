@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { sql } from "drizzle-orm";
-import { tryGetDb } from "@/lib/cloudflare-db";
+import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
 import { pageVisitsDaily } from "@/db/schema";
 
 export const runtime = "edge";
@@ -28,9 +28,7 @@ export async function POST(request: Request) {
   }
 
   const d = tryGetDb();
-  if (!d.ok) {
-    return NextResponse.json({ error: "Veritabanı bağlamı yok." }, { status: 503 });
-  }
+  if (!d.ok) return jsonDbUnavailable(d.error);
 
   const day = new Date().toISOString().slice(0, 10);
 

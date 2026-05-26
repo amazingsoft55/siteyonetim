@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { and, count, eq, gte, isNotNull } from "drizzle-orm";
 import { getSession } from "@/lib/session";
-import { tryGetDb } from "@/lib/cloudflare-db";
+import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
 import {
   sites,
   users,
@@ -21,9 +21,7 @@ export async function GET() {
   }
 
   const d = tryGetDb();
-  if (!d.ok) {
-    return NextResponse.json({ error: "Veritabanı bağlamı yok." }, { status: 503 });
-  }
+  if (!d.ok) return jsonDbUnavailable(d.error);
 
   const freshAt = new Date().toISOString();
   let dbLatencyMs: number | null = null;

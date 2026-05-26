@@ -89,6 +89,31 @@ export default function KurulumPage() {
           </ul>
         </section>
 
+        <section className="rounded-2xl border border-amber-200/80 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 p-6 space-y-3">
+          <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">4 · “Site oluşturulamadı” / D1’de sorgu sayısı 0</h2>
+          <p className="text-sm text-amber-950/90 dark:text-amber-100/85 leading-relaxed">
+            Kod, veritabanını yalnızca <strong>Cloudflare Workers içinde env.DB ile</strong> görür (<code className="text-xs bg-white/70 dark:bg-zinc-900/60 px-1 rounded">wrangler.toml</code>{" "}
+            içinde binding adı tam olarak <code className="text-xs px-1">DB</code> ve <code className="text-xs px-1">database_id</code> doğru olmalı).
+            Yerelde doğrudan <code>Vercel</code> veya <code>next start</code> ile yayınlıyorsanız D1 <strong>çalışmaz</strong>; panoda tablolar olsa bile uygulama sorgu göndermez.
+          </p>
+          <ul className="text-sm list-disc pl-5 space-y-2 text-amber-950/85 dark:text-amber-200/85">
+            <li>
+              Uygulamayı dağıttığınız Worker’a gidin → <strong>Bağlamalar</strong>: D1 içinde bir kayıt var mı? Değişken adı tam olarak{" "}
+              <code className="text-[11px]">DB</code> olmalı.
+            </li>
+            <li>
+              Repo kökünden <code className="text-xs bg-white/70 dark:bg-zinc-900/50 px-1 rounded">npm run build</code> (veya projenizdeki next-on-pages build) ardından{" "}
+              <code className="text-xs bg-white/70 dark:bg-zinc-900/50 px-1 rounded">npx wrangler deploy</code> kullanın — böylece{" "}
+              <code className="text-xs">wrangler.toml</code> içindeki D1 satırı Worker’a işlenir.
+            </li>
+            <li>
+              Tarayıcıda <Link href="/api/setup/status" className="underline font-semibold">/api/setup/status</Link>{" "}
+              açın; 503 ise mesajda <code className="text-[11px]">NO_CLOUDFLARE_CONTEXT</code> veya bağlama uyarısı görürsünüz.
+              API tarafında 503 yanıtta <code className="text-[11px]">code</code> alanı da döner (<code className="text-[11px]">NO_DB_BINDING</code> vb.).
+            </li>
+          </ul>
+        </section>
+
         <div className="flex flex-wrap gap-3 pt-4">
           <Link
             href="/login"

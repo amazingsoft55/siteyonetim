@@ -22,6 +22,8 @@ Uzak D1 için: `npm run db:apply:remote`
 
 Yerelde `npm run dev` sırasında D1 bağlamı için `next.config.mjs` içinde **`setupDevPlatform`** kullanılır (`@cloudflare/next-on-pages/next-dev`). Sorun çıkarsa ortam dosyasında `SKIP_DEV_PLATFORM=1` ile devre dışı bırakılabilir (D1 bağlanmaz; sadece teşhis).
 
+**D1 konsolunda sorgular 0:** Uygulama gerçekte bu D1 ile konuşmuyor olabilir (Workers dışında çalışan site, bağlama eksik veya bağlama adı `DB` değil). Ayrıntı: **`/kurulum`** bölüm 4 ve **`/api/setup/status`**.
+
 ## Getting Started (geliştirme sunucusu)
 
 ```bash

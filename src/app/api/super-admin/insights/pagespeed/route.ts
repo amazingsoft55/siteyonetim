@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
-import { tryGetDb } from "@/lib/cloudflare-db";
+import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
 import { platformInsights } from "@/db/schema";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
@@ -32,7 +32,7 @@ export async function POST() {
   }
 
   const d = tryGetDb();
-  if (!d.ok) return NextResponse.json({ error: "Veritabanı bağlamı yok." }, { status: 503 });
+  if (!d.ok) return jsonDbUnavailable(d.error);
 
   const siteUrl = getPublicSiteUrl();
   const qs = new URLSearchParams({

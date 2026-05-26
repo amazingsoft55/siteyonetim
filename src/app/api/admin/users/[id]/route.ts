@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { getSession } from "@/lib/session";
-import { tryGetDb } from "@/lib/cloudflare-db";
+import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
 import { users, payments, requests } from "@/db/schema";
 
 export const runtime = "edge";
@@ -21,10 +21,6 @@ function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
 }
 
-function noDb() {
-  return NextResponse.json({ error: "Veritabanı bağlamı yok." }, { status: 503 });
-}
-
 type PatchBody = {
   name?: unknown;
   emailOrPhone?: unknown;
@@ -40,7 +36,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   if (!targetId) return NextResponse.json({ error: "Kimlik eksik" }, { status: 400 });
 
   const d = tryGetDb();
-  if (!d.ok) return noDb();
+  if (!d.ok) return jsonDbUnavailable(d.error);
 
   const existing = await d.db.select().from(users).where(eq(users.id, targetId)).limit(1);
   if (!existing[0]) return NextResponse.json({ error: "Bulunamadı" }, { status: 404 });
@@ -110,7 +106,7 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
   if (!targetId) return NextResponse.json({ error: "Kimlik eksik" }, { status: 400 });
 
   const d = tryGetDb();
-  if (!d.ok) return noDb();
+  if (!d.ok) return jsonDbUnavailable(d.error);
 
   const victim = await d.db.select().from(users).where(eq(users.id, targetId)).limit(1);
   if (!victim[0]) return NextResponse.json({ error: "Bulunamadı" }, { status: 404 });

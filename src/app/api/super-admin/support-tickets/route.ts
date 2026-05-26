@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { desc, eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
-import { tryGetDb } from "@/lib/cloudflare-db";
+import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
 import { adminSupportTickets, sites, users } from "@/db/schema";
 
 export const runtime = "edge";
@@ -10,16 +10,11 @@ function forbidden() {
   return NextResponse.json({ error: "Yetkisiz." }, { status: 403 });
 }
 
-function noDb() {
-  return NextResponse.json({ error: "Veritabanı bağlamı yok." }, { status: 503 });
-}
-
-export async function GET() {
   const session = await getSession();
   if (!session || session.role !== "SUPER_ADMIN") return forbidden();
 
   const d = tryGetDb();
-  if (!d.ok) return noDb();
+  if (!d.ok) return jsonDbUnavailable(d.error);
 
   const rows = await d.db
     .select({
