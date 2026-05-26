@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS `announcements` (
   `site_id` text,
   `title` text NOT NULL,
   `content` text NOT NULL,
+  `category` text,
   `created_at` text DEFAULT (CURRENT_TIMESTAMP),
   FOREIGN KEY (`site_id`) REFERENCES `sites`(`id`)
 );
@@ -78,9 +79,21 @@ CREATE TABLE IF NOT EXISTS `requests` (
   `site_id` text,
   `subject` text NOT NULL,
   `description` text NOT NULL,
+  `category` text,
   `status` text NOT NULL DEFAULT 'OPEN',
   `created_at` text DEFAULT (CURRENT_TIMESTAMP),
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),
+  FOREIGN KEY (`site_id`) REFERENCES `sites`(`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `site_settings` (
+  `site_id` text PRIMARY KEY NOT NULL,
+  `default_aidat` text,
+  `manager_name` text,
+  `iban` text,
+  `bank_name` text,
+  `phone` text,
+  `updated_at` text DEFAULT (CURRENT_TIMESTAMP),
   FOREIGN KEY (`site_id`) REFERENCES `sites`(`id`)
 );
 

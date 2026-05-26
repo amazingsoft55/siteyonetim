@@ -1,60 +1,165 @@
 import { NextResponse } from "next/server";
-import { readDb, writeDb } from "@/lib/db";
+import { desc, eq, inArray } from "drizzle-orm";
+
+import { getSession } from "@/lib/session";
+import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { jsonSqlError } from "@/lib/db-query-error";
+import { payments, users } from "@/db/schema";
 
 export const runtime = "edge";
 
+function forbidden() {
+  return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
+}
+
+function toClientPayment(row: {
+  id: string;
+  title: string;
+  amount: number;
+  status: string;
+  paidAt: string | null;
+  createdAt: string | null;
+}) {
+  const when = row.paidAt ?? row.createdAt ?? new Date().toISOString();
+  const datePart = when.includes("T") ? new Date(when).toLocaleDateString("tr-TR") : when;
+  return {
+    id: row.id,
+    period: row.title,
+    amount: row.amount,
+    date: datePart,
+    status: row.status === "PAID" ? "Tamamlandı" : "Bekliyor",
+    type: "Kayıt",
+  };
+}
+
+/** Ödemeler — D1 (sakin veya site yöneticisi görünümü) */
 export async function GET() {
+  const session = await getSession();
+  if (!session) return forbidden();
+
+  const d = tryGetDb();
+  if (!d.ok) return jsonDbUnavailable(d.error);
+
   try {
-    const db = await readDb();
-    return NextResponse.json(db.payments);
-  } catch (err) {
-    return NextResponse.json({ error: "Ödemeler yüklenemedi." }, { status: 500 });
+    const order = desc(payments.createdAt);
+
+    if (session.role === "USER") {
+      const rows = await d.db.select().from(payments).where(eq(payments.userId, session.id)).orderBy(order);
+      return NextResponse.json(rows.map(toClientPayment));
+    }
+
+    if (session.role === "ADMIN" && session.siteId) {
+      const siteUsers = await d.db.select({ id: users.id }).from(users).where(eq(users.siteId, session.siteId));
+      const ids = siteUsers.map((u) => u.id);
+      if (ids.length === 0) return NextResponse.json([]);
+      const rows = await d.db
+        .select()
+        .from(payments)
+        .where(inArray(payments.userId, ids))
+        .orderBy(order);
+      return NextResponse.json(rows.map(toClientPayment));
+    }
+
+    if (session.role === "SUPER_ADMIN") {
+      const rows = await d.db.select().from(payments).orderBy(order).limit(500);
+      return NextResponse.json(rows.map(toClientPayment));
+    }
+
+    return forbidden();
+  } catch (e) {
+    return jsonSqlError(e, "Ödemeler listelenemedi.");
   }
 }
 
-type PaymentPostBody = {
+type UserPostBody = {
   amount?: unknown;
   period?: unknown;
   type?: unknown;
-  cardName?: unknown;
+};
+
+type AdminPostBody = UserPostBody & {
+  userId?: unknown;
+  markPaid?: unknown;
 };
 
 export async function POST(request: Request) {
+  const session = await getSession();
+  if (!session) return forbidden();
+
+  const d = tryGetDb();
+  if (!d.ok) return jsonDbUnavailable(d.error);
+
+  let raw: AdminPostBody;
   try {
-    const db = await readDb();
-    const raw = (await request.json()) as PaymentPostBody;
-    const { amount, period, type } = raw;
+    raw = (await request.json()) as AdminPostBody;
+  } catch {
+    return NextResponse.json({ error: "Geçersiz JSON" }, { status: 400 });
+  }
 
-    const paymentAmount = Number(amount) || 1250;
-    const paymentPeriod =
-      typeof period === "string" && period.trim().length > 0 ? period : "Mayıs 2026";
-    const paymentType =
-      typeof type === "string" && type.trim().length > 0 ? type : "Kredi Kartı";
+  const amount = Number(raw.amount);
+  const periodRaw = typeof raw.period === "string" ? raw.period.trim() : "";
+  const typ = typeof raw.type === "string" && raw.type.trim().length > 0 ? raw.type.trim() : "Ödemesi";
+  const period = periodRaw || new Date().toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
 
-    // 1. Create payment transaction record
-    const newPayment = {
-      id: `PAY-${Math.floor(10000 + Math.random() * 90000)}`,
-      period: paymentPeriod,
-      amount: paymentAmount,
-      date: new Date().toLocaleDateString("tr-TR"),
-      status: "Başarılı",
-      type: paymentType
-    };
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return NextResponse.json({ error: "Geçerli tutar gereklidir." }, { status: 400 });
+  }
 
-    // Prepend payment record
-    db.payments = [newPayment, ...db.payments];
+  const id =
+    typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `pay-${Date.now()}`;
+  const nowIso = new Date().toISOString();
+  const title = `Aidat · ${period} (${typ})`;
 
-    // 2. Reset Ahmet Yılmaz's (id: 1) debt to 0 in residents table
-    const ahmetIndex = db.residents.findIndex(r => r.id === 1);
-    if (ahmetIndex !== -1) {
-      db.residents[ahmetIndex].borc = 0;
-      db.residents[ahmetIndex].durum = "Düzenli";
+  try {
+    if (session.role === "USER") {
+      if (!session.siteId) {
+        return NextResponse.json({ error: "Site bilgisi eksik." }, { status: 400 });
+      }
+      await d.db.insert(payments).values({
+        id,
+        userId: session.id,
+        siteId: session.siteId,
+        amount,
+        title,
+        status: "PAID",
+        paidAt: nowIso,
+      });
+      const row = await d.db.select().from(payments).where(eq(payments.id, id)).limit(1);
+      return NextResponse.json({ success: true, payment: row[0] ? toClientPayment(row[0]) : null });
     }
 
-    await writeDb(db);
+    if (session.role === "ADMIN" || session.role === "SUPER_ADMIN") {
+      const targetUser = typeof raw.userId === "string" ? raw.userId.trim() : "";
+      if (!targetUser) {
+        return NextResponse.json({ error: "userId zorunludur." }, { status: 400 });
+      }
 
-    return NextResponse.json({ success: true, payment: newPayment });
-  } catch (err) {
-    return NextResponse.json({ error: "Ödeme işlemi başarısız oldu." }, { status: 500 });
+      const u = await d.db.select().from(users).where(eq(users.id, targetUser)).limit(1);
+      if (!u.length) {
+        return NextResponse.json({ error: "Kullanıcı bulunamadı." }, { status: 404 });
+      }
+
+      if (session.role === "ADMIN" && session.siteId && u[0].siteId !== session.siteId) {
+        return NextResponse.json({ error: "Bu kullanıcı sizin sitenize ait değil." }, { status: 403 });
+      }
+
+      const markPaid = raw.markPaid !== false;
+      await d.db.insert(payments).values({
+        id,
+        userId: targetUser,
+        siteId: u[0].siteId ?? null,
+        amount,
+        title,
+        status: markPaid ? "PAID" : "UNPAID",
+        paidAt: markPaid ? nowIso : null,
+      });
+
+      const row = await d.db.select().from(payments).where(eq(payments.id, id)).limit(1);
+      return NextResponse.json({ success: true, payment: row[0] ? toClientPayment(row[0]) : null });
+    }
+
+    return forbidden();
+  } catch (e) {
+    return jsonSqlError(e, "Ödeme kaydedilemedi.");
   }
 }

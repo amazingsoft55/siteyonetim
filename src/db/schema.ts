@@ -39,6 +39,7 @@ export const announcements = sqliteTable("announcements", {
   siteId: text("site_id").references(() => sites.id),
   title: text("title").notNull(),
   content: text("content").notNull(),
+  category: text("category"),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
@@ -48,8 +49,22 @@ export const requests = sqliteTable("requests", {
   siteId: text("site_id").references(() => sites.id),
   subject: text("subject").notNull(),
   description: text("description").notNull(),
+  category: text("category"),
   status: text("status", { enum: ["OPEN", "IN_PROGRESS", "RESOLVED"] }).notNull().default("OPEN"),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+/** Site başına görünen iletişim / aidat metinleri (D1 kalıcı) */
+export const siteSettings = sqliteTable("site_settings", {
+  siteId: text("site_id")
+    .primaryKey()
+    .references(() => sites.id),
+  defaultAidat: text("default_aidat"),
+  managerName: text("manager_name"),
+  iban: text("iban"),
+  bankName: text("bank_name"),
+  phone: text("phone"),
+  updatedAt: text("updated_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 /** Site yöneticisinden platform süper yöneticisine destek talebi */

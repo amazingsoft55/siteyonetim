@@ -1,88 +1,180 @@
 import { NextResponse } from "next/server";
-import { readDb, writeDb } from "@/lib/db";
+import { and, desc, eq } from "drizzle-orm";
+import { getSession } from "@/lib/session";
+import { tryGetDb, jsonDbUnavailable } from "@/lib/cloudflare-db";
+import { jsonSqlError } from "@/lib/db-query-error";
+import { requests as residentRequests } from "@/db/schema";
+import { dbRequestToClient, uiStatusToDb, type ClientRequestItem } from "@/lib/request-ui";
 
 export const runtime = "edge";
 
-export async function GET() {
+function forbidden() {
+  return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
+}
+
+async function forbiddenScope() {
+  return NextResponse.json({ error: "Site kapsamı belirlenemedi." }, { status: 400 });
+}
+
+export async function GET(request: Request) {
+  const session = await getSession();
+  if (!session) return forbidden();
+
+  const d = tryGetDb();
+  if (!d.ok) return jsonDbUnavailable(d.error);
+
+  const { searchParams } = new URL(request.url);
+  const siteHint = searchParams.get("siteId");
+
   try {
-    const db = await readDb();
-    return NextResponse.json(db.requests);
-  } catch (err) {
-    return NextResponse.json({ error: "Talepler yüklenemedi." }, { status: 500 });
+    const order = desc(residentRequests.createdAt);
+
+    if (session.role === "SUPER_ADMIN") {
+      const sid = siteHint?.trim();
+      if (!sid) {
+        return NextResponse.json([]);
+      }
+      const rows = await d.db
+        .select()
+        .from(residentRequests)
+        .where(eq(residentRequests.siteId, sid))
+        .orderBy(order);
+      return NextResponse.json(rows.map(dbRequestToClient) satisfies ClientRequestItem[]);
+    }
+
+    if (session.role === "ADMIN") {
+      if (!session.siteId) return forbiddenScope();
+      const rows = await d.db
+        .select()
+        .from(residentRequests)
+        .where(eq(residentRequests.siteId, session.siteId))
+        .orderBy(order);
+      return NextResponse.json(rows.map(dbRequestToClient));
+    }
+
+    if (session.role === "USER") {
+      const rows = await d.db
+        .select()
+        .from(residentRequests)
+        .where(eq(residentRequests.userId, session.id))
+        .orderBy(order);
+      return NextResponse.json(rows.map(dbRequestToClient));
+    }
+
+    return forbidden();
+  } catch (e) {
+    return jsonSqlError(e, "Talepler yüklenemedi.");
   }
 }
 
-type RequestPostBody = {
+type PostBody = {
   title?: unknown;
   category?: unknown;
   description?: unknown;
 };
 
 export async function POST(request: Request) {
+  const session = await getSession();
+  if (!session || session.role !== "USER") return forbidden();
+
+  const d = tryGetDb();
+  if (!d.ok) return jsonDbUnavailable(d.error);
+
+  if (!session.siteId) return forbiddenScope();
+
+  let raw: PostBody;
   try {
-    const db = await readDb();
-    const raw = (await request.json()) as RequestPostBody;
-    const title = typeof raw.title === "string" ? raw.title.trim() : "";
-    const description = typeof raw.description === "string" ? raw.description.trim() : "";
-    const categoryRaw = raw.category;
+    raw = (await request.json()) as PostBody;
+  } catch {
+    return NextResponse.json({ error: "Geçersiz JSON" }, { status: 400 });
+  }
 
-    if (!title || !description) {
-      return NextResponse.json({ error: "Eksik parametre." }, { status: 400 });
-    }
+  const subject = typeof raw.title === "string" ? raw.title.trim() : "";
+  const description = typeof raw.description === "string" ? raw.description.trim() : "";
+  const category =
+    typeof raw.category === "string" && raw.category.trim().length > 0 ? raw.category.trim() : "Genel";
 
-    const category =
-      typeof categoryRaw === "string" && categoryRaw.trim().length > 0 ? categoryRaw.trim() : "Arıza";
+  if (!subject || !description) {
+    return NextResponse.json({ error: "Başlık ve açıklama gereklidir." }, { status: 400 });
+  }
 
-    const newRequest = {
-      id: `REQ-${Math.floor(1000 + Math.random() * 9000)}`,
-      title,
-      category,
+  const id =
+    typeof crypto !== "undefined" && crypto.randomUUID ?
+      crypto.randomUUID()
+    : `req-${Date.now()}`;
+
+  try {
+    await d.db.insert(residentRequests).values({
+      id,
+      userId: session.id,
+      siteId: session.siteId,
+      subject,
       description,
-      date: new Date().toLocaleDateString("tr-TR"),
-      status: "Bekliyor" as const
-    };
+      category,
+      status: "OPEN",
+    });
 
-    db.requests = [newRequest, ...db.requests];
-    await writeDb(db);
-
-    return NextResponse.json({ success: true, request: newRequest });
-  } catch (err) {
-    return NextResponse.json({ error: "Talep eklenemedi." }, { status: 500 });
+    const row = await d.db.select().from(residentRequests).where(eq(residentRequests.id, id)).limit(1);
+    const mapped = row[0] ? dbRequestToClient(row[0]) : null;
+    return NextResponse.json({ success: true, request: mapped });
+  } catch (e) {
+    return jsonSqlError(e, "Talep eklenemedi.");
   }
 }
 
-const REQUEST_STATUSES = ["Bekliyor", "İşlemde", "Çözüldü"] as const;
-
-type RequestPutBody = {
+type PutBody = {
   id?: unknown;
   status?: unknown;
 };
 
 export async function PUT(request: Request) {
+  const session = await getSession();
+  if (!session || session.role !== "ADMIN" || !session.siteId) return forbidden();
+
+  const d = tryGetDb();
+  if (!d.ok) return jsonDbUnavailable(d.error);
+
+  let raw: PutBody;
   try {
-    const db = await readDb();
-    const raw = (await request.json()) as RequestPutBody;
-    const id = typeof raw.id === "string" ? raw.id.trim() : "";
+    raw = (await request.json()) as PutBody;
+  } catch {
+    return NextResponse.json({ error: "Geçersiz JSON" }, { status: 400 });
+  }
 
-    const status =
-      typeof raw.status === "string" && REQUEST_STATUSES.includes(raw.status as (typeof REQUEST_STATUSES)[number])
-        ? (raw.status as (typeof REQUEST_STATUSES)[number])
-        : null;
+  const id = typeof raw.id === "string" ? raw.id.trim() : "";
+  const uiStatus =
+    typeof raw.status === "string" ?
+      raw.status.trim()
+    : "";
+  const allowed = ["Bekliyor", "İşlemde", "Çözüldü"];
 
-    if (!id || !status) {
-      return NextResponse.json({ error: "ID ve durum alanları gereklidir." }, { status: 400 });
-    }
+  if (!id || !allowed.includes(uiStatus)) {
+    return NextResponse.json({ error: "Geçersiz kimlik veya durum." }, { status: 400 });
+  }
 
-    const requestIndex = db.requests.findIndex(r => r.id === id);
-    if (requestIndex === -1) {
+  try {
+    const existing = await d.db
+      .select()
+      .from(residentRequests)
+      .where(and(eq(residentRequests.id, id), eq(residentRequests.siteId, session.siteId)))
+      .limit(1);
+
+    if (!existing.length) {
       return NextResponse.json({ error: "Talep bulunamadı." }, { status: 404 });
     }
 
-    db.requests[requestIndex].status = status;
-    await writeDb(db);
+    await d.db
+      .update(residentRequests)
+      .set({ status: uiStatusToDb(uiStatus) })
+      .where(eq(residentRequests.id, id));
 
-    return NextResponse.json({ success: true, request: db.requests[requestIndex] });
-  } catch (err) {
-    return NextResponse.json({ error: "Güncelleme başarısız." }, { status: 500 });
+    const row = await d.db.select().from(residentRequests).where(eq(residentRequests.id, id)).limit(1);
+
+    return NextResponse.json({
+      success: true,
+      request: row[0] ? dbRequestToClient(row[0]) : null,
+    });
+  } catch (e) {
+    return jsonSqlError(e, "Durum güncellenemedi.");
   }
 }
