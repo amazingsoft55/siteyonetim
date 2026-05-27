@@ -35,14 +35,15 @@ export default function MobilPage() {
           <h2 className="text-lg font-bold">iPhone / iPad (Apple)</h2>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             App Store bağlantısı tanımlı değilse Safari ile{" "}
+            <Link href="/" className="text-indigo-600 font-semibold underline">
+              ana sayfayı
+            </Link>{" "}
+            veya{" "}
             <Link href="/login" className="text-indigo-600 font-semibold underline">
               giriş sayfasını
             </Link>{" "}
-            açın → <strong>Paylaş</strong> → <strong>Ana Ekrana Ekle</strong>. Süper yönetici için önce{" "}
-            <Link href="/super-admin" className="underline">
-              /super-admin
-            </Link>{" "}
-            açık olmalıdır.
+            açın → <strong>Paylaş</strong> → <strong>Ana Ekrana Ekle</strong>. Uygulama adı{" "}
+            <strong>Site Yönetimi</strong> olarak görünür.
           </p>
         </section>
 
@@ -72,8 +73,19 @@ export default function MobilPage() {
         </section>
 
         <section className="rounded-2xl border border-violet-200/70 dark:border-violet-900/50 bg-violet-50/30 dark:bg-violet-950/20 p-6 space-y-4">
-          <h2 className="text-lg font-bold text-violet-900 dark:text-violet-100">Süper yönetici uygulaması</h2>
+          <h2 className="text-lg font-bold text-violet-900 dark:text-violet-100">Süper yönetici uygulaması (ayrı paket)</h2>
+          <p className="text-sm text-violet-950/85 dark:text-violet-100/85">
+            Bu bölüm yalnızca platform süper yöneticileri içindir. Sakin ve site yöneticileri yukarıdaki{" "}
+            <strong>Site Yönetimi</strong> indirme alanını kullanmalıdır.
+          </p>
           <AppDownloadButtons variant="super-admin" />
+          <p className="text-xs text-violet-900/80 dark:text-violet-200/80">
+            iPhone kurulumu için önce{" "}
+            <Link href="/super-admin" className="underline font-semibold">
+              süper yönetici panelini
+            </Link>{" "}
+            açıp Ana Ekrana Ekleyin — uygulama adı <strong>SY Süper</strong> olur.
+          </p>
         </section>
       </main>
       <Footer />

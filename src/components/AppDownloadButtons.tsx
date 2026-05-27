@@ -62,12 +62,32 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+function pathMatchesVariant(pathname: string, variant: AppDownloadVariant): boolean {
+  if (variant === "super-admin") return pathname.startsWith("/super-admin");
+  return !pathname.startsWith("/super-admin");
+}
+
 /** Apple, Android, Windows ve Linux için ayrı indir butonları */
-export function AppDownloadButtons({ variant }: { variant: AppDownloadVariant }) {
+export function AppDownloadButtons({
+  variant,
+  compact,
+}: {
+  variant: AppDownloadVariant;
+  compact?: boolean;
+}) {
   const [pwaInstall, setPwaInstall] = React.useState<(() => Promise<void>) | null>(null);
+  const [onMatchingPath, setOnMatchingPath] = React.useState(true);
+
+  React.useEffect(() => {
+    const path = window.location.pathname;
+    setOnMatchingPath(pathMatchesVariant(path, variant));
+  }, [variant]);
 
   React.useEffect(() => {
     const onBeforeInstall = (e: Event) => {
+      const path = window.location.pathname;
+      if (!pathMatchesVariant(path, variant)) return;
+
       e.preventDefault();
       const ev = e as BeforeInstallPromptEvent;
       setPwaInstall(() => async () => {
@@ -77,7 +97,7 @@ export function AppDownloadButtons({ variant }: { variant: AppDownloadVariant })
     };
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     return () => window.removeEventListener("beforeinstallprompt", onBeforeInstall);
-  }, []);
+  }, [variant]);
 
   const handleClick = async (platform: DownloadPlatform) => {
     const url = getAppDownloadUrl(variant, platform);
@@ -85,26 +105,37 @@ export function AppDownloadButtons({ variant }: { variant: AppDownloadVariant })
       window.open(url, "_blank", "noopener,noreferrer");
       return;
     }
-    if ((platform === "android" || platform === "windows" || platform === "linux") && pwaInstall) {
+    if ((platform === "android" || platform === "windows" || platform === "linux") && pwaInstall && onMatchingPath) {
       await pwaInstall();
       return;
     }
   };
 
   return (
-    <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-700/80 bg-zinc-50/80 dark:bg-zinc-900/40 p-4 space-y-3">
-      <div>
+    <div
+      className={
+        compact ?
+          "space-y-3"
+        : "rounded-2xl border border-zinc-200/80 dark:border-zinc-700/80 bg-zinc-50/80 dark:bg-zinc-900/40 p-4 space-y-3"
+      }
+    >
+      <div className={compact ? "text-center" : undefined}>
         <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50">{TITLES[variant]}</p>
         <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-          Platformunuzu seçin; mağaza bağlantısı yoksa kurulum rehberi açılır.
+          {variant === "site" ?
+            "Sakin ve site yöneticileri için — girişten panele erişim."
+          : "Yalnızca platform süper yöneticileri için ayrı uygulama."}
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {PLATFORMS.map((p) => {
           const url = getAppDownloadUrl(variant, p.id);
           const guide = mobilGuideHref(variant, p.id);
           const canPwa =
-            !url && pwaInstall && (p.id === "android" || p.id === "windows" || p.id === "linux");
+            !url &&
+            pwaInstall &&
+            onMatchingPath &&
+            (p.id === "android" || p.id === "windows" || p.id === "linux");
 
           if (url || canPwa) {
             return (
@@ -134,11 +165,13 @@ export function AppDownloadButtons({ variant }: { variant: AppDownloadVariant })
           );
         })}
       </div>
-      <p className="text-[10px] text-center text-zinc-400 dark:text-zinc-500">
-        <Link href="/mobil" className="underline hover:text-indigo-600 dark:hover:text-indigo-400">
-          Tüm platformlar için kurulum rehberi
-        </Link>
-      </p>
+      {!compact && (
+        <p className="text-[10px] text-center text-zinc-400 dark:text-zinc-500">
+          <Link href="/mobil" className="underline hover:text-indigo-600 dark:hover:text-indigo-400">
+            Tüm platformlar için kurulum rehberi
+          </Link>
+        </p>
+      )}
     </div>
   );
 }

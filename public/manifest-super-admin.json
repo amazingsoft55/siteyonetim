@@ -4,7 +4,7 @@
   "short_name": "SY Süper",
   "description": "Platform süper yönetici konsolu — siteler, kullanıcılar ve operasyon.",
   "start_url": "/super-admin",
-  "scope": "/",
+  "scope": "/super-admin",
   "display": "standalone",
   "background_color": "#0b0f19",
   "theme_color": "#312e81",

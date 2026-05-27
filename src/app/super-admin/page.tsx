@@ -213,6 +213,12 @@ export default function SuperAdminDashboard() {
               Yenile
             </button>
             <Link
+              href="/mobil?app=super"
+              className="hidden sm:inline-flex text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+            >
+              Süper admin uygulaması
+            </Link>
+            <Link
               href="/super-admin/kullanicilar"
               className="hidden sm:inline-flex text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
             >

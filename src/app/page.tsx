@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { AppDownloadButtons } from "@/components/AppDownloadButtons";
 import { CreditCard, Megaphone, Wrench, ArrowRight, Shield, Sparkles } from "lucide-react";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
@@ -88,6 +89,18 @@ export default function Home() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        <section className="py-16 px-6 border-t border-zinc-100 dark:border-zinc-800/50 bg-white/60 dark:bg-zinc-900/40">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Mobil uygulamayı indirin</h2>
+              <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                iPhone, Android, Windows ve Linux — site sakinleri ve yöneticiler için.
+              </p>
+            </div>
+            <AppDownloadButtons variant="site" />
           </div>
         </section>
 

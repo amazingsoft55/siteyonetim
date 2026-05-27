@@ -3,7 +3,7 @@
   "name": "Site Yönetimi",
   "short_name": "Site Yönetim",
   "description": "Apartman ve Site Yönetim Uygulaması — sakin ve yönetici paneli.",
-  "start_url": "/login",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f8fafc",

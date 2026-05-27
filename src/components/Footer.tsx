@@ -16,6 +16,9 @@ export function Footer() {
           <Link href="/iletisim" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             İletişim
           </Link>
+          <Link href="/mobil" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+            Mobil uygulama
+          </Link>
           <Link href="/login" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             Giriş
           </Link>
