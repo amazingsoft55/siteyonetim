@@ -48,15 +48,21 @@ export default function KurulumPage() {
         <section className="rounded-2xl border border-emerald-200/80 dark:border-emerald-900/50 bg-emerald-50/30 dark:bg-emerald-950/20 p-6 space-y-4">
           <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100">2 · Tek SQL dosyası (şema + deme yöneticisi)</h2>
           <p className="text-sm text-emerald-950/85 dark:text-emerald-100/85">
-            Tüm tablolar ve isteğe bağlı ilk süper kullanıcı: <strong>drizzle/full-schema.sql</strong>
+            <strong>Tek dosya</strong> — tablolar, indeksler, üç deme kullanıcı, site ayarları, duyuru, örnek borç ve talep:{" "}
+            <strong>drizzle/full-schema.sql</strong> (başka SQL dosyası yok).
           </p>
           <div className="rounded-xl bg-zinc-950 dark:bg-black text-zinc-100 text-xs sm:text-sm p-4 overflow-x-auto font-mono">
             <p className="text-emerald-400 mb-2"># Proje kökünden</p>
             <p>npm run db:apply</p>
           </div>
-          <p className="text-xs text-emerald-900/80 dark:text-emerald-300/85">
-            Deme blok uygulanırsa giriş: <code className="text-[11px]">yonetici@demo.local</code> — şifre{" "}
-            <code className="text-[11px]">Admin123!</code> (üretimde mutlaka değiştirin).
+          <p className="text-xs text-emerald-900/80 dark:text-emerald-300/85 space-y-2">
+            Deme hesaplar: <code className="text-[11px]">yonetici@demo.local</code> — <code className="text-[11px]">Admin123!</code> (süper);
+            <span className="block">
+              <code className="text-[11px]">admin@demo.local</code> — <code className="text-[11px]">SiteAdmin123!</code> (site yöneticisi);
+            </span>
+            <span className="block">
+              <code className="text-[11px]">sakin@demo.local</code> — <code className="text-[11px]">Sakin123!</code> (sakin, A-1).
+            </span>
           </p>
         </section>
 
@@ -95,8 +101,11 @@ export default function KurulumPage() {
           <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">5 · Sık hatalar</h2>
           <ul className="text-sm list-disc pl-5 space-y-2 text-amber-950/85 dark:text-amber-200/85">
             <li>
-              <strong>503 / DATABASE_UNAVAILABLE:</strong> dosya yolu yazılamıyor veya native modül yüklenemiyor — `DATABASE_PATH` ve klasör izinlerini
-              kontrol edin.
+              <strong>503 / DATABASE_UNAVAILABLE:</strong> Dosya oluşturulamıyor / native modül yüklenmiyorsa{" "}
+              <code className="text-xs">npm install</code> yapın (<code className="text-xs">better-sqlite3</code> bazen araç zinciri gerektirir).
+              Şema ve deme yönetici: <code className="text-xs">npm run db:apply</code> (
+              <code className="text-xs">drizzle/full-schema.sql</code>). İsteğe bağlı: <code className="text-xs">.env</code> içinde{" "}
+              <code className="text-xs">DATABASE_PATH</code> ve yazılabilir klasör izinleri.
             </li>
             <li>
               <strong>no such table:</strong> `npm run db:apply` henüz çalıştırılmamış veya eski bir dosya kullanılıyor.

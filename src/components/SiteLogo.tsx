@@ -1,9 +1,7 @@
 "use client";
 
-import * as React from "react";
-
-const PNG = "/logo.png";
-const FALLBACK_MARK = "/icons/app-mark.svg";
+const PRIMARY_MARK = "/icons/app-mark.svg";
+const SUPER_MARK = "/icons/super-mark.svg";
 
 type Props = {
   width?: number;
@@ -13,10 +11,7 @@ type Props = {
   rounded?: boolean;
 };
 
-/**
- * Varsayılan: `public/logo.png` varsa kullanılır; yoksa (404/boş) repodaki vektör işareti yüklenir.
- * Statik PNG yerine doğrudan vektör isterseniz `SiteMarkSvg` kullanın.
- */
+/** Ana logo: tek kaynak olarak `public/icons/app-mark.svg` (PWA ile aynı; mobil uyumlu). */
 export function SiteLogo({
   width = 40,
   height = 40,
@@ -24,27 +19,23 @@ export function SiteLogo({
   alt = "Site Yönetimi logosu",
   rounded = false,
 }: Props) {
-  const [src, setSrc] = React.useState<string>(PNG);
-
   return (
     <img
-      src={src}
+      src={PRIMARY_MARK}
       alt={alt}
       width={width}
       height={height}
       decoding="async"
       fetchPriority="high"
-      onError={() => setSrc(FALLBACK_MARK)}
       className={[rounded ? "rounded-xl object-cover" : "object-contain", className].filter(Boolean).join(" ")}
     />
   );
 }
 
-/** Ana PWA için vektör işareti */
 export function SiteMarkSvg({ width = 40, height = 40, className = "", alt }: Props & { alt?: string }) {
   return (
     <img
-      src={FALLBACK_MARK}
+      src={PRIMARY_MARK}
       alt={alt ?? "Site Yönetimi işareti"}
       width={width}
       height={height}
@@ -54,11 +45,11 @@ export function SiteMarkSvg({ width = 40, height = 40, className = "", alt }: Pr
   );
 }
 
-/** Süper yönetici PWA / konsol ikonu */
+/** Süper yönetici uygulama ikonu — `manifest-super-admin` ile aynı dosya */
 export function SuperMarkSvg({ width = 40, height = 40, className = "", alt }: Props & { alt?: string }) {
   return (
     <img
-      src="/icons/super-mark.svg"
+      src={SUPER_MARK}
       alt={alt ?? "Süper yönetici konsolu"}
       width={width}
       height={height}

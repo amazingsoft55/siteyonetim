@@ -16,6 +16,16 @@ const dbPath = resolveSqliteDbPath();
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
 const sqlite = new Database(dbPath);
+try {
+  sqlite.pragma("journal_mode = WAL");
+} catch {}
+try {
+  sqlite.pragma("foreign_keys = ON");
+} catch {}
+try {
+  sqlite.pragma("busy_timeout = 10000");
+} catch {}
+
 const sqlPath = path.join(root, "drizzle", "full-schema.sql");
 const sql = fs.readFileSync(sqlPath, "utf8");
 

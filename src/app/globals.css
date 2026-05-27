@@ -12,15 +12,23 @@
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+  --app-bg-overlay: radial-gradient(ellipse 140% 120% at 10% -40%, rgba(79, 70, 229, 0.13), transparent 55%),
+    radial-gradient(ellipse 100% 80% at 100% 0%, rgba(124, 58, 237, 0.09), transparent 50%),
+    linear-gradient(180deg, #eef2ff 0%, #f8fafc 36%, #f1f5f9 100%);
 }
 
 .dark {
   --background: #0b0f19;
   --foreground: #f1f5f9;
+  --app-bg-overlay: radial-gradient(ellipse 120% 100% at 20% -30%, rgba(99, 102, 241, 0.22), transparent 55%),
+    radial-gradient(ellipse 90% 70% at 100% 15%, rgba(91, 33, 182, 0.14), transparent 52%),
+    linear-gradient(180deg, #0f172a 0%, #0b0f19 45%, #020617 100%);
 }
 
 body {
   background-color: var(--background);
+  background-image: var(--app-bg-overlay);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   overflow-x: hidden;

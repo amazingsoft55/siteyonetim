@@ -12,7 +12,18 @@ export default function LoginPage() {
   const [usernameOrPhone, setUsernameOrPhone] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [errorMsg, setErrorMsg] = React.useState("");
-  const [setupBanner, setSetupBanner] = React.useState<{ kind: "ok" | "warn" | "err"; text: string } | null>(null);
+  type SetupBanner =
+    | { kind: "ok"; text: string }
+    | { kind: "warn"; text: string }
+    | {
+        kind: "err";
+        code?: string;
+        message?: string;
+        steps?: string[];
+        sqliteFilePath?: string;
+      };
+
+  const [setupBanner, setSetupBanner] = React.useState<SetupBanner | null>(null);
   const [apiOriginDraft, setApiOriginDraft] = React.useState("");
   const [showApiOrigin, setShowApiOrigin] = React.useState(false);
   const [apiSaveNote, setApiSaveNote] = React.useState("");
@@ -34,19 +45,23 @@ export default function LoginPage() {
           needsSeed?: boolean;
           hasSupportTicketsTable?: boolean;
           steps?: string[];
+          sqliteFilePath?: string;
         };
         if (d.ok === false) {
-          const lines = Array.isArray(d.steps) ? d.steps.join(" ") : d.message ?? "Veritabanı bağlantısı yok.";
           setSetupBanner({
             kind: "err",
-            text: `${d.code ?? ""} ${lines}`.trim(),
+            code: typeof d.code === "string" ? d.code : undefined,
+            message: typeof d.message === "string" ? d.message : "Veritabanı şu anda kullanılamıyor.",
+            steps: Array.isArray(d.steps) ? d.steps.filter((s): s is string => typeof s === "string") : [],
+            sqliteFilePath: typeof d.sqliteFilePath === "string" ? d.sqliteFilePath : undefined,
           });
           return;
         }
         if (d.needsSeed) {
           setSetupBanner({
             kind: "warn",
-            text: "Henüz ilk site veya kullanıcı kaydı yok. `npm run db:apply` ile deme verisini yükleyin veya boş veritabanında `/api/seed` ve `.env` kullanın.",
+            text:
+              "Henüz ilk site veya kullanıcı kaydı yok. Barındırıcı makinede şema ve isteğe bağlı ilk yöneticiyi yükleyin (`npm run db:apply` veya kurulum dökümünüzdaki `.sql`) veya boş tabloda sunucunun izin verdiği şekilde `/api/seed` ile başlatın.",
           });
           return;
         }
@@ -150,7 +165,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-[#0b0f19] px-4 transition-colors duration-300">
+    <div className="flex min-h-screen items-center justify-center bg-transparent px-4 transition-colors duration-300">
       <div className="w-full max-w-md space-y-6 bg-white dark:bg-zinc-900/80 dark:backdrop-blur-md p-8 rounded-3xl shadow-xl border border-zinc-200/50 dark:border-zinc-800/80">
         
         {/* Logo and Header */}
@@ -172,13 +187,33 @@ export default function LoginPage() {
         {/* Kurulum durumu */}
         {setupBanner && setupBanner.kind === "err" && (
           <div className="p-4 text-sm rounded-2xl bg-amber-50 text-amber-950 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-100 dark:border-amber-800 space-y-2">
-            <p className="font-semibold">Veritabanı / geliştirme ortamı</p>
-            <p className="text-xs sm:text-sm leading-relaxed">{setupBanner.text}</p>
+            <p className="font-semibold">Giriş geçici olarak kullanılamıyor</p>
+            <p className="text-xs text-amber-900/95 dark:text-amber-100/95 leading-relaxed">
+              Canlı sistemde şu anda veritabanına ulaşılamıyor. Normal kullanıcılar giriş yapamaz — site/hosting teknik yöneticinize başvurun. Aşağıdaki kod ve adımlar yalnızca sunucuya erişiminiz varsa kullanılacak teşhis bilgisidir.
+            </p>
+            {setupBanner.code ? (
+              <p className="text-[11px] font-mono text-amber-900/90 dark:text-amber-200/95">{setupBanner.code}</p>
+            ) : null}
+            {setupBanner.message ? (
+              <p className="text-xs sm:text-sm leading-relaxed">{setupBanner.message}</p>
+            ) : null}
+            {setupBanner.steps && setupBanner.steps.length > 0 ? (
+              <ul className="text-xs sm:text-sm list-disc pl-5 space-y-1.5 leading-relaxed">
+                {setupBanner.steps.map((step, i) => (
+                  <li key={i}>{step}</li>
+                ))}
+              </ul>
+            ) : null}
+            {setupBanner.sqliteFilePath ? (
+              <p className="text-[11px] break-all opacity-95">
+                Dosya hedefi: <code className="rounded bg-white/70 dark:bg-zinc-900/80 px-1 py-px">{setupBanner.sqliteFilePath}</code>
+              </p>
+            ) : null}
             <Link
               href="/kurulum"
               className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 dark:text-indigo-400 underline underline-offset-2"
             >
-              Teknik kurulum rehberi (barındırıcı) →
+              Barındırıcı / veritabanı yapılandırması →
             </Link>
           </div>
         )}
@@ -186,10 +221,10 @@ export default function LoginPage() {
           <div className="p-3.5 text-sm rounded-xl bg-amber-50/90 text-amber-900 border border-amber-200/80 dark:bg-amber-950/35 dark:text-amber-100 dark:border-amber-800/60 space-y-1">
             <p>{setupBanner.text}</p>
             <p className="text-[11px] opacity-95">
-              Yukarıdaki uyarıları yalnızca sistemi kuran teknik ek görür; sitenize tanımlı kullanıcılar için geçerli değildir.
+              Üretimde bu uyarıyı bu sayfayı açan hosting veya site teknik sorumlusu görür; normal sakinler arayüzden çalışan veritabanı durumunu göremez.
             </p>
             <Link href="/kurulum" className="text-xs font-bold underline text-indigo-700 dark:text-indigo-400">
-              Teknik kurulum rehberi (yalnızca barındırıcı)
+              Barındırıcı / veritabanı dokümantasyonu
             </Link>
           </div>
         )}

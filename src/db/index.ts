@@ -27,6 +27,16 @@ export function getDb() {
   } catch {
     /* bazı ortamlar desteklemeyebilir */
   }
+  try {
+    sqlite.pragma("foreign_keys = ON");
+  } catch {
+    /* güvenlik: ilişkilere uymayı zorlar */
+  }
+  try {
+    sqlite.pragma("busy_timeout = 10000");
+  } catch {
+    /* eşzamanlı yazış */
+  }
   _db = drizzle(sqlite, { schema });
   return _db;
 }

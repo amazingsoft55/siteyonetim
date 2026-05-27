@@ -1,10 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Logo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Site Yönetimi">
   <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#6366f1"/>
-      <stop offset="100%" style="stop-color:#7c3aed"/>
+    <linearGradient id="brand" x1="8%" y1="0%" x2="92%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="96" fill="url(#g)"/>
-  <path fill="#fff" fill-opacity=".95" d="M128 384V224l128-74 128 74v160h-64V272l-64-38-64 38v112H128zm96-352v64h64v-64h96v112l-96-56-96 56V32h96z"/>
+  <!-- Safe zone için içerik ~%80 kutuda -->
+  <rect width="512" height="512" rx="112" ry="112" fill="url(#brand)"/>
+  <g fill="#ffffff" transform="translate(0,16)">
+    <!-- Bina gövdesi -->
+    <path d="M144 392V184l112-72 112 72v208h-48V232l-64-41-64 41v160h-48zm112-392 96 152h-72V88h-48v64h-72z"/>
+    <!-- Pencereler -->
+    <rect x="174" y="248" width="36" height="36" rx="6" opacity="0.9"/>
+    <rect x="238" y="248" width="36" height="36" rx="6" opacity="0.9"/>
+    <rect x="302" y="248" width="36" height="36" rx="6" opacity="0.9"/>
+    <rect x="206" y="308" width="36" height="36" rx="6" opacity="0.9"/>
+    <rect x="270" y="308" width="36" height="36" rx="6" opacity="0.9"/>
+  </g>
 </svg>

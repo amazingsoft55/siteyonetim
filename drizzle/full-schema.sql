@@ -1,21 +1,25 @@
 -- =============================================================================
--- Site Yönetimi — TEK SQL PAKETİ (SQLite uyumlu: yerel dosya veya uyumlu sağlayıcı)
+-- Site Yönetimi — TEK DOSYADA TÜM SQL (SQLite)
 -- =============================================================================
--- İki blok vardır:
 --
---   A) OPSİYONEL DROP (tam sıfırlama) — `[A]` bloğu şu anda `/* ... */` ile kapalıdır.
+-- Bu dosya hem tablo oluşturur hem varsayılan / deme verisini içerir. Başka
+-- SQL kaynağı yoktur: `npm run db:apply` yalnızca bunu çalıştırır (API bağlantısı
+-- Drizzle ile aynı SQLite dosyasını kullanır).
 --
---   B) ŞEMA — CREATE IF NOT EXISTS
+-- Bölümler:
 --
---   C) OPSİYONEL DEME VERİ — ilk süper yönetici (INSERT OR IGNORE; tekrar uygulanabilir)
+--   [A] OPSİYONEL sıfırlama (DROP): varsayılan kapalı — gerekiyorsa yorumları kaldırın.
+--   [B] Şema (CREATE IF NOT EXISTS + indeksler)
+--   [C] Deme site + üç kullanıcı (üretimde şifreleri değiştirin)
+--   [D] Deme ayarlar, duyuru, örnek borç kalemi ve talep
 --
---   Yerelde:
---     npm run db:apply
+-- Yerelde çalıştırma:
+--   npm run db:apply
 --
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
--- [A] TÜM TABLOLARI SİL (sıfırlama) — varsayılan: devre dışı (bloğu kullanmak için açın)
+-- [A] TÜM TABLOLARI SİL (sıfırlama) — varsayılan kapalı
 -- -----------------------------------------------------------------------------
 /*
 PRAGMA foreign_keys = OFF;
@@ -175,16 +179,17 @@ CREATE TABLE IF NOT EXISTS `platform_insights` (
 );
 
 -- -----------------------------------------------------------------------------
--- [C] OPSİYONEL DEME — süper yönetici girişi (üretimde mutlaka değiştirin)
+-- [C] Deme kullanıcılar ve demo sitesi — bcrypt ile (düz metin saklanmaz)
 -- -----------------------------------------------------------------------------
--- Varsayılan giriş:  e‑posta/yeniden ad alanı olarak `yonetici@demo.local`
--- Varsayılan şifre:  Admin123!
--- Güvenlik: `password_hash` bcrypt ($2b$10$…) salt’lıdır; düz şifreyi saklamıyoruz.
+-- Süper admin:          yonetici@demo.local   — Admin123!
+-- Site admin:           admin@demo.local      — SiteAdmin123!
+-- Sakin:                sakin@demo.local      — Sakin123!
+-- ÜRETİMDE ilk girişten sonra bunları panele uygun güvenli şifrelerle değiştirin.
 
 INSERT OR IGNORE INTO `sites` (`id`, `name`, `address`) VALUES (
   'seed-site-001',
   'Demo Sitesi',
-  NULL
+  'Örnek Mah. Güvenlik Sok. No 1 — İstanbul'
 );
 
 INSERT OR IGNORE INTO `users` (
@@ -207,3 +212,108 @@ INSERT OR IGNORE INTO `users` (
   0
 );
 
+INSERT OR IGNORE INTO `users` (
+  `id`,
+  `name`,
+  `email_or_phone`,
+  `password_hash`,
+  `role`,
+  `site_id`,
+  `apartment_no`,
+  `must_change_password`
+) VALUES (
+  'seed-admin-001',
+  'Demo Site Yöneticisi',
+  'admin@demo.local',
+  '$2b$10$FOHIsJRPZgsftrf6PboUbuYmLEuogY6ZvnvHShF0G1I68VPRunZbq',
+  'ADMIN',
+  'seed-site-001',
+  NULL,
+  0
+);
+
+INSERT OR IGNORE INTO `users` (
+  `id`,
+  `name`,
+  `email_or_phone`,
+  `password_hash`,
+  `role`,
+  `site_id`,
+  `apartment_no`,
+  `must_change_password`
+) VALUES (
+  'seed-user-001',
+  'Demo Sakin',
+  'sakin@demo.local',
+  '$2b$10$Q8pyZqZ5upi3yX.bzGvmpeAKOReTpBiGV9kSvRliFUOHpeZ1IAkEO',
+  'USER',
+  'seed-site-001',
+  'A-1',
+  0
+);
+
+-- -----------------------------------------------------------------------------
+-- [D] Deme iş verisi — panelde boş liste görmemeniz için örnek satırlar
+-- -----------------------------------------------------------------------------
+
+INSERT OR IGNORE INTO `site_settings` (
+  `site_id`,
+  `default_aidat`,
+  `manager_name`,
+  `iban`,
+  `bank_name`,
+  `phone`,
+  `updated_at`
+) VALUES (
+  'seed-site-001',
+  '950',
+  'Demo Yöneticisi',
+  'TR00 0000 0000 0000 0000 0000 01',
+  'Demo Bankası AŞ',
+  '+90 212 000 00 00',
+  CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO `announcements` (`id`, `site_id`, `title`, `content`, `category`) VALUES (
+  'seed-announcement-001',
+  'seed-site-001',
+  'Hoş geldiniz — veritabanı canlı bağlantılı çalışıyor',
+  'Bu metin doğrudan SQLite tablosundan okunur (statik JSON dosyası değildir). Üretimde duyuruları yönetim panelinden düzenlersiniz.',
+  'Genel'
+);
+
+INSERT OR IGNORE INTO `payments` (
+  `id`,
+  `user_id`,
+  `site_id`,
+  `amount`,
+  `title`,
+  `status`,
+  `due_date`
+) VALUES (
+  'seed-payment-001',
+  'seed-user-001',
+  'seed-site-001',
+  950.00,
+  'Mart aidat ödemesi',
+  'UNPAID',
+  date('now', '+14 day')
+);
+
+INSERT OR IGNORE INTO `requests` (
+  `id`,
+  `user_id`,
+  `site_id`,
+  `subject`,
+  `description`,
+  `category`,
+  `status`
+) VALUES (
+  'seed-request-001',
+  'seed-user-001',
+  'seed-site-001',
+  'Örnek arıza kaydı',
+  'Asansör aydınlatması arızalı bildirilmiştir. Bu talep SQLite üzerinden listelenir.',
+  'Arıza',
+  'OPEN'
+);

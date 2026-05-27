@@ -1,12 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Süper yönetici">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Site Yönetimi süper yönetici">
   <defs>
-    <linearGradient id="sg" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#0f172a"/>
-      <stop offset="50%" style="stop-color:#312e81"/>
-      <stop offset="100%" style="stop-color:#5b21b6"/>
+    <linearGradient id="sa" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="55%" stop-color="#312e81"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="96" fill="url(#sg)"/>
-  <path fill="#fff" fill-opacity=".92" d="M176 392V240l80-112 80 112v152h-48V288l-32-42-32 42v104h-48zm80-344 48 64h-96l48-64z"/>
-  <path fill="#fcd34d" d="m256 120 18 54h58l-48 34 18 54-46-34-46 34 18-54-48-34h58z"/>
+  <rect width="512" height="512" rx="112" ry="112" fill="url(#sa)"/>
+  <!-- Büyük anahtar + kalkan silüeti -->
+  <g fill="#f8fafc">
+    <path d="m256 88 148 74v174c0 72-148 148-148 148S108 408 108 336V162z" opacity="0.18"/>
+    <path d="m256 128 118 62v154c0 58-118 126-118 126S138 402 138 344V190z"/>
+  </g>
+  <circle cx="256" cy="248" r="44" fill="#fbbf24" stroke="#fef3c7" stroke-width="8"/>
+  <rect x="234" y="288" width="44" height="108" rx="12" fill="#fbbf24" stroke="#fef3c7" stroke-width="8"/>
 </svg>
