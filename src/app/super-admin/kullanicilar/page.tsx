@@ -230,7 +230,15 @@ function SuperAdminUsersPageInner() {
     const j: unknown = await res.json().catch(() => null);
     setEdSaving(false);
     if (!res.ok) {
+      const redirect =
+        j && typeof j === "object" && "redirect" in j && typeof (j as { redirect: unknown }).redirect === "string" ?
+          (j as { redirect: string }).redirect
+        : null;
       setErr(readJsonError(j, "Kayıt güncellenemedi."));
+      if (redirect) {
+        setEditOpen(null);
+        router.push(redirect);
+      }
       return;
     }
     const n = readJsonNotice(j);
@@ -243,7 +251,7 @@ function SuperAdminUsersPageInner() {
   async function deleteUser(u: UserRow) {
     if (
       !window.confirm(
-        `${u.name} silinsin mi? İlgili talep ve ödeme kayıtları da kaldırılır.`,
+        `${u.name} silinsin mi? İlgili talep, ödeme ve bağlı kayıtlar da kaldırılır.`,
       )
     )
       return;
@@ -256,6 +264,29 @@ function SuperAdminUsersPageInner() {
       return;
     }
     setMsg("Silindi.");
+    await reload();
+  }
+
+  async function deleteSite(s: SiteRow) {
+    const siteUsers = users.filter((u) => u.siteId === s.id);
+    const warn =
+      siteUsers.length > 0 ?
+        `${s.name} ve ${siteUsers.length} kullanıcı silinsin mi? Tüm site verisi kalıcı olarak kaldırılır.`
+      : `${s.name} silinsin mi? Site verisi kalıcı olarak kaldırılır.`;
+    if (!window.confirm(warn)) return;
+    setErr("");
+    setMsg("");
+    const res = await fetch(`/api/super-admin/sites/${encodeURIComponent(s.id)}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    const j: unknown = await res.json().catch(() => null);
+    if (!res.ok) {
+      setErr(readJsonError(j, "Site silinemedi."));
+      return;
+    }
+    if (siteListFilterId === s.id) setSiteListFilterId("");
+    setMsg("Site silindi.");
     await reload();
   }
 
@@ -293,14 +324,22 @@ function SuperAdminUsersPageInner() {
             }`
         }
         actions={
-          <button
-            type="button"
-            onClick={logout}
-            className="flex items-center gap-2 text-sm font-medium text-rose-600 dark:text-rose-400 hover:text-rose-700 shrink-0"
-          >
-            <LogOut className="h-4 w-4" />
-            Çıkış
-          </button>
+          <>
+            <Link
+              href="/super-admin/hesabim"
+              className="hidden sm:inline-flex text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+            >
+              Hesabım
+            </Link>
+            <button
+              type="button"
+              onClick={logout}
+              className="flex items-center gap-2 text-sm font-medium text-rose-600 dark:text-rose-400 hover:text-rose-700 shrink-0"
+            >
+              <LogOut className="h-4 w-4" />
+              Çıkış
+            </button>
+          </>
         }
       />
 
@@ -466,6 +505,63 @@ function SuperAdminUsersPageInner() {
             </form>
           </section>
         </div>
+
+        <section className="bg-white dark:bg-zinc-900/50 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60 p-6 shadow-sm overflow-x-auto">
+          <h2 className="font-bold mb-1">Kayıtlı siteler</h2>
+          <p className="text-xs text-zinc-500 mb-4">
+            Site silindiğinde o siteye bağlı tüm kullanıcılar ve veriler kaldırılır.
+          </p>
+          <table className="w-full text-left border-collapse min-w-[480px]">
+            <thead>
+              <tr className="border-b border-zinc-200 dark:border-zinc-700 text-[11px] uppercase font-bold text-zinc-500">
+                <th className="py-2 px-3">Site</th>
+                <th className="py-2 px-3">Adres</th>
+                <th className="py-2 px-3">Kullanıcı</th>
+                <th className="py-2 px-3">İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sites.map((s) => {
+                const count = users.filter((u) => u.siteId === s.id).length;
+                return (
+                  <tr
+                    key={s.id}
+                    className="border-b border-zinc-50 dark:border-zinc-900 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/30"
+                  >
+                    <td className="py-2.5 px-3 font-semibold">{s.name}</td>
+                    <td className="py-2.5 px-3 text-sm text-zinc-500">{s.address ?? "—"}</td>
+                    <td className="py-2.5 px-3 text-sm">{count}</td>
+                    <td className="py-2.5 px-3">
+                      <div className="flex items-center gap-3">
+                        <Link
+                          href={`/super-admin/kullanicilar?siteId=${encodeURIComponent(s.id)}`}
+                          className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                        >
+                          Listele
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => deleteSite(s)}
+                          className="inline-flex items-center gap-1 text-sm font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Sil
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {sites.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="py-8 px-3 text-center text-sm text-zinc-500">
+                    Henüz site yok. Yukarıdan ekleyebilirsiniz.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </section>
 
         <section className="bg-white dark:bg-zinc-900/50 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60 p-6 shadow-sm overflow-x-auto">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">

@@ -19,6 +19,20 @@ export const users = sqliteTable("users", {
   lastLoginAt: text("last_login_at"),
   /** 1 = ilk girişte kalıcı şifre zorunlu (JWT’de mcp) */
   mustChangePassword: integer("must_change_password", { mode: "boolean" }).notNull().default(false),
+  /** E-posta/şifre kaç kez değiştirildi (0 = bir kez ücretsiz değişiklik hakkı) */
+  accountChangesCount: integer("account_changes_count").notNull().default(0),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+/** Süper yönetici hesap değişikliği doğrulama kodu (6 hane, kısa süreli) */
+export const emailVerificationCodes = sqliteTable("email_verification_codes", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  codeHash: text("code_hash").notNull(),
+  purpose: text("purpose").notNull().default("account_change"),
+  expiresAt: text("expires_at").notNull(),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 

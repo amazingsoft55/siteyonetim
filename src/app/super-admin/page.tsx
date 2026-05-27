@@ -219,6 +219,12 @@ export default function SuperAdminDashboard() {
               Kullanıcılar
             </Link>
             <Link
+              href="/super-admin/hesabim"
+              className="hidden sm:inline-flex text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+            >
+              Hesabım
+            </Link>
+            <Link
               href="/super-admin/destek"
               className="hidden sm:inline-flex text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
             >

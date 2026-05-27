@@ -3,7 +3,9 @@ import { eq } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
-import { users, payments, requests } from "@/db/schema";
+import { jsonSqlError } from "@/lib/db-query-error";
+import { deleteUserCascade } from "@/lib/user-cascade-delete";
+import { users } from "@/db/schema";
 
 
 const publicCols = {
@@ -56,6 +58,27 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   }
 
   const curr = existing[0];
+
+  if (targetId === session.id) {
+    const nextLogin =
+      typeof raw.emailOrPhone === "string" ?
+        raw.emailOrPhone.replace(/\s+/g, "").trim()
+      : curr.emailOrPhone;
+    const changingCredentials =
+      nextLogin !== curr.emailOrPhone ||
+      (typeof raw.password === "string" && raw.password.length > 0);
+    if (changingCredentials) {
+      return NextResponse.json(
+        {
+          error:
+            "Kendi e-posta veya şifrenizi buradan değiştiremezsiniz. “Hesabım” sayfasını kullanın.",
+          redirect: "/super-admin/hesabim",
+        },
+        { status: 403 },
+      );
+    }
+  }
+
   let nextName = curr.name;
   let nextEmail = curr.emailOrPhone;
   let nextHash = curr.passwordHash;
@@ -177,9 +200,10 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
     }
   }
 
-  await d.db.delete(requests).where(eq(requests.userId, targetId));
-  await d.db.delete(payments).where(eq(payments.userId, targetId));
-
-  await d.db.delete(users).where(eq(users.id, targetId));
-  return NextResponse.json({ success: true });
+  try {
+    await deleteUserCascade(d.db, targetId);
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    return jsonSqlError(e, "Kullanıcı silinemedi.");
+  }
 }

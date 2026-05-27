@@ -49,11 +49,22 @@ CREATE TABLE IF NOT EXISTS `users` (
   `apartment_no` text,
   `last_login_at` text,
   `must_change_password` integer NOT NULL DEFAULT 0,
+  `account_changes_count` integer NOT NULL DEFAULT 0,
   `created_at` text DEFAULT (CURRENT_TIMESTAMP),
   FOREIGN KEY (`site_id`) REFERENCES `sites`(`id`)
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS `users_email_or_phone_unique` ON `users` (`email_or_phone`);
+
+CREATE TABLE IF NOT EXISTS `email_verification_codes` (
+  `id` text PRIMARY KEY NOT NULL,
+  `user_id` text NOT NULL,
+  `code_hash` text NOT NULL,
+  `purpose` text NOT NULL DEFAULT 'account_change',
+  `expires_at` text NOT NULL,
+  `created_at` text DEFAULT (CURRENT_TIMESTAMP),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+);
 
 CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
   `id` text PRIMARY KEY NOT NULL,

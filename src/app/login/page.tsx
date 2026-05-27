@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { SiteLogo } from "@/components/SiteLogo";
-import { MobileInstallPrompt } from "@/components/MobileInstallPrompt";
+import { AppDownloadButtons } from "@/components/AppDownloadButtons";
 import { browserApiUrl, getStoredApiBase, setStoredApiBase, getBrowserApiBase } from "@/lib/browser-api-base";
 export default function LoginPage() {
   const router = useRouter();
@@ -125,7 +125,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <MobileInstallPrompt variant="site" />
+        <AppDownloadButtons variant="site" />
 
         {errorMsg && (
           <div className="p-3.5 text-sm rounded-xl bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800/50 animate-in fade-in duration-200">

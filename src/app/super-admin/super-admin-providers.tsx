@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { PresenceHeartbeat } from "@/components/PresenceHeartbeat";
-import { MobileInstallPrompt } from "@/components/MobileInstallPrompt";
+import { AppDownloadButtons } from "@/components/AppDownloadButtons";
 
 /** İstemci: oturum/nabız — kök süper-admin layout bunu sarar */
 export default function SuperAdminProviders({ children }: { children: React.ReactNode }) {
@@ -10,7 +10,7 @@ export default function SuperAdminProviders({ children }: { children: React.Reac
     <>
       <PresenceHeartbeat />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-3">
-        <MobileInstallPrompt variant="super-admin" />
+        <AppDownloadButtons variant="super-admin" />
       </div>
       {children}
     </>
