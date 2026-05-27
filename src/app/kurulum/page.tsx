@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { KurulumStatusPanel } from "@/components/KurulumStatusPanel";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
 const base = getPublicSiteUrl();
@@ -22,14 +23,19 @@ export default function KurulumPage() {
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight">Kurulum rehberi</h1>
           <p className="mt-3 text-zinc-600 dark:text-zinc-400 leading-relaxed">
-            Bu uygulama veriyi <strong>Drizzle ORM</strong> ile tutar: yerelde <strong>SQLite dosyası</strong> (<code className="text-xs">better-sqlite3</code>
-            ), Cloudflare’de ise <strong>D1</strong> (<code className="text-xs">wrangler.toml</code> içinde bağlama{" "}
-            <code className="text-xs">DB</code>) kullanılabilir.
+            Bu sayfa hosting veya site teknik sorumluları içindir; canlı veritabanı durumu ve kurulum adımları burada gösterilir. Sakin giriş sayfasında bu bilgiler yer almaz.
           </p>
+          <div className="mt-6">
+            <KurulumStatusPanel />
+          </div>
         </div>
 
         <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 space-y-4 shadow-sm">
           <h2 className="text-lg font-bold">1 · Bağımlılıklar ve ortam</h2>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+            Veri <strong>Drizzle ORM</strong> ile tutulur: yerelde <strong>SQLite dosyası</strong>, Cloudflare’de <strong>D1</strong> (
+            <code className="text-xs">wrangler.toml</code> içinde <code className="text-xs">DB</code> bağlaması).
+          </p>
           <ul className="text-sm space-y-2 text-zinc-600 dark:text-zinc-400 list-disc pl-5">
             <li>
               <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1 rounded">npm install</code> — özellikle Windows’ta

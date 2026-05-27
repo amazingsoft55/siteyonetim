@@ -12,72 +12,12 @@ export default function LoginPage() {
   const [usernameOrPhone, setUsernameOrPhone] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [errorMsg, setErrorMsg] = React.useState("");
-  type SetupBanner =
-    | { kind: "ok"; text: string }
-    | { kind: "warn"; text: string }
-    | {
-        kind: "err";
-        code?: string;
-        message?: string;
-        steps?: string[];
-        sqliteFilePath?: string;
-      };
-
-  const [setupBanner, setSetupBanner] = React.useState<SetupBanner | null>(null);
   const [apiOriginDraft, setApiOriginDraft] = React.useState("");
   const [showApiOrigin, setShowApiOrigin] = React.useState(false);
   const [apiSaveNote, setApiSaveNote] = React.useState("");
 
   React.useEffect(() => {
     setApiOriginDraft(getStoredApiBase());
-  }, []);
-
-  React.useEffect(() => {
-    let cancelled = false;
-    fetch(browserApiUrl("/api/setup/status"))
-      .then((r) => r.json().catch(() => null))
-      .then((data) => {
-        if (cancelled || !data || typeof data !== "object") return;
-        const d = data as {
-          ok?: boolean;
-          code?: string;
-          message?: string;
-          needsSeed?: boolean;
-          hasSupportTicketsTable?: boolean;
-          steps?: string[];
-          sqliteFilePath?: string;
-        };
-        if (d.ok === false) {
-          setSetupBanner({
-            kind: "err",
-            code: typeof d.code === "string" ? d.code : undefined,
-            message: typeof d.message === "string" ? d.message : "Veritabanı şu anda kullanılamıyor.",
-            steps: Array.isArray(d.steps) ? d.steps.filter((s): s is string => typeof s === "string") : [],
-            sqliteFilePath: typeof d.sqliteFilePath === "string" ? d.sqliteFilePath : undefined,
-          });
-          return;
-        }
-        if (d.needsSeed) {
-          setSetupBanner({
-            kind: "warn",
-            text:
-              "Henüz ilk site veya kullanıcı kaydı yok. Şemayı uygulayın (`npm run db:apply` veya D1 için `npm run db:d1:remote`) ve kullanıcıları süper yönetici panelinden oluşturun; tablolar tamamen boşsa `.env` ile `/api/seed` kullanılabilir.",
-          });
-          return;
-        }
-        if (d.ok && d.hasSupportTicketsTable === false) {
-          setSetupBanner({
-            kind: "warn",
-            text: "Bazı şema tabloları eksik olabilir. `drizzle/full-schema.sql` dosyasını `npm run db:apply` ile yeniden uygulayın.",
-          });
-          return;
-        }
-        if (d.ok) setSetupBanner({ kind: "ok", text: "Veritabanı bağlı. Giriş yapabilirsiniz." });
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -184,69 +124,9 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Kurulum durumu */}
-        {setupBanner && setupBanner.kind === "err" && (
-          <div className="p-4 text-sm rounded-2xl bg-amber-50 text-amber-950 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-100 dark:border-amber-800 space-y-2">
-            <p className="font-semibold">Giriş geçici olarak kullanılamıyor</p>
-            <p className="text-xs text-amber-900/95 dark:text-amber-100/95 leading-relaxed">
-              Canlı sistemde şu anda veritabanına ulaşılamıyor. Normal kullanıcılar giriş yapamaz — site/hosting teknik yöneticinize başvurun. Aşağıdaki kod ve adımlar yalnızca sunucuya erişiminiz varsa kullanılacak teşhis bilgisidir.
-            </p>
-            {setupBanner.code ? (
-              <p className="text-[11px] font-mono text-amber-900/90 dark:text-amber-200/95">{setupBanner.code}</p>
-            ) : null}
-            {setupBanner.message ? (
-              <p className="text-xs sm:text-sm leading-relaxed">{setupBanner.message}</p>
-            ) : null}
-            {setupBanner.steps && setupBanner.steps.length > 0 ? (
-              <ul className="text-xs sm:text-sm list-disc pl-5 space-y-1.5 leading-relaxed">
-                {setupBanner.steps.map((step, i) => (
-                  <li key={i}>{step}</li>
-                ))}
-              </ul>
-            ) : null}
-            {setupBanner.sqliteFilePath ? (
-              <p className="text-[11px] break-all opacity-95">
-                Dosya hedefi: <code className="rounded bg-white/70 dark:bg-zinc-900/80 px-1 py-px">{setupBanner.sqliteFilePath}</code>
-              </p>
-            ) : null}
-            <Link
-              href="/kurulum"
-              className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 dark:text-indigo-400 underline underline-offset-2"
-            >
-              Barındırıcı / veritabanı yapılandırması →
-            </Link>
-          </div>
-        )}
-        {setupBanner && setupBanner.kind === "warn" && (
-          <div className="p-3.5 text-sm rounded-xl bg-amber-50/90 text-amber-900 border border-amber-200/80 dark:bg-amber-950/35 dark:text-amber-100 dark:border-amber-800/60 space-y-1">
-            <p>{setupBanner.text}</p>
-            <p className="text-[11px] opacity-95">
-              Üretimde bu uyarıyı bu sayfayı açan hosting veya site teknik sorumlusu görür; normal sakinler arayüzden çalışan veritabanı durumunu göremez.
-            </p>
-            <Link href="/kurulum" className="text-xs font-bold underline text-indigo-700 dark:text-indigo-400">
-              Barındırıcı / veritabanı dokümantasyonu
-            </Link>
-          </div>
-        )}
-        {setupBanner && setupBanner.kind === "ok" && (
-          <div className="p-3 text-xs rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-200 dark:bg-emerald-950/35 dark:text-emerald-100 dark:border-emerald-900/70">
-            {setupBanner.text}
-          </div>
-        )}
-
-        {/* Error Alert */}
         {errorMsg && (
-          <div className="p-3.5 text-sm rounded-xl bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800/50 animate-in fade-in duration-200 space-y-2">
+          <div className="p-3.5 text-sm rounded-xl bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800/50 animate-in fade-in duration-200">
             <p>{errorMsg}</p>
-            {(errorMsg.includes("DATABASE") || errorMsg.includes("bağlantı") || errorMsg.includes("SQLite")) && (
-              <p className="text-xs text-red-600/90 dark:text-red-300/90">
-                Sunucu tarafı yapılandırma sorunu olabilir. Bilgi için sistem yöneticinize iletin (
-                <Link href="/kurulum" className="font-bold underline">
-                  teknik rehber
-                </Link>
-                ).
-              </p>
-            )}
           </div>
         )}
 
