@@ -41,10 +41,8 @@ npm run db:d1:remote
 Uygulama dağıtımı (OpenNext):
 
 - Yerel tek komut: `npm run deploy` veya önizleme: `npm run preview`.
-- **Cloudflare Workers / CI:** `wrangler.toml` içindeki `main` yolu `.open-next/worker.js` olduğu için yalnızca `npm run build` (Next derlemesi) **yeterli değildir**; OpenNext adımı (`npm run build:cf`) çalışmalıdır.
-  - **Güvenli varsayılan:** Build = `npm run build` (veya boş / atlanıyorsa), Deploy = `npx wrangler deploy` — Wrangler, `wrangler.toml` **`[build] command = "npm run build:cf"`** ile deploy öncesi OpenNext’i çalıştırır.
-  - **Çift derleme istemiyorsanız:** Panelde Build = `npm run build:cf`, Deploy = `npx wrangler deploy`; bu durumda `wrangler.toml` içindeki **`[build]` bloğunu yorum satırı yapın** (aksi halde OpenNext iki kez çalışır).
-  - Tek satır alternatif: `npm run ci:cloudflare` veya resmi akış `npm run deploy` (`opennextjs-cloudflare build && opennextjs-cloudflare deploy`).
+- **Cloudflare Workers Builds (panel varsayılanı):** Build = `npm run build`, Deploy = `npx wrangler deploy` yeterlidir. `WORKERS_CI=1` ortamında `npm run build` otomatik olarak **OpenNext** derlemesini çalıştırır (`.open-next/worker.js`); ardından Wrangler `opennextjs-cloudflare deploy` ile devam eder.
+- Manuel: `npm run build:cf` veya `npm run ci:cloudflare`. Yerel Windows’ta OpenNext için WSL önerilir.
 
 `GET /api/seed` — tablolar **tamamen boşken** `.env` ile ilk site + süper admin eklemek için (D1 uyumlu).
 
