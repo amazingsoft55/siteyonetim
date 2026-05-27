@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { readJsonError } from "@/lib/json-error";
-import { ArrowLeft, LifeBuoy, Globe, Building2 } from "lucide-react";
+import { SuperAdminTopBar } from "@/components/SuperAdminTopBar";
+import { Globe, Building2 } from "lucide-react";
 
 type AdminTicketRow = {
   id: string;
@@ -175,27 +176,20 @@ export default function SuperAdminDestekPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-[#0b0f19] text-zinc-900 dark:text-zinc-100">
-      <header className="sticky top-0 z-40 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto flex h-16 items-center justify-between px-6 gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <Link href="/super-admin" className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 shrink-0">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <LifeBuoy className="h-6 w-6 text-indigo-600 shrink-0" />
-            <div className="min-w-0">
-              <h1 className="text-lg font-bold truncate">Destek Merkezi</h1>
-              <p className="text-xs text-zinc-500 truncate">
-                {loading ?
-                  "Yükleniyor…"
-                : `${pubList.length} iletişim · ${adminList.length} site yöneticisi talebi`}
-              </p>
-            </div>
-          </div>
-          <Link href="/super-admin/kullanicilar" className="text-sm font-semibold text-indigo-600 shrink-0">
+      <SuperAdminTopBar
+        backHref="/super-admin"
+        title="Destek merkezi"
+        subtitle={
+          loading ?
+            "Yükleniyor…"
+          : `${pubList.length} iletişim · ${adminList.length} site yöneticisi talebi`
+        }
+        actions={
+          <Link href="/super-admin/kullanicilar" className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 shrink-0">
             Kullanıcılar
           </Link>
-        </div>
-      </header>
+        }
+      />
 
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
         {(err || msg) && (

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getPublicSiteUrl } from "./site-url";
+import { SITE_LOGO_PATH } from "./brand";
 
 const siteUrl = getPublicSiteUrl();
 
@@ -22,7 +23,7 @@ export function buildOrganizationJsonLd(): Record<string, unknown> {
     "@type": "Organization",
     name,
     url: siteUrl,
-    logo: `${siteUrl}/icons/app-mark.svg`,
+    logo: `${siteUrl}${SITE_LOGO_PATH}`,
     description:
       "Apartman ve site yöneticileri ile sakinler için aidat, duyuru ve talep süreçlerini tek yerden yöneten güvenli dijital platform.",
     knowsAbout: defaultKeywords.slice(0, 6),
@@ -73,10 +74,10 @@ export function rootDefaultMetadata(): Metadata {
     category: "business",
     icons: {
       icon: [
-        { url: "/icons/app-mark.svg", type: "image/svg+xml", sizes: "512x512" },
-        { url: "/icons/app-mark.svg", type: "image/svg+xml", sizes: "any" },
+        { url: SITE_LOGO_PATH, type: "image/png", sizes: "512x512" },
+        { url: SITE_LOGO_PATH, type: "image/png", sizes: "any" },
       ],
-      apple: [{ url: "/icons/app-mark.svg", sizes: "180x180", type: "image/svg+xml" }],
+      apple: [{ url: SITE_LOGO_PATH, sizes: "180x180", type: "image/png" }],
     },
     alternates: { canonical: siteUrl },
     robots: {
@@ -91,7 +92,7 @@ export function rootDefaultMetadata(): Metadata {
       siteName: "Site Yönetimi",
       title: title.default,
       description,
-      images: [{ url: "/icons/app-mark.svg", width: 512, height: 512, alt: "Site Yönetimi" }],
+      images: [{ url: SITE_LOGO_PATH, width: 512, height: 512, alt: "Site Yönetimi" }],
     },
     twitter: {
       card: "summary_large_image",

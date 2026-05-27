@@ -96,9 +96,29 @@ npm run start
 
 Eski not: Saf `npx wrangler deploy` + düz `.next` çıktısı bu mimariyle uyumlu değildir; OpenNext derlemesi gerekir.
 
-### PWA
+### Mobil uygulamalar (PWA + mağaza)
 
-Ana manifest `public/manifest.json`; süper yönetici için `manifest-super-admin.json`. Uygulama logosu **`public/icons/app-mark.svg`** (web + mobil PWA ile aynı kaynak).
+İki ayrı uygulama:
+
+| Uygulama | PWA manifest | Native (Capacitor) |
+|----------|--------------|-------------------|
+| **Site Yönetimi** (sakin / yönetici) | `public/manifest.json` — girişten kurulum (`/login`) | `com.siteyonetim.app` → `/login` |
+| **Süper yönetici** | `public/manifest-super-admin.json` — `/super-admin` açıkken kurulum | `com.siteyonetim.superadmin` → `/super-admin` |
+
+Logo: **`public/logo.png`** (web, PWA ikonları, mağaza).
+
+**Telefona hemen (PWA):** `/login` veya `/super-admin` → tarayıcı menüsü → Ana ekrana ekle. Giriş ve süper admin sayfalarında kurulum kartı da görünür.
+
+**Play Store / App Store (native kabuk):**
+
+```bash
+# .env içinde NEXT_PUBLIC_SITE_URL veya CAPACITOR_SERVER_URL = canlı https kökünüz
+npm run mobile:setup
+npm run mobile:android          # Site Yönetimi APK
+npm run mobile:android:super    # Süper yönetici APK (ayrı paket)
+```
+
+Detay: **`/mobil`** sayfası ve `capacitor.config.ts` / `capacitor.super-admin.config.ts`.
 
 ---
 

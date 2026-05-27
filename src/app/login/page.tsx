@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { SiteLogo } from "@/components/SiteLogo";
+import { MobileInstallPrompt } from "@/components/MobileInstallPrompt";
 import { browserApiUrl, getStoredApiBase, setStoredApiBase, getBrowserApiBase } from "@/lib/browser-api-base";
 export default function LoginPage() {
   const router = useRouter();
@@ -124,6 +125,8 @@ export default function LoginPage() {
           </p>
         </div>
 
+        <MobileInstallPrompt variant="site" />
+
         {errorMsg && (
           <div className="p-3.5 text-sm rounded-xl bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800/50 animate-in fade-in duration-200">
             <p>{errorMsg}</p>
@@ -232,7 +235,11 @@ export default function LoginPage() {
         </div>
 
         <p className="pt-6 border-t border-zinc-100 dark:border-zinc-800 text-center text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-          Platforma giriş, size atanmış kullanıcı hesabıyla yapılır. Ürün veya satış için{" "}
+          Platforma giriş, size atanmış kullanıcı hesabıyla yapılır. Mobil kurulum:{" "}
+          <Link href="/mobil" className="font-bold text-indigo-600 dark:text-indigo-400 underline">
+            uygulamalar
+          </Link>
+          . Ürün veya satış için{" "}
           <Link href="/destek" className="font-bold text-indigo-600 dark:text-indigo-400 underline">
             destek
           </Link>{" "}

@@ -1,7 +1,4 @@
-"use client";
-
-const PRIMARY_MARK = "/icons/app-mark.svg";
-const SUPER_MARK = "/icons/super-mark.svg";
+import { SITE_BRAND_NAME, SITE_LOGO_PATH } from "@/lib/brand";
 
 type Props = {
   width?: number;
@@ -11,17 +8,18 @@ type Props = {
   rounded?: boolean;
 };
 
-/** Ana logo: tek kaynak olarak `public/icons/app-mark.svg` (PWA ile aynı; mobil uyumlu). */
+/** Site logosu — her yerde aynı PNG (`public/logo.png`). */
 export function SiteLogo({
   width = 40,
   height = 40,
   className = "",
-  alt = "Site Yönetimi logosu",
+  alt = `${SITE_BRAND_NAME} logosu`,
   rounded = false,
 }: Props) {
   return (
+    // eslint-disable-next-line @next/next/no-img-element -- tek statik marka dosyası; Cloudflare ASSETS ile uyumlu
     <img
-      src={PRIMARY_MARK}
+      src={SITE_LOGO_PATH}
       alt={alt}
       width={width}
       height={height}
@@ -32,29 +30,12 @@ export function SiteLogo({
   );
 }
 
-export function SiteMarkSvg({ width = 40, height = 40, className = "", alt }: Props & { alt?: string }) {
-  return (
-    <img
-      src={PRIMARY_MARK}
-      alt={alt ?? "Site Yönetimi işareti"}
-      width={width}
-      height={height}
-      decoding="async"
-      className={className}
-    />
-  );
+/** @deprecated Ayrı süper-admin ikonu yok; ana logo kullanın. */
+export function SuperMarkSvg(props: Props & { alt?: string }) {
+  return <SiteLogo {...props} alt={props.alt ?? `${SITE_BRAND_NAME} — süper yönetici`} />;
 }
 
-/** Süper yönetici uygulama ikonu — `manifest-super-admin` ile aynı dosya */
-export function SuperMarkSvg({ width = 40, height = 40, className = "", alt }: Props & { alt?: string }) {
-  return (
-    <img
-      src={SUPER_MARK}
-      alt={alt ?? "Süper yönetici konsolu"}
-      width={width}
-      height={height}
-      decoding="async"
-      className={className}
-    />
-  );
+/** @deprecated SiteLogo ile aynı. */
+export function SiteMarkSvg(props: Props & { alt?: string }) {
+  return <SiteLogo {...props} />;
 }

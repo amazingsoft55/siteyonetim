@@ -15,10 +15,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icons/super-mark.svg", type: "image/svg+xml", sizes: "512x512" },
-      { url: "/icons/super-mark.svg", type: "image/svg+xml", sizes: "any" },
+      { url: "/logo.png", type: "image/png", sizes: "512x512" },
+      { url: "/logo.png", type: "image/png", sizes: "any" },
     ],
-    apple: [{ url: "/icons/super-mark.svg", sizes: "180x180", type: "image/svg+xml" }],
+    apple: [{ url: "/logo.png", sizes: "180x180", type: "image/png" }],
   },
 };
 

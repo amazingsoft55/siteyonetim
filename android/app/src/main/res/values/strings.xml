@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">siteyonetim</string>
-    <string name="title_activity_main">siteyonetim</string>
+    <string name="app_name">Site Yönetimi</string>
+    <string name="title_activity_main">Site Yönetimi</string>
     <string name="package_name">com.siteyonetim.app</string>
     <string name="custom_url_scheme">com.siteyonetim.app</string>
 </resources>

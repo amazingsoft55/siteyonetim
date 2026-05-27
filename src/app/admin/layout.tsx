@@ -4,9 +4,10 @@ import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PresenceHeartbeat } from "@/components/PresenceHeartbeat";
+import { SiteLogo } from "@/components/SiteLogo";
+import { SITE_BRAND_NAME } from "@/lib/brand";
 import type { LucideIcon } from "lucide-react";
 import {
-  ShieldCheck,
   Users,
   Megaphone,
   LayoutDashboard,
@@ -76,14 +77,12 @@ export default function AdminLayout({
       <PresenceHeartbeat />
       <aside className="hidden sm:flex flex-col w-64 border-r border-rose-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 h-full p-4 shrink-0">
         <div className="flex items-center gap-2.5 px-2 py-4 mb-6 border-b border-zinc-100 dark:border-zinc-800/80">
-          <div className="h-10 w-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-600/10">
-            <ShieldCheck className="h-5.5 w-5.5" />
+          <div className="h-11 w-11 rounded-2xl bg-white dark:bg-zinc-950 ring-1 ring-zinc-200/80 dark:ring-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
+            <SiteLogo width={40} height={40} className="h-9 w-9" alt="" />
           </div>
-          <div>
-            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Yönetici Paneli</p>
-            <p className="text-xs text-rose-600 dark:text-rose-400 font-bold tracking-wide uppercase">
-              Yetkili Erişim
-            </p>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50 truncate">{SITE_BRAND_NAME}</p>
+            <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">Yönetici paneli</p>
           </div>
         </div>
 
@@ -126,11 +125,11 @@ export default function AdminLayout({
 
       <main className="flex-1 overflow-y-auto pb-20 sm:pb-0">
         <div className="sm:hidden flex items-center justify-between p-4 border-b border-rose-200/50 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 sticky top-0 z-10">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-rose-600 text-white flex items-center justify-center shadow-sm">
-              <ShieldCheck className="h-4.5 w-4.5" />
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="h-9 w-9 rounded-xl bg-white dark:bg-zinc-950 ring-1 ring-zinc-200/80 dark:ring-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
+              <SiteLogo width={32} height={32} className="h-7 w-7" alt="" />
             </div>
-            <h1 className="text-md font-bold text-zinc-950 dark:text-zinc-50">Yönetim Modu</h1>
+            <h1 className="text-sm font-bold text-zinc-950 dark:text-zinc-50 truncate">{SITE_BRAND_NAME}</h1>
           </div>
           <ThemeToggle />
         </div>

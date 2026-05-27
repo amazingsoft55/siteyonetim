@@ -4,7 +4,9 @@ import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PresenceHeartbeat } from "@/components/PresenceHeartbeat";
-import { Home, CreditCard, Megaphone, Wrench, User, LogOut } from "lucide-react";
+import { SiteLogo } from "@/components/SiteLogo";
+import { SITE_BRAND_NAME } from "@/lib/brand";
+import { Home, CreditCard, Megaphone, Wrench, LogOut } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -51,13 +53,21 @@ export default function DashboardLayout({
       <PresenceHeartbeat />
       {/* Sidebar for Desktop */}
       <aside className="hidden sm:flex flex-col w-64 border-r border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 h-full p-4">
-        <div className="flex items-center gap-3 px-2 py-4 mb-6 border-b border-zinc-100 dark:border-zinc-800/80">
-          <div className="h-10 w-10 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-900/30">
-            <User className="h-5 w-5" />
+        <div className="px-2 py-4 mb-4 border-b border-zinc-100 dark:border-zinc-800/80 space-y-3">
+          <div className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-xl bg-white dark:bg-zinc-950 ring-1 ring-zinc-200/80 dark:ring-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
+              <SiteLogo width={32} height={32} className="h-7 w-7" alt="" />
+            </div>
+            <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300 truncate">{SITE_BRAND_NAME}</p>
           </div>
-          <div>
-            <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200">{asideName}</p>
-            <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">{asideMeta}</p>
+          <div className="flex items-center gap-2 px-1">
+            <div className="h-8 w-8 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-900/30 text-xs font-bold">
+              {asideName.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200 truncate">{asideName}</p>
+              <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 truncate">{asideMeta}</p>
+            </div>
           </div>
         </div>
         

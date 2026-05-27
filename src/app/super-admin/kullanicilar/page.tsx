@@ -5,7 +5,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { readJsonError, readJsonNotice } from "@/lib/json-error";
-import { Shield, ArrowLeft, LogOut, Trash2, Pencil } from "lucide-react";
+import { SuperAdminTopBar } from "@/components/SuperAdminTopBar";
+import { LogOut, Trash2, Pencil } from "lucide-react";
 
 type SiteRow = {
   id: string;
@@ -279,30 +280,19 @@ function SuperAdminUsersPageInner() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-[#0b0f19] text-zinc-900 dark:text-zinc-100">
-      <header className="sticky top-0 z-50 w-full border-b border-zinc-200/50 dark:border-zinc-800/50 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-6 gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <Link
-              href="/super-admin"
-              className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 shrink-0"
-              aria-label="Panele dön"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <Shield className="h-6 w-6 text-indigo-600 shrink-0" />
-            <div className="min-w-0">
-              <h1 className="text-lg font-bold tracking-tight truncate">Siteler & kullanıcılar</h1>
-              <p className="text-xs text-zinc-500 truncate">
-                {loading ?
-                  "Yükleniyor…"
-                : `${sites.length} site · ${adminTotal} yönetici · ${users.length} toplam hesap${
-                    siteListFilterId.trim() ?
-                      ` · Liste: ${siteNameOf(siteListFilterId.trim())} (${visibleUsers.length})`
-                    : ""
-                  }`}
-              </p>
-            </div>
-          </div>
+      <SuperAdminTopBar
+        backHref="/super-admin"
+        title="Siteler & kullanıcılar"
+        subtitle={
+          loading ?
+            "Yükleniyor…"
+          : `${sites.length} site · ${adminTotal} yönetici · ${users.length} toplam hesap${
+              siteListFilterId.trim() ?
+                ` · Liste: ${siteNameOf(siteListFilterId.trim())} (${visibleUsers.length})`
+              : ""
+            }`
+        }
+        actions={
           <button
             type="button"
             onClick={logout}
@@ -311,8 +301,8 @@ function SuperAdminUsersPageInner() {
             <LogOut className="h-4 w-4" />
             Çıkış
           </button>
-        </div>
-      </header>
+        }
+      />
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {(err || msg) && (

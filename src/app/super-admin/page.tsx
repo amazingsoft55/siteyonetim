@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { describeFailedResponse } from "@/lib/json-error";
-import { SuperMarkSvg } from "@/components/SiteLogo";
+import { SuperAdminTopBar } from "@/components/SuperAdminTopBar";
 
 type SiteRow = { id: string; name: string; address: string | null; createdAt: string | null };
 
@@ -191,28 +191,18 @@ export default function SuperAdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-100 via-zinc-50 to-white dark:from-[#060a12] dark:via-[#0b0f19] dark:to-zinc-950 text-zinc-900 dark:text-zinc-100">
-      <header className="sticky top-0 z-50 border-b border-indigo-200/40 dark:border-indigo-900/40 bg-white/85 dark:bg-zinc-950/85 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto flex h-[4.25rem] items-center justify-between px-6 gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-zinc-950 dark:bg-zinc-900 ring-2 ring-indigo-500/35 shadow-lg shadow-indigo-900/25 shrink-0 overflow-hidden">
-              <SuperMarkSvg width={40} height={40} className="h-9 w-9" alt="" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl font-extrabold tracking-tight truncate">Süper yönetici merkezi</h1>
-              <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 flex flex-col sm:flex-row sm:items-center sm:gap-x-2 gap-0.5 pt-0.5">
-                <span className="inline-flex items-center gap-2 truncate">
-                  <span
-                    className={`inline-flex h-2 w-2 shrink-0 rounded-full ${dash ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}
-                  />
-                  {dash?.freshAt ? `Ölçüm: ${new Date(dash.freshAt).toLocaleString("tr-TR")}` : "Ölçüm bekleniyor…"}
-                </span>
-                <span className="text-[10px] text-zinc-400 dark:text-zinc-500 truncate">
-                  Bu sekmede ana ekrana eklerseniz ayrı süper yönetici uygulaması (manifest) yüklenir.
-                </span>
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+      <SuperAdminTopBar
+        title="Süper yönetici merkezi"
+        subtitle={
+          <span className="inline-flex items-center gap-2">
+            <span
+              className={`inline-flex h-2 w-2 shrink-0 rounded-full ${dash ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}
+            />
+            {dash?.freshAt ? `Ölçüm: ${new Date(dash.freshAt).toLocaleString("tr-TR")}` : "Ölçüm bekleniyor…"}
+          </span>
+        }
+        actions={
+          <>
             <button
               type="button"
               onClick={refreshNow}
@@ -242,9 +232,9 @@ export default function SuperAdminDashboard() {
               <LogOut className="h-3.5 w-3.5" />
               Çıkış
             </button>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <main className="max-w-7xl mx-auto px-6 py-10 space-y-10">
         {loadErr && (

@@ -3,7 +3,7 @@
   "name": "Site Yönetimi",
   "short_name": "Site Yönetim",
   "description": "Apartman ve Site Yönetim Uygulaması — sakin ve yönetici paneli.",
-  "start_url": "/",
+  "start_url": "/login",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f8fafc",
@@ -11,15 +11,15 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icons/app-mark.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/app-mark.svg",
+      "src": "/logo.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ]
