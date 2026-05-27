@@ -95,8 +95,45 @@ export default function KurulumPage() {
           </ul>
         </section>
 
+        <section
+          id="mobil"
+          className="scroll-mt-24 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 space-y-4 shadow-sm"
+        >
+          <h2 className="text-lg font-bold">5 · Mobil uygulama (Android / iOS APK)</h2>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+            Sakin ve site yöneticileri için <strong>Site Yönetimi</strong>; platform süper yöneticisi için ayrı paket (
+            <strong>SY Süper Yönetici</strong>). Capacitor ile native kabuk üretilir; canlı site adresi{" "}
+            <code className="text-xs">CAPACITOR_SERVER_URL</code> veya <code className="text-xs">NEXT_PUBLIC_SITE_URL</code> ile
+            verilir.
+          </p>
+          <div className="rounded-xl bg-zinc-950 dark:bg-black text-zinc-100 text-xs sm:text-sm p-4 overflow-x-auto font-mono space-y-2">
+            <p className="text-emerald-400"># İlk kez (Capacitor platformları)</p>
+            <p>npm run mobile:setup</p>
+            <p className="text-emerald-400 pt-2"># Site uygulaması — Android Studio</p>
+            <p>npm run mobile:sync</p>
+            <p>npm run mobile:android</p>
+            <p className="text-emerald-400 pt-2"># Süper yönetici — ayrı paket</p>
+            <p>npm run mobile:sync:super</p>
+            <p>npm run mobile:android:super</p>
+          </div>
+          <ul className="text-sm list-disc pl-5 space-y-2 text-zinc-600 dark:text-zinc-400">
+            <li>
+              Play Store veya APK indirme linki (sakin/yönetici):{" "}
+              <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1 rounded">NEXT_PUBLIC_SITE_DOWNLOAD_ANDROID</code>
+            </li>
+            <li>
+              Süper yönetici APK / Play:{" "}
+              <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1 rounded">NEXT_PUBLIC_SUPER_DOWNLOAD_ANDROID</code>
+            </li>
+            <li>
+              Cloudflare Workers ortam değişkenlerine ekleyip yeniden deploy edin; ana sayfadaki Android düğmesi otomatik
+              mağaza/APK adresine gider.
+            </li>
+          </ul>
+        </section>
+
         <section className="rounded-2xl border border-amber-200/80 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 p-6 space-y-3">
-          <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">5 · Sık hatalar</h2>
+          <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">6 · Sık hatalar</h2>
           <ul className="text-sm list-disc pl-5 space-y-2 text-amber-950/85 dark:text-amber-200/85">
             <li>
               <strong>503 / DATABASE_UNAVAILABLE:</strong> Yerelde dosya SQLite: <code className="text-xs">npm install</code>, şema için{" "}

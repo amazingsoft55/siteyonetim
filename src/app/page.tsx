@@ -95,9 +95,9 @@ export default function Home() {
         <section className="py-16 px-6 border-t border-zinc-100 dark:border-zinc-800/50 bg-white/60 dark:bg-zinc-900/40">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Mobil uygulamayı indirin</h2>
+              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Uygulamayı yükleyin</h2>
               <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                iPhone, Android, Windows ve Linux — site sakinleri ve yöneticiler için.
+                Tek düğme — Android ve bilgisayarda kurulum penceresi açılır; iPhone’da 2 adımlık rehber.
               </p>
             </div>
             <AppDownloadButtons variant="site" />
