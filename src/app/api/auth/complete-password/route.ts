@@ -7,7 +7,6 @@ import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { users } from "@/db/schema";
 
-export const runtime = "nodejs";
 
 const MIN_LEN = 8;
 
@@ -44,8 +43,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Şifreler eşleşmiyor." }, { status: 400 });
   }
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   try {
     const row = await d.db.select().from(users).where(eq(users.id, payload.id)).limit(1);

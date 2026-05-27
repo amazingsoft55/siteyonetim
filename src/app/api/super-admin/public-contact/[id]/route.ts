@@ -6,7 +6,6 @@ import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { platformPublicContact } from "@/db/schema";
 
-export const runtime = "nodejs";
 
 type PatchBody = {
   status?: unknown;
@@ -42,8 +41,8 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     return NextResponse.json({ error: "status veya yanıt gerekli." }, { status: 400 });
   }
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   const nowIso = new Date().toISOString();
 

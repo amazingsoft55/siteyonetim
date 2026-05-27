@@ -61,7 +61,7 @@ export default function LoginPage() {
           setSetupBanner({
             kind: "warn",
             text:
-              "Henüz ilk site veya kullanıcı kaydı yok. Barındırıcı makinede şema ve isteğe bağlı ilk yöneticiyi yükleyin (`npm run db:apply` veya kurulum dökümünüzdaki `.sql`) veya boş tabloda sunucunun izin verdiği şekilde `/api/seed` ile başlatın.",
+              "Henüz ilk site veya kullanıcı kaydı yok. Şemayı uygulayın (`npm run db:apply` veya D1 için `npm run db:d1:remote`) ve kullanıcıları süper yönetici panelinden oluşturun; tablolar tamamen boşsa `.env` ile `/api/seed` kullanılabilir.",
           });
           return;
         }

@@ -5,7 +5,6 @@ import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { users, passwordResetTokens } from "@/db/schema";
 
-export const runtime = "nodejs";
 
 const MIN_LEN = 8;
 
@@ -33,8 +32,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Şifreler eşleşmiyor." }, { status: 400 });
   }
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   const now = new Date().toISOString();
 

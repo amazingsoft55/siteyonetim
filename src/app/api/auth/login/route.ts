@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/db";
+import { getPlatformDb } from "@/db/platform";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { signJwt } from "@/lib/auth";
 import { cookies } from "next/headers";
-
-export const runtime = "nodejs";
+import { databaseUnavailable } from "@/server/database/access";
+import type { PlatformDatabase } from "@/db/platform";
 
 type LoginBody = {
   usernameOrPhone?: unknown;
@@ -24,22 +24,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Lütfen kullanıcı adı ve şifre girin." }, { status: 400 });
     }
 
-    let db: ReturnType<typeof getDb>;
+    let db: PlatformDatabase;
     try {
-      db = getDb();
+      db = await getPlatformDb();
     } catch {
-      const { resolveSqliteDbPath } = await import("@/lib/database-path");
-      const sqliteFilePath = resolveSqliteDbPath();
-      return NextResponse.json(
-        {
-          error: "Veritabanı dosyası açılamıyor. Şemayı `npm run db:apply` ile uygulayıp yeniden deneyin.",
-          code: "DATABASE_UNAVAILABLE",
-          sqliteFilePath,
-          kurulumUrl: "/kurulum",
-          setupStatusUrl: "/api/setup/status",
-        },
-        { status: 503 },
-      );
+      return await databaseUnavailable();
     }
 
     const loginColumns = {

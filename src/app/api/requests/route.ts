@@ -6,7 +6,6 @@ import { jsonSqlError } from "@/lib/db-query-error";
 import { requests as residentRequests } from "@/db/schema";
 import { dbRequestToClient, uiStatusToDb, type ClientRequestItem } from "@/lib/request-ui";
 
-export const runtime = "nodejs";
 
 function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
@@ -20,8 +19,8 @@ export async function GET(request: Request) {
   const session = await getSession();
   if (!session) return forbidden();
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   const { searchParams } = new URL(request.url);
   const siteHint = searchParams.get("siteId");
@@ -77,8 +76,8 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (!session || session.role !== "USER") return forbidden();
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   if (!session.siteId) return forbiddenScope();
 
@@ -131,8 +130,8 @@ export async function PUT(request: Request) {
   const session = await getSession();
   if (!session || session.role !== "ADMIN" || !session.siteId) return forbidden();
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   let raw: PutBody;
   try {

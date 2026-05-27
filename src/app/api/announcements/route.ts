@@ -6,7 +6,6 @@ import { jsonSqlError } from "@/lib/db-query-error";
 import { announcements } from "@/db/schema";
 import { announcementToClient } from "@/lib/announcement-ui";
 
-export const runtime = "nodejs";
 
 function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
@@ -19,8 +18,8 @@ export async function GET(request: Request) {
   const session = await getSession();
   if (!session) return forbidden();
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   const { searchParams } = new URL(request.url);
   const hint = searchParams.get("siteId");
@@ -62,8 +61,8 @@ export async function POST(request: Request) {
   if (!session || session.role !== "ADMIN") return forbidden();
   if (!session.siteId) return forbiddenScope();
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   let raw: PostBody;
   try {
@@ -116,8 +115,8 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Kimlik gereklidir." }, { status: 400 });
   }
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   try {
     await d.db

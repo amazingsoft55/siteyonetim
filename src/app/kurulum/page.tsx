@@ -9,7 +9,7 @@ const base = getPublicSiteUrl();
 export const metadata: Metadata = {
   title: "Kurulum ve veritabanı",
   description:
-    "Site Yönetimi: yerel SQLite, şema uygulama, deme süper yöneticisi ve sık yapılan hataların çözümü.",
+    "Site Yönetimi: SQLite veya Cloudflare D1 şema uygulama, ilk kurulum ve sık yapılan hataların çözümü.",
   alternates: { canonical: `${base}/kurulum` },
   robots: { index: false, follow: false },
 };
@@ -22,8 +22,9 @@ export default function KurulumPage() {
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight">Kurulum rehberi</h1>
           <p className="mt-3 text-zinc-600 dark:text-zinc-400 leading-relaxed">
-            Bu uygulama <strong>Node.js sürecinde SQLite</strong> kullanır. API route’ları `better-sqlite3` ile diskteki tek bir
-            `.db` dosyasına yazar; klasik SSR / `next dev` ile tamamen çalışır (ek platform bağlayıcısı gerekmez).
+            Bu uygulama veriyi <strong>Drizzle ORM</strong> ile tutar: yerelde <strong>SQLite dosyası</strong> (<code className="text-xs">better-sqlite3</code>
+            ), Cloudflare’de ise <strong>D1</strong> (<code className="text-xs">wrangler.toml</code> içinde bağlama{" "}
+            <code className="text-xs">DB</code>) kullanılabilir.
           </p>
         </div>
 
@@ -46,31 +47,22 @@ export default function KurulumPage() {
         </section>
 
         <section className="rounded-2xl border border-emerald-200/80 dark:border-emerald-900/50 bg-emerald-50/30 dark:bg-emerald-950/20 p-6 space-y-4">
-          <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100">2 · Tek SQL dosyası (şema + deme yöneticisi)</h2>
+          <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100">2 · SQL şema (D1 veya yerel SQLite)</h2>
           <p className="text-sm text-emerald-950/85 dark:text-emerald-100/85">
-            <strong>Tek dosya</strong> — tablolar, indeksler, üç deme kullanıcı, site ayarları, duyuru, örnek borç ve talep:{" "}
-            <strong>drizzle/full-schema.sql</strong> (başka SQL dosyası yok).
+            <strong>Şema tek dosya:</strong> <strong>drizzle/full-schema.sql</strong> (yalnızca tablolar; üretim verisi buraya yazılmaz).
           </p>
-          <div className="rounded-xl bg-zinc-950 dark:bg-black text-zinc-100 text-xs sm:text-sm p-4 overflow-x-auto font-mono">
-            <p className="text-emerald-400 mb-2"># Proje kökünden</p>
+          <div className="rounded-xl bg-zinc-950 dark:bg-black text-zinc-100 text-xs sm:text-sm p-4 overflow-x-auto font-mono space-y-2">
+            <p className="text-emerald-400"># Yerel / VPS — dosya SQLite</p>
             <p>npm run db:apply</p>
+            <p className="text-emerald-400 pt-2"># Cloudflare D1 (wrangler giriş gerekir)</p>
+            <p>npm run db:d1:remote</p>
           </div>
-          <p className="text-xs text-emerald-900/80 dark:text-emerald-300/85 space-y-2">
-            Deme hesaplar: <code className="text-[11px]">yonetici@demo.local</code> — <code className="text-[11px]">Admin123!</code> (süper);
-            <span className="block">
-              <code className="text-[11px]">admin@demo.local</code> — <code className="text-[11px]">SiteAdmin123!</code> (site yöneticisi);
-            </span>
-            <span className="block">
-              <code className="text-[11px]">sakin@demo.local</code> — <code className="text-[11px]">Sakin123!</code> (sakin, A-1).
-            </span>
-          </p>
         </section>
 
         <section className="rounded-2xl border border-indigo-200/70 dark:border-indigo-900/50 bg-indigo-50/40 dark:bg-indigo-950/20 p-6 space-y-3">
           <h2 className="text-lg font-bold text-indigo-900 dark:text-indigo-100">3 · Programatik ilk kurulum (boş DB)</h2>
           <p className="text-sm text-indigo-950/80 dark:text-indigo-100/85">
-            SQL ile deme yüklemek istemezseniz, tablo boşken <code className="text-xs">env.example</code> ile tanımladığınız
-            ortam değişkenleriyle{" "}
+            Tablolar boşken <code className="text-xs">env.example</code> ile tanımladığınız ortam değişkenleriyle{" "}
             <Link href="/api/seed" className="font-bold underline">
               GET /api/seed
             </Link>{" "}
@@ -101,18 +93,18 @@ export default function KurulumPage() {
           <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">5 · Sık hatalar</h2>
           <ul className="text-sm list-disc pl-5 space-y-2 text-amber-950/85 dark:text-amber-200/85">
             <li>
-              <strong>503 / DATABASE_UNAVAILABLE:</strong> Dosya oluşturulamıyor / native modül yüklenmiyorsa{" "}
-              <code className="text-xs">npm install</code> yapın (<code className="text-xs">better-sqlite3</code> bazen araç zinciri gerektirir).
-              Şema ve deme yönetici: <code className="text-xs">npm run db:apply</code> (
-              <code className="text-xs">drizzle/full-schema.sql</code>). İsteğe bağlı: <code className="text-xs">.env</code> içinde{" "}
-              <code className="text-xs">DATABASE_PATH</code> ve yazılabilir klasör izinleri.
+              <strong>503 / DATABASE_UNAVAILABLE:</strong> Yerelde dosya SQLite: <code className="text-xs">npm install</code>, şema için{" "}
+              <code className="text-xs">npm run db:apply</code>, <code className="text-xs">DATABASE_PATH</code> ve klasör izinleri. Cloudflare D1:
+              Worker’da <code className="text-xs">DB</code> bağlaması (<code className="text-xs">wrangler.toml</code>) ve{" "}
+              <code className="text-xs">npm run db:d1:remote</code> ile tabloların oluşturulmuş olması gerekir.
             </li>
             <li>
-              <strong>no such table:</strong> `npm run db:apply` henüz çalıştırılmamış veya eski bir dosya kullanılıyor.
+              <strong>no such table:</strong> Yerelde <code className="text-xs">npm run db:apply</code>; D1’de{" "}
+              <code className="text-xs">npm run db:d1:remote</code> ile <code className="text-xs">full-schema.sql</code> henüz uygulanmamış olabilir.
             </li>
             <li>
-              <strong>Serverless kısıtı:</strong> tek dosya SQLite, kalıcı diski olmayan veya her istekte izole kopya sunan platformlarda uygun değildir;
-              bu durumda harici bir veritabanına geçin.
+              <strong>Cloudflare Workers:</strong> Uygulama <strong>D1</strong> ile bağlanır — kalıcı dosya SQLite değildir;{" "}
+              <code className="text-xs">better-sqlite3</code> yalnızca yerel/VPS kod yolunda çalışır.
             </li>
           </ul>
         </section>

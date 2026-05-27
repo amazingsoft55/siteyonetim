@@ -1,0 +1,21 @@
+# OpenNext + Cloudflare Workers — D1 gerçek veri
+# Veritabanı adı: siteyon  |  ID: (Dashboard’dan)
+# https://developers.cloudflare.com/d1/
+
+name = "siteyonetim"
+main = ".open-next/worker.js"
+compatibility_date = "2025-05-26"
+compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
+
+[assets]
+binding = "ASSETS"
+directory = ".open-next/assets"
+
+[[services]]
+binding = "WORKER_SELF_REFERENCE"
+service = "siteyonetim"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "siteyon"
+database_id = "8b9b5e1c-41e6-461a-8d4e-fc9779da53cc"

@@ -5,7 +5,6 @@ import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { platformPublicContact } from "@/db/schema";
 
-export const runtime = "nodejs";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -59,8 +58,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Mesajınız en az birkaç cümle olmalıdır." }, { status: 400 });
   }
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   try {
     const sinceIso = new Date(Date.now() - 3600_000).toISOString();

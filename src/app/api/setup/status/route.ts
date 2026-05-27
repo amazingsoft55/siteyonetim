@@ -1,36 +1,19 @@
 import { NextResponse } from "next/server";
 import { existsSync } from "node:fs";
 import { count } from "drizzle-orm";
-import { acquireDatabase } from "@/server/database/access";
+import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { resolveSqliteDbPath } from "@/lib/database-path";
 import { getStorageMeta } from "@/server/database/meta";
 import { sites, users, adminSupportTickets } from "@/db/schema";
 
-export const runtime = "nodejs";
-
 /** Sağlık kontrolü ve ilk kurulum metni: kimlik doğrulama gerektirmez. */
 export async function GET() {
-  const sqliteFilePath = resolveSqliteDbPath();
-  const storage = getStorageMeta();
+  const storage = await getStorageMeta();
 
-  const ctx = acquireDatabase();
+  const ctx = await acquireDatabase();
   if (!ctx.ok) {
-    return NextResponse.json(
-      {
-        ok: false,
-        code: "DATABASE_UNAVAILABLE",
-        storage,
-        sqliteFilePath,
-        fileExistsOnDisk: existsSync(sqliteFilePath),
-        message: "SQLite dosyası açılamıyor veya yerel sürücü erişilemiyor.",
-        steps: [
-          "`npm install` tamam olduğundan emin olun (`better-sqlite3` native derlemesi gerekebilir).",
-          "Şema ve deme yönetici için: `npm run db:apply` (`drizzle/full-schema.sql`).",
-          "İsteğe bağlı: `.env` içinde `DATABASE_PATH` ile dosya konumunu ayarlayın.",
-        ],
-      },
-      { status: 503 },
-    );
+    const res = await databaseUnavailable();
+    return res;
   }
 
   let sitesCount = 0;
@@ -42,6 +25,7 @@ export async function GET() {
     const uc = await ctx.db.select({ c: count() }).from(users);
     usersCount = uc[0]?.c ?? 0;
   } catch {
+    const sqliteFilePath = storage.engine === "sqlite" ? resolveSqliteDbPath() : undefined;
     return NextResponse.json(
       {
         ok: false,
@@ -49,7 +33,10 @@ export async function GET() {
         storage,
         sqliteFilePath,
         message: "`sites` veya `users` tabloları okunamadı.",
-        hint: "`npm run db:apply` çalıştırın.",
+        hint:
+          storage.engine === "d1" ?
+            "`npm run db:d1:remote` ile tam şema dosyasını D1'e uygulayın (`drizzle/full-schema.sql`)."
+          : "`npm run db:apply` ile `drizzle/full-schema.sql` dosyasını uygulayın.",
       },
       { status: 500 },
     );
@@ -64,12 +51,17 @@ export async function GET() {
   }
 
   const needsSeed = sitesCount === 0 || usersCount === 0;
+  const sqliteFilePath = storage.engine === "sqlite" ? resolveSqliteDbPath() : undefined;
 
   return NextResponse.json({
     ok: true,
     storage,
-    sqliteFilePath,
-    fileExistsOnDisk: existsSync(sqliteFilePath),
+    ...(storage.engine === "sqlite" ?
+      {
+        sqliteFilePath,
+        fileExistsOnDisk: sqliteFilePath ? existsSync(sqliteFilePath) : false,
+      }
+    : { fileExistsOnDisk: null }),
     code:
       needsSeed ? "NEEDS_SEED"
       : !hasSupportTicketsTable ?
@@ -83,13 +75,15 @@ export async function GET() {
     ...(needsSeed ?
       {
         nextStep:
-          "`npm run db:apply` ile deme süper kullanıcı dahil şemayı yükleyin veya boş tabloda `.env` ile `/api/seed`.",
+          storage.engine === "d1" ?
+            "Panel kullanıcılarını D1'e eklemek için önce ilk süper yöneticiyi oluşturun: Cloudflare konsolundan tabloya INSERT veya (önerilir) ilk bir kez boştan `/api/seed` + `.env` veya güvenilir SQL importu."
+          : "`npm run db:apply` veya `.env` ile `/api/seed` (tablolar boşsa) veya panelden ilk kullanıcıları oluşturun.",
       }
     : {}),
     ...(hasSupportTicketsTable ? {}
     : {
         optionalNote:
-          "Şema eksik tablolar içeriyorsa `drizzle/full-schema.sql` dosyasını yeniden `npm run db:apply` ile uygulayın.",
+          "Şema güncellenmiş ise `npm run db:apply` (yerel) veya `npm run db:d1:remote` ile migration tekrarı yapılabilir.",
       }),
   });
 }

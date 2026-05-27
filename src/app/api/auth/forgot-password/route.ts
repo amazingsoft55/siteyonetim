@@ -4,7 +4,6 @@ import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { users, passwordResetTokens } from "@/db/schema";
 import { sendPasswordResetEmail } from "@/lib/send-email";
 
-export const runtime = "nodejs";
 
 type Body = { email?: unknown };
 
@@ -35,8 +34,8 @@ export async function POST(request: Request) {
     return generic;
   }
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   try {
     const rows = await d.db

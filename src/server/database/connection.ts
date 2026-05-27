@@ -1,4 +1,3 @@
-/** Sunucu veritabanı bağlantısı (`better-sqlite3` + Drizzle). */
-export { getDb, getBetterSqlitePath } from "@/db";
-
-export type PlatformDatabase = ReturnType<typeof import("@/db").getDb>;
+export type { PlatformDatabase } from "@/db/platform";
+export { getPlatformDb } from "@/db/platform";
+export { getBetterSqlitePath } from "@/db/sqlite-internal";

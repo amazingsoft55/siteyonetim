@@ -32,7 +32,7 @@ interface RequestItem {
 
 export default function DashboardPage() {
   const [balance, setBalance] = React.useState(0);
-  const [residentName, setResidentName] = React.useState("Sakin");
+  const [residentName, setResidentName] = React.useState("");
   const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
   const [activeRequests, setActiveRequests] = React.useState<RequestItem[]>([]);
 
@@ -93,13 +93,13 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-zinc-50 flex items-center gap-2">
-            Merhaba {residentName},
+            Merhaba{residentName.trim() ? ` ${residentName.trim()}` : ""},
           </h2>
           <p className="text-zinc-500 dark:text-zinc-400 mt-1">Görünüşe göre bugün sitenizde her şey yolunda.</p>
         </div>
         <div className="text-left sm:text-right">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs font-semibold">
-            <Shield className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" /> Güvenli oturum · SQLite
+            <Shield className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" /> Güvenli oturum
           </div>
         </div>
       </div>
@@ -119,7 +119,7 @@ export default function DashboardPage() {
             <div className="mb-8">
               <span className="text-5xl font-black">₺{balance.toLocaleString("tr-TR")}</span>
               <span className="text-indigo-200 font-bold ml-1">.00</span>
-              <p className="text-xs text-indigo-200/80 mt-2">Son ödeme tarihi: 31 Mayıs 2026</p>
+              <p className="text-xs text-indigo-200/80 mt-2">Borç tutarı veritabanındaki ödenmemiş kalemlerden hesaplanır.</p>
             </div>
           </div>
 

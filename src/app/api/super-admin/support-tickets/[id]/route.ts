@@ -4,7 +4,6 @@ import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { adminSupportTickets } from "@/db/schema";
 
-export const runtime = "nodejs";
 
 function forbidden() {
   return NextResponse.json({ error: "Yetkisiz." }, { status: 403 });
@@ -27,8 +26,8 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   const { id } = await ctx.params;
   if (!id) return NextResponse.json({ error: "Kimlik eksik." }, { status: 400 });
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   let raw: PatchBody;
   try {

@@ -5,7 +5,6 @@ import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { users } from "@/db/schema";
 
-export const runtime = "nodejs";
 
 function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
@@ -25,8 +24,8 @@ export async function GET() {
   const session = await getSession();
   if (!session || session.role !== "ADMIN" || !session.siteId) return forbidden();
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   const list = await d.db
     .select(publicUserColumns)
@@ -47,8 +46,8 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (!session || session.role !== "ADMIN" || !session.siteId) return forbidden();
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   let raw: Body;
   try {

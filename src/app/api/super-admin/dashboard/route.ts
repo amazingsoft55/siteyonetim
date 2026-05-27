@@ -13,7 +13,6 @@ import {
   platformPublicContact,
 } from "@/db/schema";
 
-export const runtime = "nodejs";
 
 export async function GET() {
   try {
@@ -22,8 +21,8 @@ export async function GET() {
       return NextResponse.json({ error: "Bu özet için süper yönetici gereklidir." }, { status: 403 });
     }
 
-    const d = acquireDatabase();
-    if (!d.ok) return databaseUnavailable();
+    const d = await acquireDatabase();
+    if (!d.ok) return await databaseUnavailable();
 
     const freshAt = new Date().toISOString();
   let dbLatencyMs: number | null = null;

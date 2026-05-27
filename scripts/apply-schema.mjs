@@ -28,7 +28,6 @@ try {
 
 const sqlPath = path.join(root, "drizzle", "full-schema.sql");
 const sql = fs.readFileSync(sqlPath, "utf8");
-
 sqlite.exec(sql);
 sqlite.close();
 

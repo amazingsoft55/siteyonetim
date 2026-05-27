@@ -1,24 +1,20 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/db";
+import { getPlatformDb } from "@/db/platform";
 import { users, sites } from "@/db/schema";
 import * as bcrypt from "bcryptjs";
 
-export const runtime = "nodejs";
-
 /**
- * Opsiyonel: SQL seed uygulanmamış, boş tabloda ortamdan ilk site + süper yönetici.
- * Dosyalı kurulum için `drizzle/full-schema.sql` içindeki deme blokunu kullanın.
+ * Opsiyonel: tabloda hiç site yokken ilk site + süper yöneticiyi ortam değişkenleriyle oluşturur (D1 uyumlu).
+ * Üretimde çoğu kurulum doğrudan SQL veya panele güvenir; bu endpoint’i sıkı sınır ile koruyun.
  */
 export async function GET() {
   try {
-    const db = getDb();
+    const db = await getPlatformDb();
 
     const existingSites = await db.select().from(sites).limit(1);
     if (existingSites.length > 0) {
       return NextResponse.json({
-        message:
-          "Veritabanı zaten kurulu. Deme süper kullanıcı full-schema ile eklendiyseniz `yonetici@demo.local` / `Admin123!` ile deneyin.",
-        hint: "Yeni site ve kullanıcılar süper yönetici panelinden eklenir.",
+        message: "Veritabanında zaten site kaydı var. Yeni site ve kullanıcılar süper yönetici panelinden oluşturulur.",
       });
     }
 
@@ -37,7 +33,7 @@ export async function GET() {
       return NextResponse.json(
         {
           error:
-            "Tablolar boş; ortam değişkenleri eksik veya şifre kısa. Tam şema ve deme kullanıcı için: `npm run db:apply`.",
+            "Tablolar boş; ortam değişkenleri eksik veya şifre kısa. Şemayı `drizzle/full-schema.sql` ile uygulayın; ilk kayıtlar süper yönetici panelinden veya uygun güvenilir import ile oluşturulmalıdır. Boş başlangıç için bu endpoint kullanılacaksa .env’de INITIAL_* alanlarını doldurun.",
           required: [
             "INITIAL_SUPER_ADMIN_LOGIN — oturum (e‑posta veya telefon)",
             "INITIAL_SUPER_ADMIN_PASSWORD — en az 8 karakter",

@@ -4,7 +4,6 @@ import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { platformInsights } from "@/db/schema";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
-export const runtime = "nodejs";
 
 export const maxDuration = 60;
 
@@ -31,8 +30,8 @@ export async function POST() {
     );
   }
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   const siteUrl = getPublicSiteUrl();
   const qs = new URLSearchParams({

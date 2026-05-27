@@ -6,7 +6,6 @@ import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { users } from "@/db/schema";
 
-export const runtime = "nodejs";
 
 function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
@@ -27,8 +26,8 @@ export async function GET() {
   const session = await getSession();
   if (!session || session.role !== "SUPER_ADMIN") return forbidden();
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   try {
     const list = await d.db.select(publicUserColumns).from(users);
@@ -52,8 +51,8 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (!session || session.role !== "SUPER_ADMIN") return forbidden();
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   let raw: CreateBody;
   try {

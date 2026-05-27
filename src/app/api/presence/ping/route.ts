@@ -5,7 +5,6 @@ import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { userPresence } from "@/db/schema";
 
-export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -13,8 +12,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
   }
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   let pathStr = "/";
   try {

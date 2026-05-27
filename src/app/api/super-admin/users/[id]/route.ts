@@ -5,7 +5,6 @@ import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { users, payments, requests } from "@/db/schema";
 
-export const runtime = "nodejs";
 
 const publicCols = {
   id: users.id,
@@ -41,8 +40,8 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     return NextResponse.json({ error: "Kimlik eksik" }, { status: 400 });
   }
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   const existing = await d.db.select().from(users).where(eq(users.id, targetId)).limit(1);
   if (!existing[0]) {
@@ -165,8 +164,8 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
     return NextResponse.json({ error: "Kendi hesabınızı silemezsiniz." }, { status: 403 });
   }
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   const victim = await d.db.select().from(users).where(eq(users.id, targetId)).limit(1);
   if (!victim[0]) return NextResponse.json({ error: "Bulunamadı" }, { status: 404 });

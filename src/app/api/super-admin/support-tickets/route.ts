@@ -4,7 +4,6 @@ import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { adminSupportTickets, sites, users } from "@/db/schema";
 
-export const runtime = "nodejs";
 
 function forbidden() {
   return NextResponse.json({ error: "Yetkisiz." }, { status: 403 });
@@ -14,8 +13,8 @@ export async function GET() {
   const session = await getSession();
   if (!session || session.role !== "SUPER_ADMIN") return forbidden();
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   const rows = await d.db
     .select({

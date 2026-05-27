@@ -6,7 +6,6 @@ import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { payments, users } from "@/db/schema";
 
-export const runtime = "nodejs";
 
 function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
@@ -37,8 +36,8 @@ export async function GET() {
   const session = await getSession();
   if (!session) return forbidden();
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   try {
     const order = desc(payments.createdAt);
@@ -86,8 +85,8 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (!session) return forbidden();
 
-  const d = acquireDatabase();
-  if (!d.ok) return databaseUnavailable();
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
 
   let raw: AdminPostBody;
   try {
