@@ -7,6 +7,12 @@ main = ".open-next/worker.js"
 compatibility_date = "2025-05-26"
 compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 
+# `wrangler deploy` öncesi OpenNext paketini üretir (.open-next/worker.js).
+# Panelde Build komutunuz zaten `npm run build:cf` ise bu adım ikinci kez çalışır; gecikmeyi azaltmak
+# için aşağıdaki [build] bloğunu yorum satırı yapabilirsiniz.
+[build]
+command = "npm run build:cf"
+
 [assets]
 binding = "ASSETS"
 directory = ".open-next/assets"
