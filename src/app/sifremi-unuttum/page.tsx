@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { browserApiUrl } from "@/lib/browser-api-base";
+import { readJsonError } from "@/lib/json-error";
 import { SiteLogo } from "@/components/SiteLogo";
 
 export default function SifremiUnuttumPage() {
@@ -24,11 +25,7 @@ export default function SifremiUnuttumPage() {
       });
       const j: unknown = await res.json().catch(() => null);
       if (!res.ok) {
-        const t =
-          j !== null && typeof j === "object" && "error" in j && typeof (j as { error: unknown }).error === "string"
-            ? (j as { error: string }).error
-            : "İstek başarısız.";
-        setErr(t);
+        setErr(readJsonError(j, "İstek başarısız."));
         setBusy(false);
         return;
       }
@@ -50,20 +47,19 @@ export default function SifremiUnuttumPage() {
           <SiteLogo width={64} height={64} rounded className="rounded-xl" alt="" />
         </div>
         <div className="text-center space-y-1">
-          <h1 className="text-xl font-black text-zinc-900 dark:text-white">Süper yönetici şifre sıfırlama</h1>
+          <h1 className="text-xl font-black text-zinc-900 dark:text-white">Şifre sıfırlama</h1>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-            Yalnızca süper yönetici rolündeki ve sistemde kayıtlı <strong>e-posta adresi</strong> ile giriş yapan hesaplar
-            için sıfırlama bağlantısı gönderilir. Resend yapılandırması ve doğru{" "}
-            <code className="text-[10px]">NEXT_PUBLIC_SITE_URL</code> gereklidir.
+            Kayıtlı <strong>e-posta adresinize</strong> logo ve marka ile sıfırlama bağlantısı gönderilir. Yönetici,
+            sakin ve süper yönetici hesapları için geçerlidir.
           </p>
         </div>
-        {msg ?
+        {msg ? (
           <div className="text-sm rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-100 p-3">
             {msg}
           </div>
-        : null}
+        ) : null}
         {err ? <div className="text-sm text-red-600 dark:text-red-400 p-2">{err}</div> : null}
-        {!msg ?
+        {!msg ? (
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <label className="text-xs font-bold text-zinc-500 uppercase mb-1 block">E-posta</label>
@@ -73,7 +69,7 @@ export default function SifremiUnuttumPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 py-3 px-3 outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Kayıtlı süper yönetici adresi"
+                placeholder="Kayıtlı e-posta adresiniz"
                 autoComplete="email"
               />
             </div>
@@ -85,7 +81,7 @@ export default function SifremiUnuttumPage() {
               {busy ? "Gönderiliyor..." : "Sıfırlama bağlantısı gönder"}
             </button>
           </form>
-        : null}
+        ) : null}
         <p className="text-center text-xs text-zinc-500">
           <Link href="/login" className="underline font-semibold text-indigo-600 dark:text-indigo-400">
             Girişe dön

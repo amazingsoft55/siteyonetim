@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
@@ -49,11 +49,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Bağlantı geçersiz veya süresi dolmuş. Yeni istek gönderin." }, { status: 400 });
     }
 
-    const uRows = await d.db
-      .select()
-      .from(users)
-      .where(and(eq(users.id, trow.userId), eq(users.role, "SUPER_ADMIN")))
-      .limit(1);
+    const uRows = await d.db.select().from(users).where(eq(users.id, trow.userId)).limit(1);
 
     const u = uRows[0];
     if (!u) {

@@ -22,6 +22,7 @@
     "mobile:ios:super": "npx cap open ios --config capacitor.super-admin.config.ts",
     "build:mobile": "node scripts/setup-mobile.mjs",
     "lint": "eslint",
+    "gmail:setup": "node scripts/gmail-oauth-setup.mjs",
     "deploy:noop": "node -e \"console.log('[siteyonetim] Workers deploy skipped; use Node hosting. See README.');\""
   },
   "dependencies": {

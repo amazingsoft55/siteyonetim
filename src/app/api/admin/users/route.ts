@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
+import { jsonSqlError } from "@/lib/db-query-error";
+import { deleteUserCascade } from "@/lib/user-cascade-delete";
 import { users } from "@/db/schema";
-
 
 function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
@@ -20,6 +21,8 @@ const publicUserColumns = {
   createdAt: users.createdAt,
 };
 
+const SITE_ROLES = ["ADMIN", "USER"] as const;
+
 export async function GET() {
   const session = await getSession();
   if (!session || session.role !== "ADMIN" || !session.siteId) return forbidden();
@@ -27,12 +30,15 @@ export async function GET() {
   const d = await acquireDatabase();
   if (!d.ok) return await databaseUnavailable();
 
-  const list = await d.db
-    .select(publicUserColumns)
-    .from(users)
-    .where(and(eq(users.siteId, session.siteId), eq(users.role, "USER")));
-
-  return NextResponse.json(list);
+  try {
+    const list = await d.db
+      .select(publicUserColumns)
+      .from(users)
+      .where(and(eq(users.siteId, session.siteId), inArray(users.role, [...SITE_ROLES])));
+    return NextResponse.json(list);
+  } catch (e) {
+    return jsonSqlError(e, "Liste alınamadı.");
+  }
 }
 
 type Body = {
@@ -40,6 +46,7 @@ type Body = {
   emailOrPhone?: unknown;
   password?: unknown;
   apartmentNo?: unknown;
+  role?: unknown;
 };
 
 export async function POST(request: Request) {
@@ -60,10 +67,11 @@ export async function POST(request: Request) {
   const emailOrPhone =
     typeof raw.emailOrPhone === "string" ? raw.emailOrPhone.replace(/\s+/g, "").trim() : "";
   const password = typeof raw.password === "string" ? raw.password : "";
+  const role = raw.role === "ADMIN" ? "ADMIN" : "USER";
   const apartmentNo =
-    typeof raw.apartmentNo === "string" && raw.apartmentNo.trim().length > 0
-      ? raw.apartmentNo.trim()
-      : undefined;
+    typeof raw.apartmentNo === "string" && raw.apartmentNo.trim().length > 0 ?
+      raw.apartmentNo.trim()
+    : undefined;
 
   if (!name || !emailOrPhone || !password) {
     return NextResponse.json(
@@ -85,16 +93,20 @@ export async function POST(request: Request) {
     typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `u-${Date.now()}`;
   const passwordHash = await bcrypt.hash(password, 10);
 
-  await d.db.insert(users).values({
-    id,
-    name,
-    emailOrPhone,
-    passwordHash,
-    role: "USER",
-    siteId: session.siteId,
-    apartmentNo,
-  });
+  try {
+    await d.db.insert(users).values({
+      id,
+      name,
+      emailOrPhone,
+      passwordHash,
+      role,
+      siteId: session.siteId,
+      apartmentNo: role === "USER" ? apartmentNo : null,
+    });
 
-  const row = await d.db.select(publicUserColumns).from(users).where(eq(users.id, id)).limit(1);
-  return NextResponse.json(row[0]);
+    const row = await d.db.select(publicUserColumns).from(users).where(eq(users.id, id)).limit(1);
+    return NextResponse.json(row[0]);
+  } catch (e) {
+    return jsonSqlError(e, "Hesap oluşturulamadı.");
+  }
 }

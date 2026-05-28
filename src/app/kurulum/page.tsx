@@ -132,8 +132,42 @@ export default function KurulumPage() {
           </ul>
         </section>
 
+        <section
+          id="gmail"
+          className="scroll-mt-24 rounded-2xl border border-sky-200/70 dark:border-sky-900/50 bg-sky-50/30 dark:bg-sky-950/20 p-6 space-y-4"
+        >
+          <h2 className="text-lg font-bold text-sky-900 dark:text-sky-100">6 · E-posta (Google Gmail)</h2>
+          <p className="text-sm text-sky-950/85 dark:text-sky-100/85 leading-relaxed">
+            Şifre sıfırlama ve bildirimler <strong>ccode4779@gmail.com</strong> üzerinden Gmail API ile gider; maillerde{" "}
+            <strong>Site Yönetimi logosu</strong> kullanılır. Cloudflare Workers SMTP desteklemediği için OAuth refresh token
+            gerekir (Resend yalnızca yedek).
+          </p>
+          <ol className="text-sm list-decimal pl-5 space-y-2 text-sky-950/90 dark:text-sky-100/90">
+            <li>
+              <a href="https://console.cloud.google.com" className="font-bold underline" target="_blank" rel="noreferrer">
+                Google Cloud Console
+              </a>{" "}
+              → yeni proje → <strong>Gmail API</strong> etkinleştir
+            </li>
+            <li>
+              OAuth consent screen → External → test kullanıcısı olarak Gmail adresinizi ekleyin
+            </li>
+            <li>Credentials → OAuth client ID → <strong>Desktop app</strong></li>
+            <li>
+              Yerelde: <code className="text-xs bg-white/60 dark:bg-zinc-900/50 px-1 rounded">GMAIL_CLIENT_ID</code> ve{" "}
+              <code className="text-xs bg-white/60 dark:bg-zinc-900/50 px-1 rounded">GMAIL_CLIENT_SECRET</code> tanımlayıp{" "}
+              <code className="text-xs bg-white/60 dark:bg-zinc-900/50 px-1 rounded">npm run gmail:setup</code>
+            </li>
+            <li>
+              Çıkan <code className="text-xs">GMAIL_REFRESH_TOKEN</code> ve{" "}
+              <code className="text-xs">GMAIL_FROM=ccode4779@gmail.com</code> değerlerini Cloudflare Workers → Variables
+              bölümüne ekleyin
+            </li>
+          </ol>
+        </section>
+
         <section className="rounded-2xl border border-amber-200/80 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 p-6 space-y-3">
-          <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">6 · Sık hatalar</h2>
+          <h2 className="text-lg font-bold text-amber-950 dark:text-amber-100">7 · Sık hatalar</h2>
           <ul className="text-sm list-disc pl-5 space-y-2 text-amber-950/85 dark:text-amber-200/85">
             <li>
               <strong>503 / DATABASE_UNAVAILABLE:</strong> Yerelde dosya SQLite: <code className="text-xs">npm install</code>, şema için{" "}

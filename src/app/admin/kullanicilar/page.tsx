@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { readJsonError, readJsonNotice } from "@/lib/json-error";
-import { Pencil, Trash2 } from "lucide-react";
+import { Mail, Pencil, Trash2 } from "lucide-react";
 
 type UserRow = {
   id: string;
@@ -14,11 +14,19 @@ type UserRow = {
   createdAt: string | null;
 };
 
+type Tab = "admins" | "residents";
+
+function isEmail(v: string) {
+  return v.includes("@") && v.includes(".");
+}
+
 export default function AdminResidentsAccountsPage() {
+  const [tab, setTab] = React.useState<Tab>("admins");
   const [list, setList] = React.useState<UserRow[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [err, setErr] = React.useState("");
   const [msg, setMsg] = React.useState("");
+  const [selfId, setSelfId] = React.useState("");
 
   const [nuName, setNuName] = React.useState("");
   const [nuLogin, setNuLogin] = React.useState("");
@@ -30,17 +38,26 @@ export default function AdminResidentsAccountsPage() {
   const [edLogin, setEdLogin] = React.useState("");
   const [edPass, setEdPass] = React.useState("");
   const [edApt, setEdApt] = React.useState("");
+  const [edRole, setEdRole] = React.useState<"ADMIN" | "USER">("USER");
   const [edSaving, setEdSaving] = React.useState(false);
+  const [resetBusy, setResetBusy] = React.useState<string | null>(null);
 
   async function reload() {
     setErr("");
-    const res = await fetch("/api/admin/users", { credentials: "include" });
-    if (!res.ok) {
-      const j: unknown = await res.json().catch(() => null);
+    const [ur, ar] = await Promise.all([
+      fetch("/api/admin/users", { credentials: "include" }),
+      fetch("/api/admin/account", { credentials: "include" }),
+    ]);
+    if (!ur.ok) {
+      const j: unknown = await ur.json().catch(() => null);
       setErr(readJsonError(j, "Liste alınamadı."));
       return;
     }
-    const j = (await res.json()) as UserRow[];
+    if (ar.ok) {
+      const acc = (await ar.json()) as { id?: string };
+      if (acc.id) setSelfId(acc.id);
+    }
+    const j = (await ur.json()) as UserRow[];
     setList(Array.isArray(j) ? j : []);
   }
 
@@ -56,12 +73,17 @@ export default function AdminResidentsAccountsPage() {
     };
   }, []);
 
+  const admins = React.useMemo(() => list.filter((u) => u.role === "ADMIN"), [list]);
+  const residents = React.useMemo(() => list.filter((u) => u.role === "USER"), [list]);
+  const visible = tab === "admins" ? admins : residents;
+
   function openEdit(u: UserRow) {
     setEditOpen(u);
     setEdName(u.name);
     setEdLogin(u.emailOrPhone);
     setEdPass("");
     setEdApt(u.apartmentNo ?? "");
+    setEdRole(u.role as "ADMIN" | "USER");
     setErr("");
     setMsg("");
   }
@@ -78,7 +100,8 @@ export default function AdminResidentsAccountsPage() {
         name: nuName.trim(),
         emailOrPhone: nuLogin.replace(/\s+/g, "").trim(),
         password: nuPass,
-        apartmentNo: nuApt.trim() || undefined,
+        role: tab === "admins" ? "ADMIN" : "USER",
+        apartmentNo: tab === "residents" ? nuApt.trim() || undefined : undefined,
       }),
     });
     const j: unknown = await res.json().catch(() => null);
@@ -86,8 +109,7 @@ export default function AdminResidentsAccountsPage() {
       setErr(readJsonError(j, "Oluşturulamadı."));
       return;
     }
-    void j;
-    setMsg("Sakin hesabı eklendi.");
+    setMsg(tab === "admins" ? "Yönetici eklendi." : "Sakin eklendi.");
     setNuName("");
     setNuLogin("");
     setNuPass("");
@@ -108,12 +130,14 @@ export default function AdminResidentsAccountsPage() {
     const payload: Record<string, unknown> = {
       name: edName.trim(),
       emailOrPhone: edLogin.replace(/\s+/g, "").trim(),
-      apartmentNo: edApt.trim().length === 0 ? null : edApt.trim(),
+      role: edRole,
     };
     if (edPass.trim()) payload.password = edPass;
+    if (edRole === "USER") payload.apartmentNo = edApt.trim().length === 0 ? null : edApt.trim();
 
     const res = await fetch(`/api/admin/users/${editOpen.id}`, {
       method: "PATCH",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
@@ -123,9 +147,7 @@ export default function AdminResidentsAccountsPage() {
       setErr(readJsonError(j, "Güncellenemedi."));
       return;
     }
-    const n = readJsonNotice(j);
-    if (n) setMsg(n);
-    else setMsg("Kaydedildi.");
+    setMsg(readJsonNotice(j) ?? "Kaydedildi.");
     setEditOpen(null);
     await reload();
   }
@@ -139,17 +161,41 @@ export default function AdminResidentsAccountsPage() {
       setErr(readJsonError(j, "Silinemedi."));
       return;
     }
-    void j;
     setMsg("Silindi.");
     await reload();
+  }
+
+  async function sendReset(u: UserRow) {
+    if (!isEmail(u.emailOrPhone)) {
+      setErr("Şifre sıfırlama maili için hesapta geçerli e-posta olmalı.");
+      return;
+    }
+    setResetBusy(u.id);
+    setErr("");
+    const res = await fetch(`/api/admin/users/${u.id}/send-reset`, {
+      method: "POST",
+      credentials: "include",
+    });
+    const j: unknown = await res.json().catch(() => null);
+    setResetBusy(null);
+    if (!res.ok) {
+      setErr(readJsonError(j, "Mail gönderilemedi."));
+      return;
+    }
+    const m =
+      j && typeof j === "object" && "message" in j && typeof (j as { message: unknown }).message === "string" ?
+        (j as { message: string }).message
+      : "Sıfırlama maili gönderildi.";
+    setMsg(m);
   }
 
   return (
     <div className="max-w-5xl mx-auto p-6 sm:p-10 space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Sakin hesapları</h1>
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Yönetim kurulu & sakinler</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-          Bu siteye bağlı kullanıcıları oluşturun; oturum adı veya şifreyi gerektiğinde güncelleyin.
+          Yönetici kurulu üyesi ekleyin, bilgileri güncelleyin; sakin hesapları oluşturun ve şifre sıfırlama maili
+          gönderin.
         </p>
       </div>
 
@@ -168,13 +214,30 @@ export default function AdminResidentsAccountsPage() {
         </div>
       )}
 
+      <div className="flex gap-2 p-1 rounded-2xl bg-zinc-100 dark:bg-zinc-800/80 w-fit">
+        <button
+          type="button"
+          onClick={() => setTab("admins")}
+          className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${tab === "admins" ? "bg-white dark:bg-zinc-900 shadow text-rose-600" : "text-zinc-600 dark:text-zinc-400"}`}
+        >
+          Yönetici kurulu ({admins.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("residents")}
+          className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${tab === "residents" ? "bg-white dark:bg-zinc-900 shadow text-rose-600" : "text-zinc-600 dark:text-zinc-400"}`}
+        >
+          Sakinler ({residents.length})
+        </button>
+      </div>
+
       <section className="rounded-3xl bg-white dark:bg-zinc-900/60 border border-rose-100 dark:border-zinc-800 p-6 shadow-sm">
-        <h2 className="font-bold text-zinc-900 dark:text-zinc-50 mb-4">Yeni sakin</h2>
+        <h2 className="font-bold text-zinc-900 dark:text-zinc-50 mb-4">
+          {tab === "admins" ? "Yeni yönetici" : "Yeni sakin"}
+        </h2>
         <form onSubmit={create} className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">
-              Ad soyad
-            </label>
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">Ad soyad</label>
             <input
               className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 px-4 py-3"
               value={nuName}
@@ -183,9 +246,7 @@ export default function AdminResidentsAccountsPage() {
             />
           </div>
           <div>
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">
-              E‑posta veya telefon
-            </label>
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">E‑posta veya telefon</label>
             <input
               className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 px-4 py-3"
               value={nuLogin}
@@ -204,23 +265,23 @@ export default function AdminResidentsAccountsPage() {
               minLength={6}
             />
           </div>
-          <div className="sm:col-span-2">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">
-              Daire (isteğe bağlı)
-            </label>
-            <input
-              className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 px-4 py-3"
-              value={nuApt}
-              onChange={(e) => setNuApt(e.target.value)}
-              placeholder="Örn: 5"
-            />
-          </div>
+          {tab === "residents" && (
+            <div className="sm:col-span-2">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">Daire (isteğe bağlı)</label>
+              <input
+                className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 px-4 py-3"
+                value={nuApt}
+                onChange={(e) => setNuApt(e.target.value)}
+                placeholder="Örn: 5"
+              />
+            </div>
+          )}
           <div className="sm:col-span-2">
             <button
               type="submit"
               className="px-6 py-3 rounded-2xl bg-rose-600 text-white text-sm font-bold hover:bg-rose-500 shadow-md shadow-rose-600/10"
             >
-              Sakin ekle
+              {tab === "admins" ? "Yönetici ekle" : "Sakin ekle"}
             </button>
           </div>
         </form>
@@ -228,10 +289,10 @@ export default function AdminResidentsAccountsPage() {
 
       <section className="rounded-3xl bg-white dark:bg-zinc-900/60 border border-rose-100 dark:border-zinc-800 overflow-hidden shadow-sm">
         <div className="p-6 border-b border-zinc-100 dark:border-zinc-800">
-          <h2 className="font-bold text-zinc-900 dark:text-zinc-50">Kayıtlı sakinler</h2>
-          <p className="text-xs text-zinc-500 mt-1">
-            {loading ? "Yükleniyor…" : `${list.length} hesap`}
-          </p>
+          <h2 className="font-bold text-zinc-900 dark:text-zinc-50">
+            {tab === "admins" ? "Yönetici kurulu" : "Kayıtlı sakinler"}
+          </h2>
+          <p className="text-xs text-zinc-500 mt-1">{loading ? "Yükleniyor…" : `${visible.length} hesap`}</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -239,22 +300,36 @@ export default function AdminResidentsAccountsPage() {
               <tr className="text-xs uppercase text-zinc-500 border-b border-zinc-100 dark:border-zinc-800">
                 <th className="py-3 px-4 font-semibold">İsim</th>
                 <th className="py-3 px-4 font-semibold">Oturum</th>
-                <th className="py-3 px-4 font-semibold">Daire</th>
+                {tab === "residents" && <th className="py-3 px-4 font-semibold">Daire</th>}
                 <th className="py-3 px-4 font-semibold text-right">İşlem</th>
               </tr>
             </thead>
             <tbody>
-              {list.map((u) => (
+              {visible.map((u) => (
                 <tr
                   key={u.id}
                   className="border-b border-zinc-50 dark:border-zinc-900 hover:bg-rose-50/30 dark:hover:bg-zinc-800/40"
                 >
                   <td className="py-3 px-4 font-medium text-zinc-900 dark:text-zinc-50">
                     {u.name}
+                    {u.id === selfId && (
+                      <span className="ml-2 text-[10px] font-bold text-rose-600">(siz)</span>
+                    )}
                   </td>
                   <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">{u.emailOrPhone}</td>
-                  <td className="py-3 px-4">{u.apartmentNo ?? "—"}</td>
-                  <td className="py-3 px-4 text-right space-x-2">
+                  {tab === "residents" && <td className="py-3 px-4">{u.apartmentNo ?? "—"}</td>}
+                  <td className="py-3 px-4 text-right space-x-1">
+                    {isEmail(u.emailOrPhone) && (
+                      <button
+                        type="button"
+                        disabled={resetBusy === u.id}
+                        onClick={() => void sendReset(u)}
+                        className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-bold hover:underline text-xs disabled:opacity-50"
+                      >
+                        <Mail className="h-3.5 w-3.5" />
+                        {resetBusy === u.id ? "…" : "Şifre maili"}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => openEdit(u)}
@@ -263,21 +338,23 @@ export default function AdminResidentsAccountsPage() {
                       <Pencil className="h-3.5 w-3.5" />
                       Düzenle
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => del(u)}
-                      className="inline-flex items-center gap-1 text-zinc-500 hover:text-red-600 font-bold text-xs"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Sil
-                    </button>
+                    {u.id !== selfId && (
+                      <button
+                        type="button"
+                        onClick={() => del(u)}
+                        className="inline-flex items-center gap-1 text-zinc-500 hover:text-red-600 font-bold text-xs"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Sil
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
-              {!loading && list.length === 0 && (
+              {!loading && visible.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-10 px-4 text-center text-zinc-500">
-                    Henüz sakin eklenmemiş.
+                  <td colSpan={tab === "residents" ? 4 : 3} className="py-10 px-4 text-center text-zinc-500">
+                    {tab === "admins" ? "Henüz yönetici eklenmemiş." : "Henüz sakin eklenmemiş."}
                   </td>
                 </tr>
               )}
@@ -289,13 +366,11 @@ export default function AdminResidentsAccountsPage() {
       {editOpen && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xl p-6">
-            <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-50">Sakini düzenle</h3>
+            <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-50">Hesabı düzenle</h3>
             <p className="text-xs text-zinc-500 mt-1">{editOpen.name}</p>
             <form onSubmit={saveEdit} className="mt-5 space-y-4">
               <div>
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">
-                  İsim
-                </label>
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">İsim</label>
                 <input
                   className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 bg-white dark:bg-zinc-950"
                   value={edName}
@@ -304,9 +379,7 @@ export default function AdminResidentsAccountsPage() {
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">
-                  E‑posta veya telefon
-                </label>
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">E‑posta veya telefon</label>
                 <input
                   className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 bg-white dark:bg-zinc-950"
                   value={edLogin}
@@ -314,10 +387,21 @@ export default function AdminResidentsAccountsPage() {
                   required
                 />
               </div>
+              {editOpen.id !== selfId && (
+                <div>
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">Rol</label>
+                  <select
+                    className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 bg-white dark:bg-zinc-950"
+                    value={edRole}
+                    onChange={(e) => setEdRole(e.target.value === "ADMIN" ? "ADMIN" : "USER")}
+                  >
+                    <option value="ADMIN">Yönetici</option>
+                    <option value="USER">Sakin</option>
+                  </select>
+                </div>
+              )}
               <div>
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">
-                  Yeni şifre (opsiyonel)
-                </label>
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">Yeni şifre (opsiyonel)</label>
                 <input
                   type="password"
                   placeholder="Boşsa değişmez (en az 6 karakter)"
@@ -326,16 +410,16 @@ export default function AdminResidentsAccountsPage() {
                   onChange={(e) => setEdPass(e.target.value)}
                 />
               </div>
-              <div>
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">
-                  Daire
-                </label>
-                <input
-                  className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 bg-white dark:bg-zinc-950"
-                  value={edApt}
-                  onChange={(e) => setEdApt(e.target.value)}
-                />
-              </div>
+              {edRole === "USER" && (
+                <div>
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">Daire</label>
+                  <input
+                    className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 bg-white dark:bg-zinc-950"
+                    value={edApt}
+                    onChange={(e) => setEdApt(e.target.value)}
+                  />
+                </div>
+              )}
               <div className="flex gap-2 pt-2">
                 <button
                   type="button"

@@ -174,7 +174,7 @@ export default function LoginPage() {
               href="/sifremi-unuttum"
               className="font-semibold hover:underline text-indigo-600 dark:text-indigo-400"
             >
-              Şifremi unuttum (süper admin)
+              Şifremi unuttum
             </Link>
           </div>
 

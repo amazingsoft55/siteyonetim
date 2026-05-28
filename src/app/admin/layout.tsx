@@ -16,6 +16,7 @@ import {
   LogOut,
   UserSquare2,
   LifeBuoy,
+  UserCog,
 } from "lucide-react";
 
 const ADMIN_MENU: {
@@ -26,7 +27,8 @@ const ADMIN_MENU: {
   siteManagerOnly?: boolean;
 }[] = [
   { name: "Özet Durum", href: "/admin", icon: LayoutDashboard },
-  { name: "Sakin Hesapları", href: "/admin/kullanicilar", icon: UserSquare2, siteManagerOnly: true },
+  { name: "Yönetim kurulu", href: "/admin/kullanicilar", icon: UserSquare2, siteManagerOnly: true },
+  { name: "Hesabım", href: "/admin/hesabim", icon: UserCog, siteManagerOnly: true },
   { name: "Sakinler & Aidatlar", href: "/admin/residents", icon: Users },
   { name: "Duyuru Yönetimi", href: "/admin/announcements", icon: Megaphone },
   { name: "Arıza & Talepler", href: "/admin/requests", icon: Wrench },
