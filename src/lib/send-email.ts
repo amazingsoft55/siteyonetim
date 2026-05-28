@@ -52,7 +52,7 @@ async function sendViaResend(input: {
   return { ok: true };
 }
 
-async function sendBrandedEmail(input: {
+export async function sendBrandedEmail(input: {
   to: string;
   subject: string;
   html: string;

@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
+import { emailNotConfiguredMessage, isEmailConfigured } from "@/lib/email-config";
 import { issuePasswordResetEmail } from "@/lib/password-reset";
 import { users } from "@/db/schema";
 
@@ -27,6 +28,10 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
     const u = row[0];
     if (u.siteId !== session.siteId || (u.role !== "ADMIN" && u.role !== "USER")) {
       return NextResponse.json({ error: "Bu hesap için mail gönderilemez." }, { status: 403 });
+    }
+
+    if (!isEmailConfigured()) {
+      return NextResponse.json({ error: emailNotConfiguredMessage() }, { status: 503 });
     }
 
     const send = await issuePasswordResetEmail(d.db, u);

@@ -9,6 +9,7 @@ import {
   generateSixDigitCode,
   looksLikeEmail,
 } from "@/lib/account-verification";
+import { emailNotConfiguredMessage, isEmailConfigured } from "@/lib/email-config";
 import { sendAccountVerificationEmail } from "@/lib/send-email";
 import { emailVerificationCodes, users } from "@/db/schema";
 
@@ -28,6 +29,11 @@ export async function POST() {
     if (!row[0]) {
       return NextResponse.json({ error: "Hesap bulunamadı." }, { status: 404 });
     }
+
+    if (!isEmailConfigured()) {
+      return NextResponse.json({ error: emailNotConfiguredMessage() }, { status: 503 });
+    }
+
     const u = row[0];
     const changeCount = u.accountChangesCount ?? 0;
 

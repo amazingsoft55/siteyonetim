@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { count } from "drizzle-orm";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { resolveSqliteDbPath } from "@/lib/database-path";
+import { getEmailProviderStatus } from "@/lib/email-config";
 import { getStorageMeta } from "@/server/database/meta";
 import { sites, users, adminSupportTickets } from "@/db/schema";
 
@@ -52,10 +53,14 @@ export async function GET() {
 
   const needsSeed = sitesCount === 0 || usersCount === 0;
   const sqliteFilePath = storage.engine === "sqlite" ? resolveSqliteDbPath() : undefined;
+  const email = getEmailProviderStatus();
 
   return NextResponse.json({
     ok: true,
     storage,
+    emailConfigured: email.configured,
+    emailProvider: email.provider,
+    ...(email.configured ? {} : { emailMissing: email.missing }),
     ...(storage.engine === "sqlite" ?
       {
         sqliteFilePath,

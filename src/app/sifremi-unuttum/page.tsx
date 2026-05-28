@@ -11,6 +11,25 @@ export default function SifremiUnuttumPage() {
   const [msg, setMsg] = React.useState("");
   const [err, setErr] = React.useState("");
   const [busy, setBusy] = React.useState(false);
+  const [emailReady, setEmailReady] = React.useState<boolean | null>(null);
+
+  React.useEffect(() => {
+    let alive = true;
+    (async () => {
+      const res = await fetch(browserApiUrl("/api/setup/status"));
+      const j: unknown = await res.json().catch(() => null);
+      if (!alive) return;
+      const ok =
+        j !== null &&
+        typeof j === "object" &&
+        "emailConfigured" in j &&
+        (j as { emailConfigured: unknown }).emailConfigured === true;
+      setEmailReady(ok);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,6 +72,13 @@ export default function SifremiUnuttumPage() {
             sakin ve süper yönetici hesapları için geçerlidir.
           </p>
         </div>
+        {emailReady === false && (
+          <div className="text-sm rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-100 p-3">
+            Sunucuda e-posta ayarları henüz yapılandırılmamış. Site yöneticisi Cloudflare&apos;de{" "}
+            <strong>GMAIL_*</strong> değişkenlerini tanımlamalı (<Link href="/kurulum#gmail" className="underline">kurulum rehberi</Link>
+            ).
+          </div>
+        )}
         {msg ? (
           <div className="text-sm rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-100 p-3">
             {msg}
@@ -75,7 +101,7 @@ export default function SifremiUnuttumPage() {
             </div>
             <button
               type="submit"
-              disabled={busy}
+              disabled={busy || emailReady === false}
               className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm disabled:opacity-60"
             >
               {busy ? "Gönderiliyor..." : "Sıfırlama bağlantısı gönder"}

@@ -5,6 +5,7 @@ import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { codeExpiresAt, generateSixDigitCode, looksLikeEmail } from "@/lib/account-verification";
+import { emailNotConfiguredMessage, isEmailConfigured } from "@/lib/email-config";
 import { sendAccountVerificationEmail } from "@/lib/send-email";
 import { emailVerificationCodes, users } from "@/db/schema";
 
@@ -22,6 +23,10 @@ export async function POST() {
   try {
     const row = await d.db.select().from(users).where(eq(users.id, session.id)).limit(1);
     if (!row[0]) return NextResponse.json({ error: "Hesap bulunamadı." }, { status: 404 });
+
+    if (!isEmailConfigured()) {
+      return NextResponse.json({ error: emailNotConfiguredMessage() }, { status: 503 });
+    }
 
     const u = row[0];
     const changeCount = u.accountChangesCount ?? 0;

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { users } from "@/db/schema";
+import { emailNotConfiguredMessage, isEmailConfigured } from "@/lib/email-config";
 import { issuePasswordResetEmail, looksLikeEmail } from "@/lib/password-reset";
 
 type Body = { email?: unknown };
@@ -15,6 +16,10 @@ export async function POST(request: Request) {
   }
 
   const email = typeof raw.email === "string" ? raw.email.replace(/\s+/g, "").trim() : "";
+
+  if (!isEmailConfigured()) {
+    return NextResponse.json({ error: emailNotConfiguredMessage() }, { status: 503 });
+  }
 
   const generic = NextResponse.json({
     ok: true,
