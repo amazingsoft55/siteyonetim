@@ -55,7 +55,17 @@ async function getAccessToken(cfg: NonNullable<ReturnType<typeof gmailConfig>>):
 
   if (!res.ok) {
     const t = await res.text().catch(() => res.statusText);
-    throw new Error(`Gmail OAuth hatası: ${t || res.status}`);
+    let hint = "";
+    try {
+      const parsed = JSON.parse(t) as { error?: string };
+      if (parsed.error === "unauthorized_client") {
+        hint =
+          " GMAIL_REFRESH_TOKEN eski veya farklı OAuth istemcisine ait. Yeni Client ID ile tekrar OAuth yapıp refresh token alın (npm run gmail:auth-url).";
+      }
+    } catch {
+      /* ignore */
+    }
+    throw new Error(`Gmail OAuth hatası: ${t || res.status}${hint}`);
   }
 
   const data = (await res.json()) as { access_token?: string };
