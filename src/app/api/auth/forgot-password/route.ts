@@ -46,11 +46,22 @@ export async function POST(request: Request) {
     }
 
     const send = await issuePasswordResetEmail(d.db, u);
-    if (!send.ok && process.env.NODE_ENV !== "production") {
-      console.warn("[forgot-password] e-posta gönderilemedi:", send.error);
+    if (!send.ok) {
+      return NextResponse.json(
+        {
+          error:
+            "E-posta gönderilemedi. Gmail ayarlarını (GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN) kontrol edin.",
+          detail: send.error,
+        },
+        { status: 502 },
+      );
     }
 
-    return generic;
+    return NextResponse.json({
+      ok: true,
+      message:
+        "Sıfırlama bağlantısı e-posta adresinize gönderildi. Gelen kutunuzu ve spam klasörünü kontrol edin.",
+    });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: "İstek işlenemedi.", detail: msg }, { status: 500 });
