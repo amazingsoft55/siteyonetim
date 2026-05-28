@@ -24,6 +24,7 @@
     "lint": "eslint",
     "gmail:setup": "node scripts/gmail-oauth-setup.mjs",
     "gmail:auth-url": "node scripts/gmail-print-auth-url.mjs",
+    "gmail:exchange": "node scripts/gmail-exchange-code.mjs",
     "deploy:noop": "node -e \"console.log('[siteyonetim] Workers deploy skipped; use Node hosting. See README.');\""
   },
   "dependencies": {
