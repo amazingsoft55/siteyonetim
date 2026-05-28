@@ -12,6 +12,7 @@ export default function SifremiUnuttumPage() {
   const [err, setErr] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [emailReady, setEmailReady] = React.useState<boolean | null>(null);
+  const [emailMissing, setEmailMissing] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     let alive = true;
@@ -25,6 +26,14 @@ export default function SifremiUnuttumPage() {
         "emailConfigured" in j &&
         (j as { emailConfigured: unknown }).emailConfigured === true;
       setEmailReady(ok);
+      const missing =
+        j !== null &&
+        typeof j === "object" &&
+        "emailMissing" in j &&
+        Array.isArray((j as { emailMissing: unknown }).emailMissing) ?
+          (j as { emailMissing: string[] }).emailMissing
+        : [];
+      setEmailMissing(missing);
     })();
     return () => {
       alive = false;
@@ -73,10 +82,20 @@ export default function SifremiUnuttumPage() {
           </p>
         </div>
         {emailReady === false && (
-          <div className="text-sm rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-100 p-3">
-            Sunucuda e-posta ayarları henüz yapılandırılmamış. Site yöneticisi Cloudflare&apos;de{" "}
-            <strong>GMAIL_*</strong> değişkenlerini tanımlamalı (<Link href="/kurulum#gmail" className="underline">kurulum rehberi</Link>
-            ).
+          <div className="text-sm rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-100 p-3 space-y-1">
+            <p>
+              Sunucuda e-posta ayarları henüz tamamlanmadı.
+              {emailMissing.length > 0 ?
+                <> Eksik: {emailMissing.join(", ")}.</>
+              : null}{" "}
+              (<Link href="/kurulum#gmail" className="underline">kurulum rehberi</Link>)
+            </p>
+            {emailMissing.includes("GMAIL_REFRESH_TOKEN") && (
+              <p className="text-xs">
+                Google OAuth&apos;da <strong>403 access_denied</strong> aldıysanız: Cloud Console → OAuth consent screen →
+                Test users → <strong>ccode4779@gmail.com</strong> ekleyin, sonra yeniden yetkilendirin.
+              </p>
+            )}
           </div>
         )}
         {msg ? (

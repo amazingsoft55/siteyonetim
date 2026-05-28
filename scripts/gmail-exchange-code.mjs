@@ -1,21 +1,20 @@
 /**
  * Google OAuth kodunu refresh token'a çevirir.
- * Kullanım:
- *   set GMAIL_CLIENT_ID=...
- *   set GMAIL_CLIENT_SECRET=...
- *   node scripts/gmail-exchange-code.mjs "GOOGLE_KODU"
+ * Kullanım: npm run gmail:exchange -- "KOD" veya "http://localhost/?code=..."
  */
+
+import { GMAIL_OAUTH_REDIRECT_URI, extractOAuthCode } from "./gmail-oauth-shared.mjs";
 
 const clientId = process.env.GMAIL_CLIENT_ID?.trim();
 const clientSecret = process.env.GMAIL_CLIENT_SECRET?.trim();
-const code = process.argv[2]?.trim();
+const code = extractOAuthCode(process.argv[2] ?? "");
 
 if (!clientId || !clientSecret) {
   console.error("GMAIL_CLIENT_ID ve GMAIL_CLIENT_SECRET gerekli.");
   process.exit(1);
 }
 if (!code) {
-  console.error("Kullanım: node scripts/gmail-exchange-code.mjs \"GOOGLE_KODU\"");
+  console.error('Kullanım: npm run gmail:exchange -- "GOOGLE_KODU_VEYA_LOCALHOST_URL"');
   process.exit(1);
 }
 
@@ -26,7 +25,7 @@ const res = await fetch("https://oauth2.googleapis.com/token", {
     code,
     client_id: clientId,
     client_secret: clientSecret,
-    redirect_uri: "urn:ietf:wg:oauth:2.0:oob",
+    redirect_uri: GMAIL_OAUTH_REDIRECT_URI,
     grant_type: "authorization_code",
   }),
 });
