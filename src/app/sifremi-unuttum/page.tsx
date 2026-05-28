@@ -77,8 +77,8 @@ export default function SifremiUnuttumPage() {
         <div className="text-center space-y-1">
           <h1 className="text-xl font-black text-zinc-900 dark:text-white">Şifre sıfırlama</h1>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-            Kayıtlı <strong>e-posta adresinize</strong> logo ve marka ile sıfırlama bağlantısı gönderilir. Yönetici,
-            sakin ve süper yönetici hesapları için geçerlidir.
+            Kayıtlı <strong>e-posta adresinize</strong> logo ve marka ile sıfırlama bağlantısı gönderilir. Sistemde
+            kayıtlı olmayan bir adres için mail gönderilmez (güvenlik nedeniyle yine de başarı mesajı görünebilir).
           </p>
         </div>
         {emailReady === false && (

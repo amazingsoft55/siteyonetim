@@ -42,7 +42,11 @@ export async function POST(request: Request) {
     await new Promise((r) => setTimeout(r, 400));
 
     if (!u) {
-      return generic;
+      return NextResponse.json({
+        ok: true,
+        message:
+          "Bu e-posta sistemde kayıtlı değilse mail gönderilmez. Kayıtlı adresinizi deneyin; gelmezse spam klasörünü kontrol edin.",
+      });
     }
 
     const send = await issuePasswordResetEmail(d.db, u);
