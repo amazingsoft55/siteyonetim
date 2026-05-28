@@ -13,11 +13,14 @@ import {
   extractOAuthCode,
 } from "./gmail-oauth-shared.mjs";
 
-const clientId =
-  process.env.GMAIL_CLIENT_ID?.trim() ||
-  "276387077834-drq08o3l0qemjpvcnj27era40jm0d6i4.apps.googleusercontent.com";
-const clientSecret =
-  process.env.GMAIL_CLIENT_SECRET?.trim() || "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";
+const clientId = process.env.GMAIL_CLIENT_ID?.trim();
+const clientSecret = process.env.GMAIL_CLIENT_SECRET?.trim();
+
+if (!clientId || !clientSecret) {
+  console.error("GMAIL_CLIENT_ID ve GMAIL_CLIENT_SECRET ortam değişkenlerini ayarlayın.");
+  console.error("Örnek: $env:GMAIL_CLIENT_ID=\"....apps.googleusercontent.com\"");
+  process.exit(1);
+}
 
 const authUrl = buildGmailAuthUrl(clientId);
 

@@ -1,9 +1,18 @@
-/** Yerel Gmail test — node scripts/test-gmail-send.mjs alici@email.com */
-const clientId = process.env.GMAIL_CLIENT_ID?.trim() || "1009271557525-8158q5ajcojeq9s18hu2corj3ajt01js.apps.googleusercontent.com";
-const clientSecret = process.env.GMAIL_CLIENT_SECRET?.trim() || "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";
-const refreshToken = process.env.GMAIL_REFRESH_TOKEN?.trim() || "1//03Oagsrs7biBACgYIARAAGAMSNwF-L9IrBxjP-2LylLPKiPX_-mBlwQeRuHHVtkEjwRSKX6irmvDdVW9Ncczex6KfMXj_yuHR0pk";
+/** Yerel Gmail test — GMAIL_* ortam değişkenleri gerekli. */
+const clientId = process.env.GMAIL_CLIENT_ID?.trim();
+const clientSecret = process.env.GMAIL_CLIENT_SECRET?.trim();
+const refreshToken = process.env.GMAIL_REFRESH_TOKEN?.trim();
 const from = process.env.GMAIL_FROM?.trim() || "ccode4779@gmail.com";
-const to = process.argv[2]?.trim() || "mustafakeksinn@gmail.com";
+const to = process.argv[2]?.trim();
+
+if (!clientId || !clientSecret || !refreshToken) {
+  console.error("GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET ve GMAIL_REFRESH_TOKEN gerekli.");
+  process.exit(1);
+}
+if (!to) {
+  console.error("Kullanım: node scripts/test-gmail-send.mjs alici@email.com");
+  process.exit(1);
+}
 
 async function main() {
   console.log("1) Access token...");

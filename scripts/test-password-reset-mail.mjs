@@ -1,24 +1,32 @@
-/** Tam şifre sıfırlama maili testi — node scripts/test-password-reset-mail.mjs email@ornek.com */
+/** Tam şifre sıfırlama maili testi — GMAIL_* ortam değişkenleri gerekli. */
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const clientId = "1009271557525-8158q5ajcojeq9s18hu2corj3ajt01js.apps.googleusercontent.com";
-const clientSecret = process.env.GMAIL_CLIENT_SECRET?.trim() || "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";
-const refreshToken =
-  process.env.GMAIL_REFRESH_TOKEN?.trim() ||
-  "1//03Oagsrs7biBACgYIARAAGAMSNwF-L9IrBxjP-2LylLPKiPX_-mBlwQeRuHHVtkEjwRSKX6irmvDdVW9Ncczex6KfMXj_yuHR0pk";
-const from = "ccode4779@gmail.com";
-const siteUrl = "https://siteyonetim.mustafakeskin2290.workers.dev";
-const to = process.argv[2]?.trim() || "mustafakeksinn@gmail.com";
-const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
-const resetUrl = `${siteUrl}/sifre-sifirla?t=${encodeURIComponent(token)}`;
+const clientId = process.env.GMAIL_CLIENT_ID?.trim();
+const clientSecret = process.env.GMAIL_CLIENT_SECRET?.trim();
+const refreshToken = process.env.GMAIL_REFRESH_TOKEN?.trim();
+const from = process.env.GMAIL_FROM?.trim() || "ccode4779@gmail.com";
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://siteyonetim.mustafakeskin2290.workers.dev";
+const to = process.argv[2]?.trim();
 
-const logoPath = join(root, "public", "logo.png");
+if (!clientId || !clientSecret || !refreshToken) {
+  console.error("GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET ve GMAIL_REFRESH_TOKEN gerekli.");
+  process.exit(1);
+}
+if (!to) {
+  console.error("Kullanım: node scripts/test-password-reset-mail.mjs alici@email.com");
+  process.exit(1);
+}
+
+const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+const resetUrl = `${siteUrl.replace(/\/$/, "")}/sifre-sifirla?t=${encodeURIComponent(token)}`;
+
 let logoDataUri = "";
 try {
-  logoDataUri = `data:image/png;base64,${readFileSync(logoPath).toString("base64")}`;
+  logoDataUri = `data:image/png;base64,${readFileSync(join(root, "public", "logo.png")).toString("base64")}`;
 } catch {
   logoDataUri = "";
 }
@@ -31,7 +39,6 @@ ${logoDataUri ? `<img src="${logoDataUri}" alt="Logo" width="64" height="64" sty
 <p style="text-align:center;margin:24px 0">
 <a href="${resetUrl}" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:12px;text-decoration:none;font-weight:bold">Yeni şifre belirle</a>
 </p>
-<p style="font-size:12px;color:#a1a1aa;text-align:center">Bağlantı yaklaşık 1 saat geçerlidir.</p>
 </div></body></html>`;
 
 async function main() {
@@ -78,7 +85,6 @@ async function main() {
     process.exit(1);
   }
   console.log(`OK — şifre sıfırlama maili gönderildi: ${to}`);
-  console.log(`Test bağlantısı (DB token yok, sadece örnek): ${resetUrl}`);
 }
 
 main();
