@@ -61,6 +61,9 @@ async function getAccessToken(cfg: NonNullable<ReturnType<typeof gmailConfig>>):
       if (parsed.error === "unauthorized_client") {
         hint =
           " GMAIL_REFRESH_TOKEN eski veya farklı OAuth istemcisine ait. Yeni Client ID ile tekrar OAuth yapıp refresh token alın (npm run gmail:auth-url).";
+      } else if (parsed.error === "invalid_grant") {
+        hint =
+          " GMAIL_REFRESH_TOKEN geçersiz, süresi dolmuş veya yanlış kopyalanmış. Cloudflare'deki değeri silip OAuth ile yeni refresh token alın (node scripts/gmail-oauth-server.mjs).";
       }
     } catch {
       /* ignore */
