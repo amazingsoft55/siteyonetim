@@ -6,6 +6,8 @@ name = "siteyonetim"
 main = ".open-next/worker.js"
 compatibility_date = "2025-05-26"
 compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
+# esbuild keep_names → inline scriptlerde __name is not defined hatası (next-themes, PWA bootstrap)
+keep_names = false
 
 [assets]
 binding = "ASSETS"

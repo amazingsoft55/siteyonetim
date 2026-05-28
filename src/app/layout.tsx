@@ -41,22 +41,7 @@ const jsonLdBlocks = [
   buildWebsiteJsonLd(),
 ];
 
-/** PWA: service worker + beforeinstallprompt sayfa yüklenmeden yakalanır. */
-const pwaBootstrapScript = `
-(function(){
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(){});
-  }
-  window.__deferredPwaInstall=null;
-  window.__pwaInstallListeners=[];
-  window.addEventListener('beforeinstallprompt',function(e){
-    e.preventDefault();
-    window.__deferredPwaInstall=e;
-    var list=window.__pwaInstallListeners||[];
-    for(var i=0;i<list.length;i++){try{list[i](e);}catch(x){}}
-  });
-})();
-`;
+/** PWA: service worker + beforeinstallprompt sayfa yüklenmeden yakalanır (statik dosya — __name hatası önlenir). */
 
 export default function RootLayout({
   children,
@@ -69,9 +54,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <Script id="pwa-bootstrap" strategy="beforeInteractive">
-        {pwaBootstrapScript}
-      </Script>
+      <Script id="pwa-bootstrap" src="/pwa-bootstrap.js" strategy="beforeInteractive" />
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-background text-foreground">
         {jsonLdBlocks.map((data, i) => (
           <script
