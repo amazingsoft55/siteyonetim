@@ -58,7 +58,7 @@ rl.question("Google kodu veya localhost URL: ", async (raw) => {
     }),
   });
 
-  const data = (await res.json()) as { refresh_token?: string; error?: string; error_description?: string };
+  const data = await res.json();
 
   if (!res.ok || !data.refresh_token) {
     console.error("Token alınamadı:", data.error_description || data.error || res.statusText);
