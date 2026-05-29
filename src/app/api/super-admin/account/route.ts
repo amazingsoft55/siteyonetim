@@ -31,7 +31,7 @@ export async function GET() {
       return NextResponse.json({ error: "Hesap bulunamadı." }, { status: 404 });
     }
     const u = row[0];
-    const count = u.accountChangesCount ?? 0;
+    const count = Number(u.accountChangesCount) || 0;
     return NextResponse.json({
       id: u.id,
       name: u.name,
@@ -74,7 +74,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Hesap bulunamadı." }, { status: 404 });
     }
     const curr = existing[0];
-    const changeCount = curr.accountChangesCount ?? 0;
+    const changeCount = Number(curr.accountChangesCount) || 0;
 
     let nextName = curr.name;
     if (typeof raw.name === "string" && raw.name.trim().length > 0) {
@@ -189,7 +189,7 @@ export async function PATCH(request: Request) {
         emailOrPhone: nextLogin,
         passwordHash: nextHash,
         mustChangePassword: false,
-        accountChangesCount: nextChangeCount,
+        accountChangesCount: Number(nextChangeCount) || 0,
       })
       .where(eq(users.id, session.id));
 

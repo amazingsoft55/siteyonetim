@@ -29,7 +29,7 @@ export async function GET() {
     const row = await d.db.select().from(users).where(eq(users.id, session.id)).limit(1);
     if (!row[0]) return NextResponse.json({ error: "Hesap bulunamadı." }, { status: 404 });
     const u = row[0];
-    const count = u.accountChangesCount ?? 0;
+    const count = Number(u.accountChangesCount) || 0;
     return NextResponse.json({
       id: u.id,
       name: u.name,
@@ -72,7 +72,7 @@ export async function PATCH(request: Request) {
     const existing = await d.db.select().from(users).where(eq(users.id, session.id)).limit(1);
     if (!existing[0]) return NextResponse.json({ error: "Hesap bulunamadı." }, { status: 404 });
     const curr = existing[0];
-    const changeCount = curr.accountChangesCount ?? 0;
+    const changeCount = Number(curr.accountChangesCount) || 0;
 
     let nextName = curr.name;
     if (typeof raw.name === "string" && raw.name.trim()) nextName = raw.name.trim();
@@ -171,7 +171,7 @@ export async function PATCH(request: Request) {
         name: nextName,
         emailOrPhone: nextLogin,
         passwordHash: nextHash,
-        accountChangesCount: nextChangeCount,
+        accountChangesCount: Number(nextChangeCount) || 0,
       })
       .where(eq(users.id, session.id));
 
