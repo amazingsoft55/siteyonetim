@@ -1,8 +1,12 @@
 import { SignJWT, jwtVerify } from "jose";
 
-// Güvenlik için ortam değişkenlerinden alınmalı, şimdilik sabit
+const jwtSecretEnv = process.env.JWT_SECRET;
+if (!jwtSecretEnv && process.env.NODE_ENV === "production") {
+  throw new Error("CRITICAL SECURITY CONFIGURATION ERROR: JWT_SECRET environment variable is missing!");
+}
+
 const SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET || "super-secret-siteyonetim-key-2024"
+  jwtSecretEnv || "dev-only-fallback-insecure-key-never-use-in-prod"
 );
 
 export async function signJwt(payload: any) {

@@ -2,9 +2,29 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
+const jwtSecretEnv = process.env.JWT_SECRET;
+if (!jwtSecretEnv && process.env.NODE_ENV === "production") {
+  throw new Error("CRITICAL SECURITY ERROR: JWT_SECRET environment variable is missing!");
+}
+
 const SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET || "super-secret-siteyonetim-key-2024",
+  jwtSecretEnv || "dev-only-fallback-insecure-key-never-use-in-prod"
 );
+
+function isPublicApiPath(path: string): boolean {
+  const publicPaths = [
+    "/api/auth/login",
+    "/api/auth/logout",
+    "/api/auth/complete-password",
+    "/api/auth/forgot-password",
+    "/api/auth/reset-password",
+    "/api/setup/status",
+    "/api/seed",
+    "/api/telemetry/pageview",
+    "/api/public/contact"
+  ];
+  return publicPaths.includes(path);
+}
 
 function redirectByRole(role: string, req: NextRequest) {
   if (role === "SUPER_ADMIN") return NextResponse.redirect(new URL("/super-admin", req.url));
@@ -12,59 +32,71 @@ function redirectByRole(role: string, req: NextRequest) {
   return NextResponse.redirect(new URL("/dashboard", req.url));
 }
 
-function isPublicApiPath(path: string): boolean {
-  if (path === "/api/auth/login") return true;
-  if (path === "/api/auth/logout") return true;
-  if (path === "/api/auth/complete-password") return true;
-  if (path === "/api/auth/forgot-password") return true;
-  if (path === "/api/auth/reset-password") return true;
-  if (path === "/api/setup/status") return true;
-  if (path === "/api/seed") return true;
-  if (path === "/api/telemetry/pageview") return true;
-  if (path === "/api/public/contact") return true;
-  return false;
-}
-
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const token = request.cookies.get("token")?.value;
 
-  /* ---- API: geçici şifre bekleyen kullanıcıyı işlemeye zorlamadan önce engelle ---- */
+  // ---- 1. API Route Access Strategy ----
   if (path.startsWith("/api/")) {
-    if (isPublicApiPath(path) || path === "/api/auth/complete-password") {
+    if (isPublicApiPath(path)) {
       return NextResponse.next();
     }
-    if (!token) return NextResponse.next();
+
+    if (!token) {
+      return NextResponse.json(
+        { error: "Bu istek için kimlik doğrulaması yetersizdir.", code: "UNAUTHORIZED" },
+        { status: 401 }
+      );
+    }
 
     try {
       const { payload } = await jwtVerify(token, SECRET_KEY);
-      if (payload.mcp === true) {
+      const role = payload.role as string;
+
+      if (payload.mcp === true && path !== "/api/auth/complete-password") {
         return NextResponse.json(
           {
-            error: "Önce kalıcı şifrenizi tanımlayın.",
+            error: "Kalıcı şifrenizi belirlemeden diğer işlemleri gerçekleştiremezsiniz.",
             code: "MUST_CHANGE_PASSWORD",
             redirect: "/sifre-belirle",
           },
-          { status: 403 },
+          { status: 403 }
+        );
+      }
+
+      // Explicit RBAC Check mapping
+      if (path.startsWith("/api/super-admin/") && role !== "SUPER_ADMIN") {
+        return NextResponse.json(
+          { error: "Bu alana erişmek için yetkiniz bulunmamaktadır.", code: "FORBIDDEN" },
+          { status: 403 }
+        );
+      }
+
+      if (path.startsWith("/api/admin/") && role !== "ADMIN" && role !== "SUPER_ADMIN") {
+        return NextResponse.json(
+          { error: "Bu alana erişmek için yetkiniz bulunmamaktadır.", code: "FORBIDDEN" },
+          { status: 403 }
         );
       }
     } catch {
-      return NextResponse.next();
+      return NextResponse.json(
+        { error: "Geçersiz veya süresi dolmuş oturum anahtarı.", code: "INVALID_TOKEN" },
+        { status: 401 }
+      );
     }
 
     return NextResponse.next();
   }
 
-  /* ---- /sifre-belirle: oturum + yalnızca mcp iken mantıklı ---- */
+  // ---- 2. Page Transitions & SSR Guards ----
   if (path.startsWith("/sifre-belirle")) {
     if (!token) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
     try {
       const { payload } = await jwtVerify(token, SECRET_KEY);
-      const role = payload.role as string;
       if (payload.mcp !== true) {
-        return redirectByRole(role, request);
+        return redirectByRole(payload.role as string, request);
       }
     } catch {
       return NextResponse.redirect(new URL("/login", request.url));
@@ -88,7 +120,6 @@ export async function middleware(request: NextRequest) {
     const { payload } = await jwtVerify(token, SECRET_KEY);
     const role = payload.role as string;
 
-    /* Geçici şifre: önce doğrulama sayfasına */
     if (payload.mcp === true) {
       return NextResponse.redirect(new URL("/sifre-belirle", request.url));
     }

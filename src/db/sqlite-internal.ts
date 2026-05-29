@@ -6,36 +6,49 @@ import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { resolveSqliteDbPath } from "@/lib/database-path";
 import * as schema from "./schema";
 
-let _db: BetterSQLite3Database<typeof schema> | null = null;
+declare global {
+  // eslint-disable-next-line no-var
+  var _globalSqliteDb: BetterSQLite3Database<typeof schema> | undefined;
+}
 
-/** Yerel/VPS için tek dosya SQLite (better-sqlite3). Cloudflare Workers kod yolunda çağırılmamalıdır. */
 export function getBetterSqliteDrizzle(): BetterSQLite3Database<typeof schema> {
-  if (_db) return _db;
+  if (process.env.NODE_ENV === "production") {
+    return createDrizzleInstance();
+  }
+
+  if (!globalThis._globalSqliteDb) {
+    globalThis._globalSqliteDb = createDrizzleInstance();
+  }
+  return globalThis._globalSqliteDb;
+}
+
+function createDrizzleInstance(): BetterSQLite3Database<typeof schema> {
   const filePath = resolveSqliteDbPath();
   const dir = path.dirname(filePath);
+
   try {
-    fs.mkdirSync(dir, { recursive: true });
-  } catch {
-    /* yoksa açılışta better-sqlite3 hata verir */
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  } catch (error) {
+    console.error("Database directory setup failed:", error instanceof Error ? error.message : String(error));
   }
+
   const sqlite = new Database(filePath);
-  try {
-    sqlite.pragma("journal_mode = WAL");
-  } catch {
-    /* bazı ortamlar desteklemeyebilir */
-  }
-  try {
-    sqlite.pragma("foreign_keys = ON");
-  } catch {
-    /* ilişkilere uyum */
-  }
-  try {
-    sqlite.pragma("busy_timeout = 10000");
-  } catch {
-    /* kilit süresi */
-  }
-  _db = drizzle(sqlite, { schema });
-  return _db;
+
+  const runPragma = (query: string, description: string) => {
+    try {
+      sqlite.pragma(query);
+    } catch (err) {
+      console.warn(`Database pragma initialization failed (${description}):`, err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  runPragma("journal_mode = WAL", "WAL Mode");
+  runPragma("foreign_keys = ON", "Foreign Keys Constraint");
+  runPragma("busy_timeout = 10000", "Busy Timeout");
+
+  return drizzle(sqlite, { schema });
 }
 
 export function getBetterSqlitePath(): string {
