@@ -7,8 +7,7 @@ import { resolveSqliteDbPath } from "@/lib/database-path";
 import * as schema from "./schema";
 
 declare global {
-  // eslint-disable-next-line no-var
-  var _globalSqliteDb: BetterSQLite3Database<typeof schema> | undefined;
+  var _globalSqliteDb: BetterSQLite3Database<typeof schema> | undefined; // eslint-disable-line no-var
 }
 
 export function getBetterSqliteDrizzle(): BetterSQLite3Database<typeof schema> {

@@ -205,7 +205,7 @@ export default function AdminDashboardPage() {
                 </div>
                 {card.badge && (
                   <span className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${card.badgeColor}`}>
-                    {card.label === "Bekleyen Talepler" && card.value > 0
+                    {card.label === "Bekleyen Talepler" && Number(card.value) > 0
                       ? <span className="animate-pulse h-1.5 w-1.5 rounded-full bg-rose-500" />
                       : <ArrowUpRight className="h-3 w-3" />}
                     {card.badge}
