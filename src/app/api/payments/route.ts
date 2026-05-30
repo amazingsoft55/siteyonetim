@@ -9,6 +9,7 @@ import { createNotification } from "@/lib/notify";
 import { sendBrandedEmail } from "@/lib/send-email";
 import { buildBrandedEmailHtml } from "@/lib/email-template";
 import { looksLikeEmail } from "@/lib/password-reset";
+import { requireFeature } from "@/lib/feature-guard";
 
 
 function forbidden() {
@@ -42,6 +43,9 @@ export async function GET() {
 
   const d = await acquireDatabase();
   if (!d.ok) return await databaseUnavailable();
+
+  const featureCheck = await requireFeature(d.db, session.siteId, "payments");
+  if (featureCheck) return featureCheck;
 
   try {
     const order = desc(payments.createdAt);
@@ -91,6 +95,9 @@ export async function POST(request: Request) {
 
   const d = await acquireDatabase();
   if (!d.ok) return await databaseUnavailable();
+
+  const featureCheck = await requireFeature(d.db, session.siteId, "payments");
+  if (featureCheck) return featureCheck;
 
   let raw: AdminPostBody;
   try {

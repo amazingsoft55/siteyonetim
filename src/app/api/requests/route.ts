@@ -6,6 +6,7 @@ import { jsonSqlError } from "@/lib/db-query-error";
 import { requests as residentRequests, users } from "@/db/schema";
 import { dbRequestToClient, uiStatusToDb, type ClientRequestItem } from "@/lib/request-ui";
 import { createNotification } from "@/lib/notify";
+import { requireFeature } from "@/lib/feature-guard";
 
 
 function forbidden() {
@@ -22,6 +23,9 @@ export async function GET(request: Request) {
 
   const d = await acquireDatabase();
   if (!d.ok) return await databaseUnavailable();
+
+  const featureCheck = await requireFeature(d.db, session.siteId, "requests");
+  if (featureCheck) return featureCheck;
 
   const { searchParams } = new URL(request.url);
   const siteHint = searchParams.get("siteId");
@@ -79,6 +83,9 @@ export async function POST(request: Request) {
 
   const d = await acquireDatabase();
   if (!d.ok) return await databaseUnavailable();
+
+  const featureCheck = await requireFeature(d.db, session.siteId, "requests");
+  if (featureCheck) return featureCheck;
 
   if (!session.siteId) return forbiddenScope();
 

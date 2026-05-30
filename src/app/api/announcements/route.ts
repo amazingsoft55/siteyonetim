@@ -25,6 +25,9 @@ export async function GET(request: Request) {
   const d = await acquireDatabase();
   if (!d.ok) return await databaseUnavailable();
 
+  const featureCheck = await requireFeature(d.db, session.siteId, "announcements");
+  if (featureCheck) return featureCheck;
+
   const { searchParams } = new URL(request.url);
   const hint = searchParams.get("siteId");
 
@@ -67,6 +70,9 @@ export async function POST(request: Request) {
 
   const d = await acquireDatabase();
   if (!d.ok) return await databaseUnavailable();
+
+  const featureCheck = await requireFeature(d.db, session.siteId, "announcements");
+  if (featureCheck) return featureCheck;
 
   let raw: PostBody;
   try {
