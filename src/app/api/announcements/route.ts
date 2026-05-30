@@ -8,6 +8,7 @@ import { announcementToClient } from "@/lib/announcement-ui";
 import { createBulkNotifications } from "@/lib/notify";
 import { sendAnnouncementEmail } from "@/lib/send-email";
 import { looksLikeEmail } from "@/lib/password-reset";
+import { requireFeature } from "@/lib/feature-guard";
 
 
 function forbidden() {

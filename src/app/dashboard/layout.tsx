@@ -7,6 +7,7 @@ import { PresenceHeartbeat } from "@/components/PresenceHeartbeat";
 import { SiteLogo } from "@/components/SiteLogo";
 import { SITE_BRAND_NAME } from "@/lib/brand";
 import { NotificationBell } from "@/components/NotificationBell";
+import { FeatureGateProvider } from "@/components/FeatureGate";
 import { Home, CreditCard, Megaphone, Wrench, LogOut } from "lucide-react";
 
 export default function DashboardLayout({
@@ -125,7 +126,9 @@ export default function DashboardLayout({
           </div>
         </div>
         <div className="h-full">
-          {children}
+          <FeatureGateProvider>
+            {children}
+          </FeatureGateProvider>
         </div>
       </main>
 

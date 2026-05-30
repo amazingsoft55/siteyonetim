@@ -6,13 +6,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { readJsonError, readJsonNotice } from "@/lib/json-error";
 import { SuperAdminTopBar } from "@/components/SuperAdminTopBar";
-import { LogOut, Trash2, Pencil } from "lucide-react";
+import { LogOut, Trash2, Pencil, CreditCard } from "lucide-react";
 import { useAlert, useConfirm } from "@/components/ModalProvider";
+import { PLAN_DETAILS, FEATURE_LABELS } from "@/lib/features";
+import type { PlanType } from "@/lib/features";
 
 type SiteRow = {
   id: string;
   name: string;
   address: string | null;
+  plan: string;
   createdAt: string | null;
 };
 
@@ -290,6 +293,27 @@ function SuperAdminUsersPageInner() {
       setErr(readJsonError(j, "Site silinemedi."));
       return;
     }
+    setMsg("Site ve bağlı tüm veriler silindi.");
+    await reload();
+  }
+
+  async function changeSitePlan(siteId: string, newPlan: string) {
+    setErr("");
+    setMsg("");
+    const res = await fetch(`/api/super-admin/sites/${encodeURIComponent(siteId)}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: newPlan }),
+    });
+    const j: unknown = await res.json().catch(() => null);
+    if (!res.ok) {
+      setErr(readJsonError(j, "Plan değiştirilemedi."));
+      return;
+    }
+    setMsg(`Plan "${PLAN_DETAILS[newPlan as PlanType]?.name ?? newPlan}" olarak güncellendi.`);
+    await reload();
+  }
     if (siteListFilterId === s.id) setSiteListFilterId("");
     setMsg("Site silindi.");
     await reload();
@@ -521,6 +545,7 @@ function SuperAdminUsersPageInner() {
               <tr className="border-b border-zinc-200 dark:border-zinc-700 text-[11px] uppercase font-bold text-zinc-500">
                 <th className="py-2 px-3">Site</th>
                 <th className="py-2 px-3">Adres</th>
+                <th className="py-2 px-3">Paket</th>
                 <th className="py-2 px-3">Kullanıcı</th>
                 <th className="py-2 px-3">İşlem</th>
               </tr>
@@ -528,6 +553,8 @@ function SuperAdminUsersPageInner() {
             <tbody>
               {sites.map((s) => {
                 const count = users.filter((u) => u.siteId === s.id).length;
+                const currentPlan = (s.plan as PlanType) || "starter";
+                const planInfo = PLAN_DETAILS[currentPlan];
                 return (
                   <tr
                     key={s.id}
@@ -535,6 +562,19 @@ function SuperAdminUsersPageInner() {
                   >
                     <td className="py-2.5 px-3 font-semibold">{s.name}</td>
                     <td className="py-2.5 px-3 text-sm text-zinc-500">{s.address ?? "—"}</td>
+                    <td className="py-2.5 px-3">
+                      <select
+                        value={currentPlan}
+                        onChange={(e) => changeSitePlan(s.id, e.target.value)}
+                        className="text-xs font-bold rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-2 py-1.5 cursor-pointer"
+                      >
+                        {Object.entries(PLAN_DETAILS).map(([key, info]) => (
+                          <option key={key} value={key}>
+                            {info.name} — {info.monthlyPrice} TL/ay
+                          </option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="py-2.5 px-3 text-sm">{count}</td>
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-3">
@@ -552,6 +592,9 @@ function SuperAdminUsersPageInner() {
                           <Trash2 className="h-3.5 w-3.5" />
                           Sil
                         </button>
+                      </div>
+                    </td>
+                  </tr>
                       </div>
                     </td>
                   </tr>
