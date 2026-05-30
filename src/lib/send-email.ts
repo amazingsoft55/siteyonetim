@@ -132,3 +132,29 @@ export async function sendAccountVerificationEmail(to: string, code: string): Pr
 
   return sendBrandedEmail({ to, subject: "Doğrulama kodu — Site Yönetimi", html });
 }
+
+/** Duyuru bildirim e-postası — sakinlere ve yöneticilere gönderilir */
+export async function sendAnnouncementEmail(
+  to: string,
+  recipientName: string,
+  announcementTitle: string,
+  announcementContent: string,
+  category: string,
+): Promise<SendResult> {
+  const base = getPublicSiteUrl().replace(/\/$/, "");
+  const truncated = announcementContent.length > 200 ? announcementContent.slice(0, 200) + "..." : announcementContent;
+
+  const html = buildBrandedEmailHtml({
+    title: `Yeni Duyuru: ${announcementTitle}`,
+    intro: `Merhaba ${recipientName || "Değerli Sakin"},`,
+    bodyHtml: `
+      <p style="margin:0 0 8px;font-size:13px;color:#71717a">Kategori: <strong>${category}</strong></p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#3f3f46">${truncated}</p>
+    `,
+    ctaHref: `${base}/dashboard/announcements`,
+    ctaLabel: "Duyuruyu Görüntüle",
+    footerNote: "Bu e-posta site yönetimi tarafından gönderilen bir duyuru bildirimdir.",
+  });
+
+  return sendBrandedEmail({ to, subject: `Yeni Duyuru: ${announcementTitle} — Site Yönetimi`, html });
+}

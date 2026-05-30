@@ -7,6 +7,9 @@ import { jsonSqlError } from "@/lib/db-query-error";
 import { deleteUserCascade } from "@/lib/user-cascade-delete";
 import { users } from "@/db/schema";
 import { createNotification } from "@/lib/notify";
+import { sendBrandedEmail } from "@/lib/send-email";
+import { buildBrandedEmailHtml } from "@/lib/email-template";
+import { looksLikeEmail } from "@/lib/password-reset";
 
 function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
@@ -118,6 +121,28 @@ export async function POST(request: Request) {
       type: "WELCOME",
       href: role === "ADMIN" ? "/admin" : "/dashboard",
     });
+
+    // Kullanıcıya hoşgeldin emaili gönder
+    if (looksLikeEmail(emailOrPhone)) {
+      const base = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000").replace(/\/$/, "");
+      sendBrandedEmail({
+        to: emailOrPhone,
+        subject: `Hoş Geldiniz — ${siteName}`,
+        html: buildBrandedEmailHtml({
+          title: "Hoş Geldiniz!",
+          intro: `Merhaba ${name}, ${siteName} sitesine başarıyla eklendiniz.`,
+          bodyHtml: `
+            <p style="margin:0 0 8px;font-size:14px;color:#3f3f46">Giriş bilgileriniz:</p>
+            <p style="margin:0 0 4px;font-size:14px;color:#3f3f46"><strong>Kullanıcı adı:</strong> ${emailOrPhone}</p>
+            <p style="margin:0 0 16px;font-size:14px;color:#3f3f46"><strong>Şifre:</strong> (yönetici tarafından belirlendi)</p>
+            ${role === "USER" && apartmentNo ? `<p style="margin:0 0 16px;font-size:14px;color:#3f3f46"><strong>Daire:</strong> ${apartmentNo}</p>` : ""}
+          `,
+          ctaHref: `${base}/login`,
+          ctaLabel: "Panele Giriş Yap",
+          footerNote: "Bu hesap site yönetimi tarafından oluşturulmuştur. İlk girişte şifrenizi değiştirmeniz istenebilir.",
+        }),
+      }).catch(() => {});
+    }
 
     return NextResponse.json(row[0]);
   } catch (e) {

@@ -6,6 +6,9 @@ import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { payments, users } from "@/db/schema";
 import { createNotification } from "@/lib/notify";
+import { sendBrandedEmail } from "@/lib/send-email";
+import { buildBrandedEmailHtml } from "@/lib/email-template";
+import { looksLikeEmail } from "@/lib/password-reset";
 
 
 function forbidden() {
@@ -174,6 +177,27 @@ export async function POST(request: Request) {
         type: "PAYMENT",
         href: "/dashboard/payments",
       });
+
+      // Kullanıcıya email bildirimi gönder
+      if (looksLikeEmail(u[0].emailOrPhone)) {
+        const html = buildBrandedEmailHtml({
+          title: markPaid ? "Aidat Ödemesi Onaylandı" : "Yeni Aidat Borcu",
+          intro: `Merhaba ${u[0].name},`,
+          bodyHtml: `<p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#3f3f46">
+            ${period} dönemine ait <strong>${amount.toLocaleString("tr-TR")} TL</strong> aidatınız ${
+              markPaid ? "yönetici tarafından onaylandı." : "hesabınıza eklendi."
+            }
+          </p>`,
+          ctaHref: `${process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000"}/dashboard/payments`,
+          ctaLabel: "Ödemeleri Görüntüle",
+          footerNote: "Bu e-posta site yönetimi tarafından gönderilen bir aidat bildirimdir.",
+        });
+        sendBrandedEmail({
+          to: u[0].emailOrPhone,
+          subject: markPaid ? "Aidat Ödemesi Onaylandı — Site Yönetimi" : "Yeni Aidat Borcu — Site Yönetimi",
+          html,
+        }).catch(() => {});
+      }
 
       return NextResponse.json({ success: true, payment: row[0] ? toClientPayment(row[0]) : null });
     }

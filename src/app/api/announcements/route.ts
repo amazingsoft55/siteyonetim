@@ -6,6 +6,8 @@ import { jsonSqlError } from "@/lib/db-query-error";
 import { announcements, users } from "@/db/schema";
 import { announcementToClient } from "@/lib/announcement-ui";
 import { createBulkNotifications } from "@/lib/notify";
+import { sendAnnouncementEmail } from "@/lib/send-email";
+import { looksLikeEmail } from "@/lib/password-reset";
 
 
 function forbidden() {
@@ -95,20 +97,30 @@ export async function POST(request: Request) {
 
     const row = await d.db.select().from(announcements).where(eq(announcements.id, id)).limit(1);
 
-    // Sitedeki tüm kullanıcılarına bildirim gönder
+    // Sitedeki tüm kullanıcılarına bildirim + email gönder
     try {
       const siteUsers = await d.db
-        .select({ id: users.id })
+        .select({ id: users.id, name: users.name, emailOrPhone: users.emailOrPhone })
         .from(users)
-        .where(and(eq(users.siteId, session.siteId), eq(users.role, "USER")));
+        .where(and(eq(users.siteId, session.siteId)));
+
       const userIds = siteUsers.map((u) => u.id);
       if (userIds.length > 0) {
+        // Uygulama içi bildirim (tüm kullanıcılara)
         await createBulkNotifications(d.db, userIds, {
           title: `Yeni Duyuru: ${title}`,
           body: content.length > 100 ? content.slice(0, 100) + "..." : content,
           type: "ANNOUNCEMENT",
           href: "/dashboard/announcements",
         });
+
+        // Email bildirimi (sadece geçerli email adresi olanlara, yayıncı hariç)
+        const emailsToSend = siteUsers.filter(
+          (u) => u.id !== session.id && looksLikeEmail(u.emailOrPhone),
+        );
+        for (const u of emailsToSend) {
+          sendAnnouncementEmail(u.emailOrPhone, u.name, title, content, category).catch(() => {});
+        }
       }
     } catch {
       /* bildirim hatası ana işlemi bozmasın */
