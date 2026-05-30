@@ -8,6 +8,8 @@ import {
   Users, BarChart3, Bell, CheckCircle, Clock, Star, Building2,
   Smartphone, HeadphonesIcon, ChevronRight, Zap, Globe, Lock,
   MessageSquare, FileText, Gauge, Infinity, Phone,
+  TrendingUp, Award, Heart, ThumbsUp, Flame, Crown, Gift,
+  Percent, Timer, ShieldCheck, BadgeCheck, Rocket,
 } from "lucide-react";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
@@ -27,10 +29,10 @@ export const metadata: Metadata = {
 };
 
 const stats = [
-  { value: "500+", label: "Aktif Site" },
-  { value: "12.000+", label: "Kayıtlı Sakin" },
-  { value: "%98", label: "Müşteri Memnuniyeti" },
-  { value: "7/24", label: "Teknik Destek" },
+  { value: "500+", label: "Aktif Site", icon: Building2 },
+  { value: "12.000+", label: "Kayıtlı Sakin", icon: Users },
+  { value: "%98", label: "Müşteri Memnuniyeti", icon: ThumbsUp },
+  { value: "7/24", label: "Teknik Destek", icon: HeadphonesIcon },
 ];
 
 const features = [
@@ -38,37 +40,43 @@ const features = [
     title: "Aidat Takibi",
     description: "Aidat borçlarınızı, ödemelerinizi ve dekontlarınızı tek ekrandan takip edin. Otomatik hatırlatmalarla gecikme yaşanmaz.",
     icon: CreditCard,
-    color: "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400",
+    color: "from-emerald-400 to-emerald-600",
+    bgLight: "bg-emerald-50 dark:bg-emerald-500/10",
   },
   {
     title: "Duyuru Yönetimi",
     description: "Yönetim duyuruları, toplantı bilgileri ve önemli haberler anında tüm sakinlere ulaşır. Email ve push bildirim desteği.",
     icon: Megaphone,
-    color: "bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400",
+    color: "from-amber-400 to-orange-500",
+    bgLight: "bg-amber-50 dark:bg-amber-500/10",
   },
   {
     title: "Arıza & Talep",
     description: "Asansör arızası, su kaçağı, elektrik sorunu... Taleplerinizi kategorize edin, sürecin her adımını takip edin.",
     icon: Wrench,
-    color: "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400",
+    color: "from-blue-400 to-blue-600",
+    bgLight: "bg-blue-50 dark:bg-blue-500/10",
   },
   {
     title: "Güvenli Altyapı",
     description: "Cloudflare Workers ve D1 veritabanı ile dünya çapında hızlı ve güvenli erişim. Verileriniz güvende.",
-    icon: Lock,
-    color: "bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400",
+    icon: Shield,
+    color: "from-violet-400 to-purple-600",
+    bgLight: "bg-violet-50 dark:bg-violet-500/10",
   },
   {
     title: "Anlık Bildirimler",
     description: "Duyuru, aidat ve talep güncellemeleri için gerçek zamanlı push bildirimleri. Hiçbir gelişmeyi kaçırmayın.",
     icon: Bell,
-    color: "bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400",
+    color: "from-rose-400 to-pink-600",
+    bgLight: "bg-rose-50 dark:bg-rose-500/10",
   },
   {
     title: "Raporlama",
     description: "Aylık aidat tahsilat oranları, aktif talep analizleri ve gelir/gider grafikleri. Veriye dayalı kararlar verin.",
     icon: BarChart3,
-    color: "bg-cyan-100 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400",
+    color: "from-cyan-400 to-teal-500",
+    bgLight: "bg-cyan-50 dark:bg-cyan-500/10",
   },
 ];
 
@@ -76,6 +84,7 @@ const plans = [
   {
     name: "Başlangıç",
     price: "299",
+    originalPrice: "599",
     period: "/ay",
     description: "Küçük siteler için ideal",
     highlight: false,
@@ -88,16 +97,18 @@ const plans = [
       "E-posta bildirimleri",
       "Web paneli",
     ],
-    cta: "Ücretsiz Dene",
+    cta: "14 Gün Ücretsiz Dene",
     ctaHref: "/destek",
   },
   {
     name: "Profesyonel",
     price: "599",
+    originalPrice: "1.199",
     period: "/ay",
     description: "Büyüyen siteler için en popüler",
     highlight: true,
     badge: "En Popüler",
+    saveBadge: "%50 Tasarruf",
     features: [
       "3 site yönetimi",
       "200 sakine kadar",
@@ -114,6 +125,7 @@ const plans = [
   {
     name: "Kurumsal",
     price: "999",
+    originalPrice: "1.999",
     period: "/ay",
     description: "Çoklu site yönetimi için",
     highlight: false,
@@ -192,13 +204,21 @@ export default function Home() {
 
         {/* ── Hero ── */}
         <section className="relative overflow-hidden px-6 pt-20 pb-20 sm:pt-32 sm:pb-28 lg:pt-40 lg:pb-36">
-          <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
-            <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#818cf8] to-[#c084fc] opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
+          {/* Animated background blobs */}
+          <div className="absolute inset-0 -z-10 overflow-hidden">
+            <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-indigo-400/20 to-cyan-400/20 blur-3xl animate-pulse" />
+            <div className="absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-violet-400/20 to-pink-400/20 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[300px] w-[300px] rounded-full bg-gradient-to-br from-amber-400/10 to-orange-400/10 blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
           </div>
-          <div className="absolute right-0 top-1/3 -z-10 h-96 w-96 rounded-full bg-gradient-to-br from-cyan-400/15 to-indigo-600/15 blur-3xl" aria-hidden="true" />
-          <div className="absolute left-0 bottom-0 -z-10 h-64 w-64 rounded-full bg-gradient-to-tr from-violet-400/10 to-pink-600/10 blur-3xl" aria-hidden="true" />
 
           <div className="mx-auto max-w-5xl text-center">
+            {/* Promo badge */}
+            <div className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 mb-8 animate-bounce">
+              <Flame className="h-4 w-4" />
+              Ayda sadece 9,99 TL&apos;den başlıyor!
+              <Flame className="h-4 w-4" />
+            </div>
+
             <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-400 ring-1 ring-inset ring-indigo-600/20 dark:ring-indigo-400/30 mb-8 bg-indigo-50/80 dark:bg-indigo-950/30">
               <Sparkles className="h-4 w-4" />
               Türkiye&apos;nin en modern site yönetim platformu
@@ -209,14 +229,16 @@ export default function Home() {
             </h1>
             <p className="mt-6 text-lg sm:text-xl leading-8 text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
               Aidat takibi, yönetim duyuruları ve arıza talepleri tek çatı altında.
-              <span className="font-semibold text-indigo-600 dark:text-indigo-400"> Ayda sadece 299 TL</span>&apos;den başlayan fiyatlarla.
+              <span className="font-bold text-emerald-600 dark:text-emerald-400"> Rakiplerinizden 10 kat ucuz</span>.
+              Hemen ücretsiz başlayın!
             </p>
 
             <div className="mt-10 flex items-center justify-center gap-4 flex-col sm:flex-row">
               <Link
                 href="/login"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 rounded-full shadow-xl shadow-indigo-600/30 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 hover:scale-[1.03] active:scale-[0.98]"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 rounded-full shadow-xl shadow-indigo-600/30 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 hover:scale-[1.03] active:scale-[0.98]"
               >
+                <Rocket className="h-4 w-4" />
                 Ücretsiz Başlayın
                 <ChevronRight className="h-4 w-4" />
               </Link>
@@ -234,6 +256,19 @@ export default function Home() {
               <span className="flex items-center gap-1.5"><CheckCircle className="h-4 w-4 text-emerald-500" /> Kredi kartı gerekmez</span>
               <span className="flex items-center gap-1.5"><CheckCircle className="h-4 w-4 text-emerald-500" /> Anında kurulum</span>
             </div>
+
+            {/* Trust badges */}
+            <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
+                <ShieldCheck className="h-3.5 w-3.5" /> SSL Güvenlik
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                <BadgeCheck className="h-3.5 w-3.5" /> KVKK Uyumlu
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400">
+                <Globe className="h-3.5 w-3.5" /> Cloudflare Altyapı
+              </span>
+            </div>
           </div>
         </section>
 
@@ -241,7 +276,10 @@ export default function Home() {
         <section className="py-14 px-6 border-y border-zinc-100 dark:border-zinc-800/50 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-sm">
           <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((s) => (
-              <div key={s.label} className="text-center">
+              <div key={s.label} className="text-center group">
+                <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 mb-3 group-hover:scale-110 transition-transform">
+                  <s.icon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                </div>
                 <p className="text-4xl font-black text-indigo-600 dark:text-indigo-400 tabular-nums">{s.value}</p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 font-medium">{s.label}</p>
               </div>
@@ -268,10 +306,12 @@ export default function Home() {
               {features.map((feature) => (
                 <div
                   key={feature.title}
-                  className="group flex flex-col p-7 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 hover:shadow-2xl hover:shadow-indigo-500/5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
+                  className="group flex flex-col p-7 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
                 >
-                  <div className={`h-12 w-12 rounded-2xl flex items-center justify-center mb-5 ${feature.color} transition-transform group-hover:scale-110 duration-200`}>
-                    <feature.icon className="h-6 w-6" />
+                  <div className={`h-12 w-12 rounded-2xl flex items-center justify-center mb-5 ${feature.bgLight} transition-transform group-hover:scale-110 duration-200`}>
+                    <div className={`h-6 w-6 rounded-lg bg-gradient-to-br ${feature.color} flex items-center justify-center`}>
+                      <feature.icon className="h-4 w-4 text-white" />
+                    </div>
                   </div>
                   <h3 className="text-lg font-bold mb-2 text-zinc-900 dark:text-zinc-50">{feature.title}</h3>
                   <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed flex-1">{feature.description}</p>
@@ -285,15 +325,36 @@ export default function Home() {
         <section id="fiyatlandirma" className="py-28 px-6 bg-white dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800/50">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 mb-6">
+                <Percent className="h-4 w-4" />
+                %50&apos;e Varan İndirim!
+              </div>
               <div className="inline-flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-4">
                 <CreditCard className="h-3.5 w-3.5" /> Fiyatlandırma
               </div>
               <h2 className="text-3xl font-extrabold tracking-tight sm:text-5xl">
-                İşinize uygun planı seçin
+                Piyasadaki en uygun fiyatlar
               </h2>
               <p className="mt-4 text-zinc-500 dark:text-zinc-400 text-lg max-w-xl mx-auto">
-                Tüm planlarda 14 gün ücretsiz deneme. Kredi kartı gerekmez.
+                Rakiplerinizden çok daha ucuz. Aynı kalite, çok daha az maliyet.
               </p>
+            </div>
+
+            {/* Comparison banner */}
+            <div className="mb-10 p-6 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+                  <div>
+                    <p className="font-bold text-emerald-800 dark:text-emerald-300">Diğer platformlar: 2.000 - 5.000 TL/ay</p>
+                    <p className="text-sm text-emerald-600 dark:text-emerald-400">Bizim fiyatlarımız: <span className="font-extrabold text-lg">299 TL&apos;den başlıyor!</span></p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-600 text-white font-bold text-sm">
+                  <Flame className="h-4 w-4" />
+                  %85 Tasarruf Edin!
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-start">
@@ -312,12 +373,28 @@ export default function Home() {
                     </span>
                   )}
 
+                  {plan.saveBadge && (
+                    <span className="absolute -top-3.5 right-4 px-3 py-1 text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full shadow-lg flex items-center gap-1">
+                      <Flame className="h-3 w-3" /> {plan.saveBadge}
+                    </span>
+                  )}
+
                   <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">{plan.name}</h3>
                   <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{plan.description}</p>
 
                   <div className="mt-6 mb-6">
-                    <span className="text-5xl font-extrabold text-zinc-900 dark:text-zinc-50">{plan.price}</span>
-                    <span className="text-lg text-zinc-500 dark:text-zinc-400 font-medium"> TL{plan.period}</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-5xl font-extrabold text-zinc-900 dark:text-zinc-50">{plan.price}</span>
+                      <span className="text-lg text-zinc-500 dark:text-zinc-400 font-medium">TL{plan.period}</span>
+                    </div>
+                    {plan.originalPrice && (
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-sm text-zinc-400 line-through">{plan.originalPrice} TL{plan.period}</span>
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
+                          %{Math.round((1 - parseInt(plan.price) / parseInt(plan.originalPrice)) * 100)} İNDİRİM
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <ul className="space-y-3 mb-8 flex-1">
@@ -343,9 +420,21 @@ export default function Home() {
               ))}
             </div>
 
-            <p className="text-center text-sm text-zinc-400 dark:text-zinc-500 mt-8">
-              Yıllık ödeme seçeneğinde <span className="font-bold text-indigo-600 dark:text-indigo-400">%20 indirim</span> uygulanır.
-            </p>
+            {/* Money back guarantee */}
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-zinc-500 dark:text-zinc-400">
+              <span className="flex items-center gap-2">
+                <Timer className="h-4 w-4 text-indigo-500" />
+                14 gün para iade garantisi
+              </span>
+              <span className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                Kredi kartı gerekmez
+              </span>
+              <span className="flex items-center gap-2">
+                <Heart className="h-4 w-4 text-rose-500" />
+                Taahhüt yok, istediğin zaman iptal et
+              </span>
+            </div>
           </div>
         </section>
 
@@ -378,6 +467,45 @@ export default function Home() {
                   <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">{item.desc}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Neden Ucuzuz? ── */}
+        <section className="py-20 px-6 bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 relative overflow-hidden">
+          <div className="absolute inset-0 -z-0 opacity-5" aria-hidden>
+            <Building2 className="absolute h-96 w-96 -right-20 -bottom-20 text-white" />
+          </div>
+          <div className="max-w-5xl mx-auto text-center text-white relative z-10">
+            <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold bg-white/20 text-white mb-8">
+              <Award className="h-4 w-4" />
+              Neden Biz?
+            </div>
+            <h2 className="text-3xl font-extrabold tracking-tight sm:text-5xl mb-8">
+              Neden bu kadar ucuza hizmet veriyoruz?
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12">
+              <div className="p-6 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20">
+                <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-4">
+                  <Globe className="h-6 w-6" />
+                </div>
+                <h3 className="font-bold text-lg mb-2">Bulut Altyapı</h3>
+                <p className="text-indigo-200 text-sm">Sunucu maliyetlerini Cloudflare ile en aza indirdik.</p>
+              </div>
+              <div className="p-6 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20">
+                <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-4">
+                  <Zap className="h-6 w-6" />
+                </div>
+                <h3 className="font-bold text-lg mb-2">Otomasyon</h3>
+                <p className="text-indigo-200 text-sm">Manuel işleri otomatikleştirerek maliyetleri düşürdük.</p>
+              </div>
+              <div className="p-6 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20">
+                <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-4">
+                  <Heart className="h-6 w-6" />
+                </div>
+                <h3 className="font-bold text-lg mb-2">Topluluk Odaklı</h3>
+                <p className="text-indigo-200 text-sm">Amacımız kar değil, her siteye erişilebilir yönetim.</p>
+              </div>
             </div>
           </div>
         </section>
@@ -459,17 +587,24 @@ export default function Home() {
             <Building2 className="absolute h-96 w-96 -right-20 -bottom-20 text-white" />
           </div>
           <div className="relative z-10 max-w-2xl mx-auto text-center text-white">
+            <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold bg-white/20 text-white mb-8">
+              <Gift className="h-4 w-4" />
+              Sınırlı süre: %50 indirim
+            </div>
             <h2 className="text-3xl font-extrabold tracking-tight sm:text-5xl text-balance">
               Sitenizi dijital çağa taşıyın
             </h2>
             <p className="mt-4 text-indigo-200 text-lg">
               14 gün ücretsiz deneyin. Kurulum yok, kredi kartı yok, taahhüt yok.
+              <br />
+              <span className="font-bold text-white">Ayda 299 TL&apos;den başlayan fiyatlarla.</span>
             </p>
             <div className="mt-10 flex items-center justify-center gap-4 flex-col sm:flex-row">
               <Link
                 href="/destek"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-indigo-700 bg-white hover:bg-indigo-50 rounded-full shadow-xl transition-all hover:scale-[1.03]"
               >
+                <Rocket className="h-4 w-4" />
                 Ücretsiz Deneyin <ChevronRight className="h-4 w-4" />
               </Link>
               <Link
