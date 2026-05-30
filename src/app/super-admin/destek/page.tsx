@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { readJsonError } from "@/lib/json-error";
-import { SuperAdminTopBar } from "@/components/SuperAdminTopBar";
 import { Globe, Building2 } from "lucide-react";
 
 type AdminTicketRow = {
@@ -175,23 +174,8 @@ export default function SuperAdminDestekPage() {
   const openPub = pubList.filter((x) => x.status === "OPEN").length;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#0b0f19] text-zinc-900 dark:text-zinc-100">
-      <SuperAdminTopBar
-        backHref="/super-admin"
-        title="Destek merkezi"
-        subtitle={
-          loading ?
-            "Yükleniyor…"
-          : `${pubList.length} iletişim · ${adminList.length} site yöneticisi talebi`
-        }
-        actions={
-          <Link href="/super-admin/kullanicilar" className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 shrink-0">
-            Kullanıcılar
-          </Link>
-        }
-      />
-
-      <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+    <div className="min-h-full bg-gradient-to-br from-zinc-50 via-white to-indigo-50/30 dark:from-[#060a12] dark:via-[#0b0f19] dark:to-indigo-950/10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         {(err || msg) && (
           <div>
             {err && (
@@ -340,7 +324,7 @@ export default function SuperAdminDestekPage() {
             )}
           </div>
         )}
-      </main>
+      </div>
 
       {adminActive && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 p-4">

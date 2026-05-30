@@ -5,8 +5,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { readJsonError, readJsonNotice } from "@/lib/json-error";
-import { SuperAdminTopBar } from "@/components/SuperAdminTopBar";
-import { LogOut, Trash2, Pencil, CreditCard } from "lucide-react";
+import { Trash2, Pencil, CreditCard } from "lucide-react";
 import { useAlert, useConfirm } from "@/components/ModalProvider";
 import { PLAN_DETAILS, FEATURE_LABELS } from "@/lib/features";
 import type { PlanType } from "@/lib/features";
@@ -314,10 +313,6 @@ function SuperAdminUsersPageInner() {
     setMsg(`Plan "${PLAN_DETAILS[newPlan as PlanType]?.name ?? newPlan}" olarak güncellendi.`);
     await reload();
   }
-    if (siteListFilterId === s.id) setSiteListFilterId("");
-    setMsg("Site silindi.");
-    await reload();
-  }
 
   async function logout() {
     document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -339,40 +334,8 @@ function SuperAdminUsersPageInner() {
   );
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#0b0f19] text-zinc-900 dark:text-zinc-100">
-      <SuperAdminTopBar
-        backHref="/super-admin"
-        title="Siteler & kullanıcılar"
-        subtitle={
-          loading ?
-            "Yükleniyor…"
-          : `${sites.length} site · ${adminTotal} yönetici · ${users.length} toplam hesap${
-              siteListFilterId.trim() ?
-                ` · Liste: ${siteNameOf(siteListFilterId.trim())} (${visibleUsers.length})`
-              : ""
-            }`
-        }
-        actions={
-          <>
-            <Link
-              href="/super-admin/hesabim"
-              className="hidden sm:inline-flex text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
-            >
-              Hesabım
-            </Link>
-            <button
-              type="button"
-              onClick={logout}
-              className="flex items-center gap-2 text-sm font-medium text-rose-600 dark:text-rose-400 hover:text-rose-700 shrink-0"
-            >
-              <LogOut className="h-4 w-4" />
-              Çıkış
-            </button>
-          </>
-        }
-      />
-
-      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+    <div className="min-h-full bg-gradient-to-br from-zinc-50 via-white to-indigo-50/30 dark:from-[#060a12] dark:via-[#0b0f19] dark:to-indigo-950/10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         {(err || msg) && (
           <div className="space-y-2">
             {err && (
@@ -594,10 +557,7 @@ function SuperAdminUsersPageInner() {
                         </button>
                       </div>
                     </td>
-                  </tr>
-                      </div>
-                    </td>
-                  </tr>
+                   </tr>
                 );
               })}
               {sites.length === 0 && (
@@ -824,7 +784,7 @@ function SuperAdminUsersPageInner() {
             </div>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

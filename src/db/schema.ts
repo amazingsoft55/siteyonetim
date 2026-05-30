@@ -155,6 +155,18 @@ export const platformInsights = sqliteTable("platform_insights", {
   updatedAt: text("updated_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
+/** Platform özellikleri — süper yönetici tarafından yönetilir, paketlere eklenir */
+export const features = sqliteTable("features", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  icon: text("icon"),
+  category: text("category").notNull().default("genel"),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
 /** Fiyatlandırma paketleri — süper yönetici tarafından yönetilir */
 export const plans = sqliteTable("plans", {
   id: text("id").primaryKey(),
@@ -163,7 +175,7 @@ export const plans = sqliteTable("plans", {
   price: integer("price").notNull(),
   originalPrice: integer("original_price"),
   period: text("period").notNull().default("/ay"),
-  features: text("features").notNull(),
+  featureIds: text("feature_ids").notNull().default("[]"),
   highlight: integer("highlight", { mode: "boolean" }).notNull().default(false),
   badge: text("badge"),
   cta: text("cta").notNull().default("Hemen Başla"),

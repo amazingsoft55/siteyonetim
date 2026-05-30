@@ -1,0 +1,35 @@
+
+-- İlk site
+INSERT OR IGNORE INTO sites (id, name, address) VALUES ('23b164f5cae9473093acf3b310e3552e', 'Site Yönetimi Demo', NULL);
+
+-- Süper yönetici
+INSERT OR IGNORE INTO users (id, name, email_or_phone, password_hash, role, site_id, must_change_password, created_at) VALUES ('68c9830dd80a4b0c9c7857da9583f13c', 'Mustafa Keskın', 'mustafakeskin2655@gmail.com', '$2b$10$nvuS59k1AsTas1ay890AVusbhR2C90bXRQbDjT1d2GZTAmaHZUDLa', 'SUPER_ADMIN', '23b164f5cae9473093acf3b310e3552e', 0, datetime('now'));
+
+-- Platform özellikleri
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('91bf3226bd1945e785d5b631baa87b78', 'Aidat Takibi', 'Aidat borçlarınızı ve ödemelerinizi takip edin', 'Aidat Yönetimi', 0, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('2bcb9d59b13e40449fc970d22809160a', 'Otomatik Hatırlatma', 'Geciken aidatlar için otomatik bildirim', 'Aidat Yönetimi', 1, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('1dd5187048c94512acfcca4f44196b82', 'Dekont Yükleme', 'Ödeme dekontlarını sisteme yükleyin', 'Aidat Yönetimi', 2, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('5b01b50fe0f44eab8ddac8e63bf6df13', 'Duyuru Yönetimi', 'Site sakinlerine duyuru gönderin', 'Duyuru Sistemi', 3, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('1049bb6e20c4408286c6a78cd489e732', 'Kategori Duyuruları', 'Duyuruları kategorilere ayırın', 'Duyuru Sistemi', 4, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('98ace77a12f64bad99567eac9a1e15d7', 'Arıza Talebi', 'Arıza ve bakım talepleri oluşturun', 'Talep Yönetimi', 5, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('0e9f6a198e7d433ca2b2a81e6c56e0df', 'Talep Takibi', 'Taleplerin durumunu takip edin', 'Talep Yönetimi', 6, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('64cd8c0741ff4c54a80bcece4c0a6ec6', 'Talep Kategorileri', 'Talepleri kategorilere ayırın', 'Talep Yönetimi', 7, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('f5237894d8394aeea04009e3fb81ad0b', 'Aylık Rapor', 'Aylık aidat ve ödeme raporları', 'Raporlama', 8, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('22e728c7ddac47f9bbc8bdbebc7ab32b', 'Gelir/Gider Grafiği', 'Gelir ve gider grafiklerini görüntüleyin', 'Raporlama', 9, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('547d6d8f636949a7b4a326fc7cee04fa', 'Push Bildirimi', 'Anlık mobil bildirimler', 'Bildirimler', 10, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('89525b51dfe14ec4a4bae6eb38487430', 'E-posta Bildirimi', 'E-posta ile bildirim gönderimi', 'Bildirimler', 11, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('e7438fbd8ef344e6b571e121be03728d', 'SMS Bildirimi', 'SMS ile bildirim gönderimi', 'Bildirimler', 12, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('d07239e9a031464d9dd48edf02f7badd', 'Mobil Uygulama (PWA)', 'Tarayıcıdan yüklenen mobil uygulama', 'Mobil', 13, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('b0eb3b0d1e4940ee8ebe833a940fb083', 'Web Paneli', 'Tarayıcı üzerinden yönetim paneli', 'Genel', 14, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('e46f91651bed4fedb44bcd13d95437ba', 'Çoklu Site', 'Birden fazla siteyi aynı anda yönetin', 'Genel', 15, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('d157ebbf9eef4845bbaf8aa5577d332a', 'API Erişimi', 'Harici entegrasyonlar için API', 'Genel', 16, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('ee3d4073d49a4735ac1d62cc90c501f0', 'Öncelikli Destek', 'Hızlı teknik destek', 'Destek', 17, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('98b295e0fdd848c696b9a2e802277645', 'Dedicated Hesap Yöneticisi', 'Size özel hesap yöneticisi', 'Destek', 18, 1);
+INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('73046715a4564d818e4e3b5f98b8c6f6', 'SLA Garanti', 'Hizmet seviyesi garanti süresi', 'Genel', 19, 1);
+
+-- Fiyatlandırma paketleri
+INSERT OR IGNORE INTO plans (id, name, description, price, original_price, period, feature_ids, highlight, badge, cta, sort_order, active) VALUES ('a7d0ff77cdfc466fbf90b5973ab18d16', 'Başlangıç', 'Küçük siteler için ideal', 49, 99, '/ay', '["91bf3226bd1945e785d5b631baa87b78","2bcb9d59b13e40449fc970d22809160a","1dd5187048c94512acfcca4f44196b82","5b01b50fe0f44eab8ddac8e63bf6df13","1049bb6e20c4408286c6a78cd489e732","98ace77a12f64bad99567eac9a1e15d7","0e9f6a198e7d433ca2b2a81e6c56e0df","64cd8c0741ff4c54a80bcece4c0a6ec6","b0eb3b0d1e4940ee8ebe833a940fb083"]', 0, NULL, '14 Gün Ücretsiz Dene', 0, 1);
+
+INSERT OR IGNORE INTO plans (id, name, description, price, original_price, period, feature_ids, highlight, badge, cta, sort_order, active) VALUES ('3b092405df7e48ffac566e6e2158472d', 'Profesyonel', 'Büyüyen siteler için en popüler', 99, 199, '/ay', '["91bf3226bd1945e785d5b631baa87b78","2bcb9d59b13e40449fc970d22809160a","1dd5187048c94512acfcca4f44196b82","5b01b50fe0f44eab8ddac8e63bf6df13","1049bb6e20c4408286c6a78cd489e732","98ace77a12f64bad99567eac9a1e15d7","0e9f6a198e7d433ca2b2a81e6c56e0df","64cd8c0741ff4c54a80bcece4c0a6ec6","f5237894d8394aeea04009e3fb81ad0b","22e728c7ddac47f9bbc8bdbebc7ab32b","547d6d8f636949a7b4a326fc7cee04fa","89525b51dfe14ec4a4bae6eb38487430","d07239e9a031464d9dd48edf02f7badd","b0eb3b0d1e4940ee8ebe833a940fb083","ee3d4073d49a4735ac1d62cc90c501f0"]', 1, 'En Popüler', 'Hemen Başla', 1, 1);
+
+INSERT OR IGNORE INTO plans (id, name, description, price, original_price, period, feature_ids, highlight, badge, cta, sort_order, active) VALUES ('c43fcd94020a43f596071b030cf7e6f7', 'Kurumsal', 'Çoklu site yönetimi için', 199, 399, '/ay', '["91bf3226bd1945e785d5b631baa87b78","2bcb9d59b13e40449fc970d22809160a","1dd5187048c94512acfcca4f44196b82","5b01b50fe0f44eab8ddac8e63bf6df13","1049bb6e20c4408286c6a78cd489e732","98ace77a12f64bad99567eac9a1e15d7","0e9f6a198e7d433ca2b2a81e6c56e0df","64cd8c0741ff4c54a80bcece4c0a6ec6","f5237894d8394aeea04009e3fb81ad0b","22e728c7ddac47f9bbc8bdbebc7ab32b","547d6d8f636949a7b4a326fc7cee04fa","89525b51dfe14ec4a4bae6eb38487430","e7438fbd8ef344e6b571e121be03728d","d07239e9a031464d9dd48edf02f7badd","b0eb3b0d1e4940ee8ebe833a940fb083","e46f91651bed4fedb44bcd13d95437ba","d157ebbf9eef4845bbaf8aa5577d332a","ee3d4073d49a4735ac1d62cc90c501f0","98b295e0fdd848c696b9a2e802277645","73046715a4564d818e4e3b5f98b8c6f6"]', 0, NULL, 'İletişime Geçin', 2, 1);

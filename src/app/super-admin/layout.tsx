@@ -1,10 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import SuperAdminProviders from "./super-admin-providers";
+import { SuperAdminSidebar } from "@/components/SuperAdminSidebar";
 
-/**
- * Süper yönetici alanı için ayrı manifest / ikon ile “kurulumlanabilir ikinci uygulama” hissi:
- * kullanıcı /super-admin açıyken ana ekrana eklerse start_url doğrudan bu panele gider.
- */
 export const metadata: Metadata = {
   manifest: "/manifest-super-admin.json",
   applicationName: "Site Yönetimi — Süper Yönetici",
@@ -27,5 +23,5 @@ export const viewport: Viewport = {
 };
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
-  return <SuperAdminProviders>{children}</SuperAdminProviders>;
+  return <SuperAdminSidebar>{children}</SuperAdminSidebar>;
 }

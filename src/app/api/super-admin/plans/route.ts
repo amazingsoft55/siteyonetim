@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { desc } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
-import { plans } from "@/db/schema";
+import { plans, features } from "@/db/schema";
 
 export async function GET() {
   try {
@@ -14,29 +14,53 @@ export async function GET() {
     const d = await acquireDatabase();
     if (!d.ok) return await databaseUnavailable();
 
-    let rows: typeof plans.$inferSelect[];
+    let planRows: typeof plans.$inferSelect[];
     try {
-      rows = await d.db.select().from(plans).orderBy(plans.sortOrder);
+      planRows = await d.db.select().from(plans).orderBy(plans.sortOrder);
     } catch {
-      rows = [];
+      planRows = [];
     }
 
-    const parsed = rows.map((r) => ({
-      id: r.id,
-      name: r.name,
-      description: r.description,
-      price: r.price,
-      originalPrice: r.originalPrice,
-      period: r.period,
-      features: typeof r.features === "string" ? JSON.parse(r.features) as string[] : r.features,
-      highlight: r.highlight,
-      badge: r.badge,
-      cta: r.cta,
-      sortOrder: r.sortOrder,
-      active: r.active,
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
-    }));
+    const allFeatureIds = new Set<string>();
+    for (const p of planRows) {
+      const ids = typeof p.featureIds === "string" ? JSON.parse(p.featureIds) as string[] : [];
+      for (const id of ids) allFeatureIds.add(id);
+    }
+
+    let allFeatures: typeof features.$inferSelect[] = [];
+    if (allFeatureIds.size > 0) {
+      try {
+        allFeatures = await d.db
+          .select()
+          .from(features)
+          .where(inArray(features.id, Array.from(allFeatureIds)));
+      } catch {
+        allFeatures = [];
+      }
+    }
+
+    const featureMap = new Map(allFeatures.map((f) => [f.id, f.name]));
+
+    const parsed = planRows.map((r) => {
+      const featureIds = typeof r.featureIds === "string" ? JSON.parse(r.featureIds) as string[] : [];
+      return {
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        price: r.price,
+        originalPrice: r.originalPrice,
+        period: r.period,
+        featureIds,
+        features: featureIds.map((id) => featureMap.get(id) || id),
+        highlight: r.highlight,
+        badge: r.badge,
+        cta: r.cta,
+        sortOrder: r.sortOrder,
+        active: r.active,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+      };
+    });
 
     return NextResponse.json(parsed);
   } catch (e) {
@@ -57,14 +81,14 @@ export async function POST(req: Request) {
     if (!d.ok) return await databaseUnavailable();
 
     const body = await req.json() as Record<string, unknown>;
-    const { name, description, price, originalPrice, period, features, highlight, badge, cta, sortOrder, active } = body;
+    const { name, description, price, originalPrice, period, featureIds, highlight, badge, cta, sortOrder, active } = body;
 
     if (!name || price == null) {
       return NextResponse.json({ error: "name ve price zorunludur." }, { status: 400 });
     }
 
     const id = `plan_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const featuresStr = Array.isArray(features) ? JSON.stringify(features) : "[]";
+    const featureIdsStr = Array.isArray(featureIds) ? JSON.stringify(featureIds) : "[]";
 
     await d.db.insert(plans).values({
       id,
@@ -73,7 +97,7 @@ export async function POST(req: Request) {
       price: Number(price),
       originalPrice: originalPrice ? Number(originalPrice) : null,
       period: period ? String(period) : "/ay",
-      features: featuresStr,
+      featureIds: featureIdsStr,
       highlight: highlight === true || highlight === 1,
       badge: badge ? String(badge) : null,
       cta: cta ? String(cta) : "Hemen Başla",

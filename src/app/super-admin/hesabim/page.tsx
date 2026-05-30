@@ -1,11 +1,9 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { readJsonError } from "@/lib/json-error";
-import { SuperAdminTopBar } from "@/components/SuperAdminTopBar";
-import { KeyRound, LogOut, Mail, ShieldCheck } from "lucide-react";
+import { KeyRound, Mail, ShieldCheck } from "lucide-react";
 
 type AccountInfo = {
   id: string;
@@ -133,32 +131,8 @@ export default function SuperAdminAccountPage() {
   const needsCode = info?.requiresVerificationForCredentials === true;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#0b0f19] text-zinc-900 dark:text-zinc-100">
-      <SuperAdminTopBar
-        backHref="/super-admin"
-        title="Hesabım"
-        subtitle={loading ? "Yükleniyor…" : "E-posta, şifre ve profil bilgileri"}
-        actions={
-          <>
-            <Link
-              href="/super-admin/kullanicilar"
-              className="hidden sm:inline-flex text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
-            >
-              Kullanıcılar
-            </Link>
-            <button
-              type="button"
-              onClick={logout}
-              className="flex items-center gap-2 text-sm font-medium text-rose-600 dark:text-rose-400 hover:text-rose-700 shrink-0"
-            >
-              <LogOut className="h-4 w-4" />
-              Çıkış
-            </button>
-          </>
-        }
-      />
-
-      <main className="max-w-xl mx-auto px-6 py-8 space-y-6">
+    <div className="min-h-full bg-gradient-to-br from-zinc-50 via-white to-indigo-50/30 dark:from-[#060a12] dark:via-[#0b0f19] dark:to-indigo-950/10">
+      <div className="max-w-xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         {(err || msg) && (
           <div className="space-y-2">
             {err && (
@@ -286,7 +260,7 @@ export default function SuperAdminAccountPage() {
             </button>
           </form>
         </section>
-      </main>
+      </div>
     </div>
   );
 }
