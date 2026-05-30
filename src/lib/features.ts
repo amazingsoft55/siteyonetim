@@ -187,3 +187,12 @@ export const API_FEATURE_MAP: Record<string, FeatureKey[]> = {
   "/api/admin/residents": ["payments"],
   "/api/admin/support-tickets": ["support_tickets"],
 };
+
+/** Belirli bir plan, belirli bir özelliği içeriyor mu? */
+export function hasFeature(planInfo: { plan: string } | null, feature: FeatureKey): boolean {
+  if (!planInfo) return true;
+  const planType = planInfo.plan as PlanType;
+  const features = PLAN_FEATURES[planType];
+  if (!features) return true;
+  return features.includes(feature);
+}

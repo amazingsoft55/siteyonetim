@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { PlatformDatabase } from "@/db/platform";
-import { getSitePlan } from "@/lib/plan-guard";
-import { hasFeature, type FeatureKey } from "@/lib/features";
+import { getSitePlan, hasFeature } from "@/lib/plan-guard";
+import type { FeatureKey } from "@/lib/features";
 
 /**
  * API route'larda feature kontrolü yapar.
