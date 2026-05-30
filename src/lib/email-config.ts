@@ -2,12 +2,16 @@ import { isGmailConfigured } from "@/lib/gmail-send";
 
 export type EmailProviderStatus = {
   configured: boolean;
-  provider: "gmail" | "resend" | "none";
+  provider: "gmail" | "gmail_smtp" | "resend" | "none";
   missing: string[];
 };
 
-/** Gmail veya Resend yapılandırılmış mı? */
+/** Gmail (OAuth), Gmail SMTP veya Resend yapılandırılmış mı? */
 export function getEmailProviderStatus(): EmailProviderStatus {
+  if (process.env.GMAIL_APP_PASSWORD?.trim()) {
+    return { configured: true, provider: "gmail_smtp", missing: [] };
+  }
+
   if (isGmailConfigured()) {
     return { configured: true, provider: "gmail", missing: [] };
   }
@@ -21,7 +25,7 @@ export function getEmailProviderStatus(): EmailProviderStatus {
     return { configured: true, provider: "resend", missing: [] };
   }
 
-  missing.push("RESEND_API_KEY (veya Gmail OAuth değişkenleri)");
+  missing.push("RESEND_API_KEY (veya Gmail SMTP/OAuth değişkenleri)");
   return { configured: false, provider: "none", missing };
 }
 
@@ -30,5 +34,5 @@ export function isEmailConfigured(): boolean {
 }
 
 export function emailNotConfiguredMessage(): string {
-  return "E-posta servisi yapılandırılmamış. Cloudflare Workers ortam değişkenlerine GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN ekleyin (npm run gmail:setup).";
+  return "E-posta servisi yapılandırılmamış. Cloudflare Workers ortam değişkenlerine GMAIL_APP_PASSWORD ve GMAIL_USER ekleyin.";
 }
