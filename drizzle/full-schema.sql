@@ -183,6 +183,23 @@ CREATE TABLE IF NOT EXISTS `platform_insights` (
 -- [C] BİLDİRİMLER
 -- -----------------------------------------------------------------------------
 
+CREATE TABLE IF NOT EXISTS `plans` (
+  `id` text PRIMARY KEY NOT NULL,
+  `name` text NOT NULL,
+  `description` text,
+  `price` integer NOT NULL,
+  `original_price` integer,
+  `period` text NOT NULL DEFAULT '/ay',
+  `features` text NOT NULL,
+  `highlight` integer NOT NULL DEFAULT 0,
+  `badge` text,
+  `cta` text NOT NULL DEFAULT 'Hemen Başla',
+  `sort_order` integer NOT NULL DEFAULT 0,
+  `active` integer NOT NULL DEFAULT 1,
+  `created_at` text DEFAULT (CURRENT_TIMESTAMP),
+  `updated_at` text DEFAULT (CURRENT_TIMESTAMP)
+);
+
 CREATE TABLE IF NOT EXISTS `notifications` (
   `id` text PRIMARY KEY NOT NULL,
   `user_id` text NOT NULL,

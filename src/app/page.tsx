@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AppDownloadButtons } from "@/components/AppDownloadButtons";
+import { PricingSection } from "@/components/PricingSection";
 import {
   CreditCard, Megaphone, Wrench, ArrowRight, Shield, Sparkles,
   Users, BarChart3, Bell, CheckCircle, Clock, Star, Building2,
@@ -80,70 +81,6 @@ const features = [
   },
 ];
 
-const plans = [
-  {
-    name: "Başlangıç",
-    price: "299",
-    originalPrice: "599",
-    period: "/ay",
-    description: "Küçük siteler için ideal",
-    highlight: false,
-    features: [
-      "1 site yönetimi",
-      "50 sakine kadar",
-      "Aidat takibi",
-      "Duyuru sistemi",
-      "Arıza talep yönetimi",
-      "E-posta bildirimleri",
-      "Web paneli",
-    ],
-    cta: "14 Gün Ücretsiz Dene",
-    ctaHref: "/destek",
-  },
-  {
-    name: "Profesyonel",
-    price: "599",
-    originalPrice: "1.199",
-    period: "/ay",
-    description: "Büyüyen siteler için en popüler",
-    highlight: true,
-    badge: "En Popüler",
-    saveBadge: "%50 Tasarruf",
-    features: [
-      "3 site yönetimi",
-      "200 sakine kadar",
-      "Tüm Başlangıç özellikleri",
-      "Mobil uygulama (PWA)",
-      "Push bildirimleri",
-      "Email bildirimleri",
-      "Detaylı raporlama",
-      "Öncelikli teknik destek",
-    ],
-    cta: "Hemen Başla",
-    ctaHref: "/destek",
-  },
-  {
-    name: "Kurumsal",
-    price: "999",
-    originalPrice: "1.999",
-    period: "/ay",
-    description: "Çoklu site yönetimi için",
-    highlight: false,
-    features: [
-      "Sınırsız site yönetimi",
-      "Sınırsız sakin",
-      "Tüm Profesyonel özellikleri",
-      "Çoklu dil desteği",
-      "API erişimi",
-      "Özel entegrasyonlar",
-      "Dedicated hesap yöneticisi",
-      "SLA garanti",
-    ],
-    cta: "İletişime Geçin",
-    ctaHref: "/iletisim",
-  },
-];
-
 const howItWorks = [
   { step: "01", title: "Kayıt Olun", desc: "Ücretsiz hesabınızı oluşturun veya yöneticiniz sizi sisteme eklesin.", icon: Users },
   { step: "02", title: "Sitenizi Tanımlayın", desc: "Site bilgilerinizi girin, sakinlerinizi ekleyin.", icon: Building2 },
@@ -215,7 +152,7 @@ export default function Home() {
             {/* Promo badge */}
             <div className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 mb-8 animate-bounce">
               <Flame className="h-4 w-4" />
-              Ayda sadece 9,99 TL&apos;den başlıyor!
+              Ayda sadece 49 TL&apos;den başlıyor!
               <Flame className="h-4 w-4" />
             </div>
 
@@ -322,121 +259,7 @@ export default function Home() {
         </section>
 
         {/* ── Fiyatlandırma ── */}
-        <section id="fiyatlandirma" className="py-28 px-6 bg-white dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800/50">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 mb-6">
-                <Percent className="h-4 w-4" />
-                %50&apos;e Varan İndirim!
-              </div>
-              <div className="inline-flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-4">
-                <CreditCard className="h-3.5 w-3.5" /> Fiyatlandırma
-              </div>
-              <h2 className="text-3xl font-extrabold tracking-tight sm:text-5xl">
-                Piyasadaki en uygun fiyatlar
-              </h2>
-              <p className="mt-4 text-zinc-500 dark:text-zinc-400 text-lg max-w-xl mx-auto">
-                Rakiplerinizden çok daha ucuz. Aynı kalite, çok daha az maliyet.
-              </p>
-            </div>
-
-            {/* Comparison banner */}
-            <div className="mb-10 p-6 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
-                  <div>
-                    <p className="font-bold text-emerald-800 dark:text-emerald-300">Diğer platformlar: 2.000 - 5.000 TL/ay</p>
-                    <p className="text-sm text-emerald-600 dark:text-emerald-400">Bizim fiyatlarımız: <span className="font-extrabold text-lg">299 TL&apos;den başlıyor!</span></p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-600 text-white font-bold text-sm">
-                  <Flame className="h-4 w-4" />
-                  %85 Tasarruf Edin!
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-start">
-              {plans.map((plan) => (
-                <div
-                  key={plan.name}
-                  className={`relative flex flex-col p-8 rounded-3xl border-2 transition-all duration-300 ${
-                    plan.highlight
-                      ? "bg-gradient-to-b from-indigo-50 to-white dark:from-indigo-950/30 dark:to-zinc-900 border-indigo-500 shadow-2xl shadow-indigo-500/10 scale-[1.02]"
-                      : "bg-white dark:bg-zinc-900 border-zinc-200/60 dark:border-zinc-800 hover:border-indigo-200 dark:hover:border-zinc-700 hover:shadow-lg"
-                  }`}
-                >
-                  {plan.badge && (
-                    <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-violet-600 rounded-full shadow-lg">
-                      {plan.badge}
-                    </span>
-                  )}
-
-                  {plan.saveBadge && (
-                    <span className="absolute -top-3.5 right-4 px-3 py-1 text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full shadow-lg flex items-center gap-1">
-                      <Flame className="h-3 w-3" /> {plan.saveBadge}
-                    </span>
-                  )}
-
-                  <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">{plan.name}</h3>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{plan.description}</p>
-
-                  <div className="mt-6 mb-6">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-5xl font-extrabold text-zinc-900 dark:text-zinc-50">{plan.price}</span>
-                      <span className="text-lg text-zinc-500 dark:text-zinc-400 font-medium">TL{plan.period}</span>
-                    </div>
-                    {plan.originalPrice && (
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="text-sm text-zinc-400 line-through">{plan.originalPrice} TL{plan.period}</span>
-                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
-                          %{Math.round((1 - parseInt(plan.price) / parseInt(plan.originalPrice)) * 100)} İNDİRİM
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <ul className="space-y-3 mb-8 flex-1">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        <CheckCircle className="h-4.5 w-4.5 text-emerald-500 shrink-0 mt-0.5" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Link
-                    href={plan.ctaHref}
-                    className={`block w-full text-center py-3.5 rounded-2xl font-bold text-sm transition-all ${
-                      plan.highlight
-                        ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 shadow-lg shadow-indigo-600/20"
-                        : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 hover:bg-zinc-200 dark:hover:bg-zinc-700"
-                    }`}
-                  >
-                    {plan.cta}
-                  </Link>
-                </div>
-              ))}
-            </div>
-
-            {/* Money back guarantee */}
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-zinc-500 dark:text-zinc-400">
-              <span className="flex items-center gap-2">
-                <Timer className="h-4 w-4 text-indigo-500" />
-                14 gün para iade garantisi
-              </span>
-              <span className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                Kredi kartı gerekmez
-              </span>
-              <span className="flex items-center gap-2">
-                <Heart className="h-4 w-4 text-rose-500" />
-                Taahhüt yok, istediğin zaman iptal et
-              </span>
-            </div>
-          </div>
-        </section>
+        <PricingSection />
 
         {/* ── Nasıl Çalışır ── */}
         <section className="py-28 px-6 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800/50">
@@ -597,7 +420,7 @@ export default function Home() {
             <p className="mt-4 text-indigo-200 text-lg">
               14 gün ücretsiz deneyin. Kurulum yok, kredi kartı yok, taahhüt yok.
               <br />
-              <span className="font-bold text-white">Ayda 299 TL&apos;den başlayan fiyatlarla.</span>
+              <span className="font-bold text-white">Ayda 49 TL&apos;den başlayan fiyatlarla.</span>
             </p>
             <div className="mt-10 flex items-center justify-center gap-4 flex-col sm:flex-row">
               <Link
