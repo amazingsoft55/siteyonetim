@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { CreditCard, Download, Printer, CheckCircle2, ChevronRight, X, Sparkles } from "lucide-react";
+import { useAlert, useConfirm } from "@/components/ModalProvider";
 
 interface Payment {
   id: string;
@@ -13,6 +14,8 @@ interface Payment {
 }
 
 export default function ResidentPaymentsPage() {
+  const showAlert = useAlert();
+  const showConfirm = useConfirm();
   const [payments, setPayments] = React.useState<Payment[]>([]);
   const [selectedPayment, setSelectedPayment] = React.useState<Payment | null>(null);
   const [loadErr, setLoadErr] = React.useState("");
@@ -54,12 +57,12 @@ export default function ResidentPaymentsPage() {
   const totalPaid = payments.filter((p) => p.status === "Tamamlandı").reduce((a, p) => a + p.amount, 0);
   const debt = payments.filter((p) => p.status === "Bekliyor").reduce((a, p) => a + p.amount, 0);
 
-  const handlePrint = (payment: Payment) => {
-    alert(`${payment.id} numaralı dekont yazıcıya gönderiliyor...`);
+  const handlePrint = async (payment: Payment) => {
+    await showAlert({ message: `${payment.id} numaralı dekont yazıcıya gönderiliyor...` });
   };
 
-  const handleDownload = (payment: Payment) => {
-    alert(`${payment.id} numaralı dekont PDF olarak indiriliyor...`);
+  const handleDownload = async (payment: Payment) => {
+    await showAlert({ message: `${payment.id} numaralı dekont PDF olarak indiriliyor...` });
   };
 
   return (

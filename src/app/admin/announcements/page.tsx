@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { PlusCircle, Megaphone, Trash2, Calendar, X } from "lucide-react";
+import { useAlert, useConfirm } from "@/components/ModalProvider";
 
 interface Announcement {
   id: string;
@@ -13,6 +14,8 @@ interface Announcement {
 }
 
 export default function AnnouncementsPage() {
+  const showAlert = useAlert();
+  const showConfirm = useConfirm();
   const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
   const [showForm, setShowForm] = React.useState(false);
   const [title, setTitle] = React.useState("");
@@ -47,7 +50,7 @@ export default function AnnouncementsPage() {
       body: JSON.stringify({ title, content, category }),
     });
     if (!res.ok) {
-      alert("Duyuru kaydedilemedi.");
+      await showAlert({ message: "Duyuru kaydedilemedi.", variant: "error" });
       return;
     }
 
@@ -56,17 +59,17 @@ export default function AnnouncementsPage() {
     setCategory("Genel");
     setShowForm(false);
     await reload();
-    alert("Duyuru yayınlandı.");
+    await showAlert({ message: "Duyuru yayınlandı.", variant: "success" });
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Bu duyuruyu silmek istediğinize emin misiniz?")) return;
+    if (!await showConfirm({ message: "Bu duyuruyu silmek istediğinize emin misiniz?", variant: "warning", confirmLabel: "Sil" })) return;
     const res = await fetch(`/api/announcements?id=${encodeURIComponent(id)}`, {
       method: "DELETE",
       credentials: "include",
     });
     if (!res.ok) {
-      alert("Silinemedi.");
+      await showAlert({ message: "Silinemedi.", variant: "error" });
       return;
     }
     await reload();

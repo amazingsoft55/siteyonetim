@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { ModalProvider } from "@/components/ModalProvider";
 import {
   rootDefaultMetadata,
   buildOrganizationJsonLd,
@@ -69,8 +70,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ServiceWorkerRegister />
-          {children}
+          <ModalProvider>
+            <ServiceWorkerRegister />
+            {children}
+          </ModalProvider>
         </ThemeProvider>
       </body>
     </html>

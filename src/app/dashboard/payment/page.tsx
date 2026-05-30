@@ -4,8 +4,11 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { CreditCard, ShieldCheck, ChevronLeft, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { useAlert, useConfirm } from "@/components/ModalProvider";
 
 export default function PaymentPage() {
+  const showAlert = useAlert();
+  const showConfirm = useConfirm();
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
@@ -104,7 +107,7 @@ export default function PaymentPage() {
       if (j && typeof j === "object" && "error" in j && typeof (j as { error?: unknown }).error === "string") {
         msg = (j as { error: string }).error;
       }
-      alert(msg);
+      await showAlert({ message: msg, variant: "error" });
       return;
     }
 

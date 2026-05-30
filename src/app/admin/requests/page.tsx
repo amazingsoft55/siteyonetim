@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Wrench, Clock, AlertCircle, CheckCircle2, ChevronRight, Filter, Search } from "lucide-react";
+import { useAlert, useConfirm } from "@/components/ModalProvider";
 
 interface RequestItem {
   id: string;
@@ -13,6 +14,8 @@ interface RequestItem {
 }
 
 export default function AdminRequestsPage() {
+  const showAlert = useAlert();
+  const showConfirm = useConfirm();
   const [requests, setRequests] = React.useState<RequestItem[]>([]);
   const [search, setSearch] = React.useState("");
   const [filterStatus, setFilterStatus] = React.useState("Hepsi");
@@ -42,11 +45,11 @@ export default function AdminRequestsPage() {
       body: JSON.stringify({ id, status: newStatus }),
     });
     if (!res.ok) {
-      alert("Durum güncellenemedi.");
+      await showAlert({ message: "Durum güncellenemedi.", variant: "error" });
       return;
     }
     await loadRequests();
-    alert(`Talep ${id.slice(0, 8)}… durumu "${newStatus}" olarak kaydedildi.`);
+    await showAlert({ message: `Talep ${id.slice(0, 8)}… durumu "${newStatus}" olarak kaydedildi.`, variant: "success" });
   };
 
   const getStatusIcon = (status: string) => {

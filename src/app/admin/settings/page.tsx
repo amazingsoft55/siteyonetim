@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Settings, Save, ShieldAlert, CreditCard, Building } from "lucide-react";
 import { browserApiUrl } from "@/lib/browser-api-base";
+import { useAlert, useConfirm } from "@/components/ModalProvider";
 
 type SettingsShape = {
   aidat: string;
@@ -13,6 +14,8 @@ type SettingsShape = {
 };
 
 export default function AdminSettingsPage() {
+  const showAlert = useAlert();
+  const showConfirm = useConfirm();
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [loadErr, setLoadErr] = React.useState("");
@@ -81,9 +84,9 @@ export default function AdminSettingsPage() {
       });
       const j = (await res.json().catch(() => null)) as { error?: string } | null;
       if (!res.ok) throw new Error(j?.error ?? "Kayıt başarısız.");
-      alert("Site ayarları veritabanına kaydedildi.");
+      await showAlert({ message: "Site ayarları veritabanına kaydedildi.", variant: "success" });
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Kayıt başarısız.");
+      await showAlert({ message: err instanceof Error ? err.message : "Kayıt başarısız.", variant: "error" });
     } finally {
       setSaving(false);
     }

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { readJsonError, readJsonNotice } from "@/lib/json-error";
 import { Mail, Pencil, Trash2 } from "lucide-react";
+import { useAlert, useConfirm } from "@/components/ModalProvider";
 
 type UserRow = {
   id: string;
@@ -21,6 +22,8 @@ function isEmail(v: string) {
 }
 
 export default function AdminResidentsAccountsPage() {
+  const showAlert = useAlert();
+  const showConfirm = useConfirm();
   const [tab, setTab] = React.useState<Tab>("admins");
   const [list, setList] = React.useState<UserRow[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -153,7 +156,7 @@ export default function AdminResidentsAccountsPage() {
   }
 
   async function del(u: UserRow) {
-    if (!window.confirm(`${u.name} silinsin mi?`)) return;
+    if (!await showConfirm({ message: `${u.name} silinsin mi?`, variant: "warning", confirmLabel: "Sil" })) return;
     setErr("");
     const res = await fetch(`/api/admin/users/${u.id}`, { method: "DELETE", credentials: "include" });
     const j: unknown = await res.json().catch(() => null);

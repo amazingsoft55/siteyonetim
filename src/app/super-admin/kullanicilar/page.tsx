@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { readJsonError, readJsonNotice } from "@/lib/json-error";
 import { SuperAdminTopBar } from "@/components/SuperAdminTopBar";
 import { LogOut, Trash2, Pencil } from "lucide-react";
+import { useAlert, useConfirm } from "@/components/ModalProvider";
 
 type SiteRow = {
   id: string;
@@ -47,6 +48,8 @@ export default function SuperAdminUsersPage() {
 }
 
 function SuperAdminUsersPageInner() {
+  const showAlert = useAlert();
+  const showConfirm = useConfirm();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [sites, setSites] = React.useState<SiteRow[]>([]);
@@ -250,9 +253,11 @@ function SuperAdminUsersPageInner() {
 
   async function deleteUser(u: UserRow) {
     if (
-      !window.confirm(
-        `${u.name} silinsin mi? İlgili talep, ödeme ve bağlı kayıtlar da kaldırılır.`,
-      )
+      !await showConfirm({
+        message: `${u.name} silinsin mi? İlgili talep, ödeme ve bağlı kayıtlar da kaldırılır.`,
+        variant: "warning",
+        confirmLabel: "Sil",
+      })
     )
       return;
     setErr("");
@@ -273,7 +278,7 @@ function SuperAdminUsersPageInner() {
       siteUsers.length > 0 ?
         `${s.name} ve ${siteUsers.length} kullanıcı silinsin mi? Tüm site verisi kalıcı olarak kaldırılır.`
       : `${s.name} silinsin mi? Site verisi kalıcı olarak kaldırılır.`;
-    if (!window.confirm(warn)) return;
+    if (!await showConfirm({ message: warn, variant: "warning", confirmLabel: "Sil" })) return;
     setErr("");
     setMsg("");
     const res = await fetch(`/api/super-admin/sites/${encodeURIComponent(s.id)}`, {

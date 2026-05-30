@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Wrench, PlusCircle, Clock, CheckCircle2, AlertCircle, X } from "lucide-react";
+import { useAlert, useConfirm } from "@/components/ModalProvider";
 
 interface RequestItem {
   id: string;
@@ -13,6 +14,8 @@ interface RequestItem {
 }
 
 export default function ResidentRequestsPage() {
+  const showAlert = useAlert();
+  const showConfirm = useConfirm();
   const [requests, setRequests] = React.useState<RequestItem[]>([]);
   const [showForm, setShowForm] = React.useState(false);
   const [title, setTitle] = React.useState("");
@@ -51,7 +54,7 @@ export default function ResidentRequestsPage() {
       }),
     });
     if (!res.ok) {
-      alert("Talep gönderilemedi.");
+      await showAlert({ message: "Talep gönderilemedi.", variant: "error" });
       return;
     }
 
@@ -59,7 +62,7 @@ export default function ResidentRequestsPage() {
     setDescription("");
     setShowForm(false);
     await reload();
-    alert("Talebiniz yönetime iletildi.");
+    await showAlert({ message: "Talebiniz yönetime iletildi.", variant: "success" });
   };
 
   const getStatusIcon = (status: string) => {
