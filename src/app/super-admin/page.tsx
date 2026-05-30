@@ -213,24 +213,24 @@ export default function SuperAdminDashboard() {
         {/* ── Quick Actions ── */}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { href: "/super-admin/kullanicilar", title: "Kullanıcılar", desc: "Site ve hesap yönetimi", icon: Users, gradient: "from-blue-500 to-cyan-500" },
-            { href: "/super-admin/destek", title: "Destek", desc: "Talep ve mesaj yönetimi", icon: LifeBuoy, gradient: "from-violet-500 to-purple-500" },
-            { href: "/super-admin/features", title: "Özellikler", desc: "Platform özellikleri", icon: Puzzle, gradient: "from-pink-500 to-rose-500" },
-            { href: "/super-admin/plans", title: "Paketler", desc: "Fiyatlandırma yönetimi", icon: CreditCard, gradient: "from-emerald-500 to-teal-500" },
-            { href: "/kurulum", title: "Kurulum", desc: "Sistem yapılandırması", icon: Settings, gradient: "from-amber-500 to-orange-500" },
+            { href: "/super-admin/kullanicilar", title: "Kullanıcılar", desc: "Site ve hesap yönetimi", icon: Users, color: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30" },
+            { href: "/super-admin/destek", title: "Destek", desc: "Talep ve mesaj yönetimi", icon: LifeBuoy, color: "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/30" },
+            { href: "/super-admin/features", title: "Özellikler", desc: "Platform özellikleri", icon: Puzzle, color: "text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/30" },
+            { href: "/super-admin/plans", title: "Paketler", desc: "Fiyatlandırma yönetimi", icon: CreditCard, color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30" },
+            { href: "/kurulum", title: "Kurulum", desc: "Sistem yapılandırması", icon: Settings, color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30" },
           ].map((c) => (
             <Link
               key={c.href}
               href={c.href}
-              className="group relative overflow-hidden rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-5 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+              className="group flex items-center gap-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-4 shadow-sm hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-200"
             >
-              <div className={`absolute -top-8 -right-8 h-24 w-24 rounded-full bg-gradient-to-br ${c.gradient} opacity-10 group-hover:opacity-20 transition-opacity`} />
-              <div className={`inline-flex p-2.5 rounded-xl bg-gradient-to-br ${c.gradient} text-white shadow-lg mb-3`}>
+              <div className={`p-2.5 rounded-xl ${c.color}`}>
                 <c.icon className="h-5 w-5" />
               </div>
-              <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{c.title}</p>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">{c.desc}</p>
-              <ArrowUpRight className="absolute top-4 right-4 h-4 w-4 text-zinc-300 dark:text-zinc-600 group-hover:text-indigo-500 transition-colors" />
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50">{c.title}</p>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">{c.desc}</p>
+              </div>
             </Link>
           ))}
         </div>
@@ -248,21 +248,20 @@ export default function SuperAdminDashboard() {
           <>
             {/* ── Stat Cards ── */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {/* DB Latency - Hero Card */}
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-5 text-white shadow-xl shadow-indigo-900/20">
-                <Cpu className="absolute -right-2 -top-2 h-20 w-20 opacity-10" />
-                <div className="relative z-10">
-                  <p className="text-xs font-bold uppercase tracking-wider text-indigo-100/80">Veritabanı</p>
-                  <p className="mt-2 text-4xl font-black tabular-nums">
-                    {dash.dbLatencyMs != null ? `${dash.dbLatencyMs}` : "—"}
-                  </p>
-                  <p className="text-sm font-medium text-indigo-100/70">ms yanıt süresi</p>
+              {/* DB Latency */}
+              <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-5 shadow-sm">
+                <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                  <Cpu className="h-4 w-4" />
+                  <span className="text-xs font-bold uppercase tracking-wide">Veritabanı</span>
                 </div>
+                <p className="mt-3 text-4xl font-black tabular-nums text-zinc-900 dark:text-zinc-50">
+                  {dash.dbLatencyMs != null ? `${dash.dbLatencyMs}` : "—"}
+                </p>
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">ms yanıt süresi</p>
               </div>
 
               {/* Active Sessions */}
-              <div className="relative overflow-hidden rounded-3xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-emerald-500/10" />
+              <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-5 shadow-sm">
                 <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                   <Activity className="h-4 w-4" />
                   <span className="text-xs font-bold uppercase tracking-wide">Canlı Oturum</span>
@@ -276,8 +275,7 @@ export default function SuperAdminDashboard() {
               </div>
 
               {/* Page Views */}
-              <div className="relative overflow-hidden rounded-3xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-blue-500/10" />
+              <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-5 shadow-sm">
                 <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
                   <Eye className="h-4 w-4" />
                   <span className="text-xs font-bold uppercase tracking-wide">Görüntülenme</span>
@@ -289,8 +287,7 @@ export default function SuperAdminDashboard() {
               </div>
 
               {/* 24h Logins */}
-              <div className="relative overflow-hidden rounded-3xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-amber-500/10" />
+              <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-5 shadow-sm">
                 <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
                   <Clock className="h-4 w-4" />
                   <span className="text-xs font-bold uppercase tracking-wide">Son 24s Giriş</span>
@@ -376,18 +373,17 @@ export default function SuperAdminDashboard() {
             {/* ── User Counts ── */}
             <div className="grid gap-4 md:grid-cols-4">
               {[
-                { icon: Building2, title: "Siteler", value: dash.totals.sites, color: "from-indigo-500 to-violet-500" },
-                { icon: Shield, title: "Süper Yön.", value: superCount, color: "from-rose-500 to-pink-500" },
-                { icon: Users, title: "Yöneticiler", value: adminCount, color: "from-amber-500 to-orange-500" },
-                { icon: Users, title: "Sakinler", value: userCountOnly, color: "from-emerald-500 to-teal-500" },
+                { icon: Building2, title: "Siteler", value: dash.totals.sites, color: "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30" },
+                { icon: Shield, title: "Süper Yön.", value: superCount, color: "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30" },
+                { icon: Users, title: "Yöneticiler", value: adminCount, color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30" },
+                { icon: Users, title: "Sakinler", value: userCountOnly, color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30" },
               ].map((c) => (
                 <div
                   key={c.title}
-                  className="relative overflow-hidden rounded-2xl border border-zinc-200/70 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/50 p-5 shadow-sm hover:shadow-md transition-shadow"
+                  className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/50 p-5 shadow-sm"
                 >
-                  <div className={`absolute -right-4 -top-4 h-16 w-16 rounded-full bg-gradient-to-br ${c.color} opacity-10`} />
                   <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${c.color} text-white shadow-lg`}>
+                    <div className={`p-2.5 rounded-xl ${c.color}`}>
                       <c.icon className="h-5 w-5" />
                     </div>
                     <div>

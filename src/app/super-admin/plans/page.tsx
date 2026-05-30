@@ -3,174 +3,147 @@
 import * as React from "react";
 import Link from "next/link";
 import {
+  CheckCircle,
   CreditCard,
-  Plus,
-  Trash2,
-  Save,
-  X,
-  GripVertical,
-  Eye,
-  EyeOff,
+  Crown,
   Star,
-  Pencil,
+  Building2,
+  Users,
+  Megaphone,
+  Wrench,
+  Bell,
+  Mail,
+  BarChart3,
+  Smartphone,
+  Globe,
+  Headphones,
+  Lock,
+  Zap,
   ArrowLeft,
+  Puzzle,
+  Pencil,
+  X,
+  Save,
 } from "lucide-react";
+import { useAlert } from "@/components/ModalProvider";
 import { SuperAdminTopBar } from "@/components/SuperAdminTopBar";
+import {
+  PLAN_DETAILS,
+  PLAN_FEATURES,
+  FEATURE_LABELS,
+  FEATURE_CATEGORIES,
+  type PlanType,
+  type FeatureKey,
+} from "@/lib/features";
 import { describeFailedResponse } from "@/lib/json-error";
 
-type Plan = {
+const PLAN_ICONS: Record<PlanType, typeof Crown> = {
+  starter: Star,
+  professional: Crown,
+  enterprise: Building2,
+};
+
+const PLAN_COLORS: Record<PlanType, string> = {
+  starter: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30",
+  professional: "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30",
+  enterprise: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30",
+};
+
+const FEATURE_ICONS: Record<string, typeof Users> = {
+  site_management: Building2,
+  user_management: Users,
+  announcements: Megaphone,
+  requests: Wrench,
+  payments: CreditCard,
+  payment_reports: BarChart3,
+  email_notifications: Mail,
+  push_notifications: Bell,
+  basic_reports: BarChart3,
+  advanced_reports: BarChart3,
+  page_speed_insights: Globe,
+  pwa_app: Smartphone,
+  multi_site: Globe,
+  support_tickets: Headphones,
+  api_access: Lock,
+  custom_integrations: Zap,
+  dedicated_support: Headphones,
+};
+
+type PlatformFeature = {
   id: string;
   name: string;
   description: string | null;
-  price: number;
-  originalPrice: number | null;
-  period: string;
-  features: string[];
-  highlight: boolean;
-  badge: string | null;
-  cta: string;
-  sortOrder: number;
+  category: string;
   active: boolean;
 };
 
-const emptyPlan: Omit<Plan, "id"> = {
-  name: "",
-  description: "",
-  price: 0,
-  originalPrice: null,
-  period: "/ay",
-  features: [],
-  highlight: false,
-  badge: null,
-  cta: "Hemen Başla",
-  sortOrder: 0,
-  active: true,
-};
-
 export default function SuperAdminPlansPage() {
-  const [plans, setPlans] = React.useState<Plan[]>([]);
-  const [loadErr, setLoadErr] = React.useState("");
-  const [editing, setEditing] = React.useState<Plan | null>(null);
-  const [isCreating, setIsCreating] = React.useState(false);
+  const showAlert = useAlert();
+  const [platformFeatures, setPlatformFeatures] = React.useState<PlatformFeature[]>([]);
+  const [editing, setEditing] = React.useState<PlanType | null>(null);
+  const [selectedFeatures, setSelectedFeatures] = React.useState<Record<PlanType, string[]>>({
+    starter: [],
+    professional: [],
+    enterprise: [],
+  });
   const [saving, setSaving] = React.useState(false);
-  const [featureInput, setFeatureInput] = React.useState("");
 
-  const loadPlans = React.useCallback(async () => {
-    setLoadErr("");
+  const loadFeatures = React.useCallback(async () => {
     try {
-      const res = await fetch("/api/super-admin/plans", { credentials: "include" });
-      const text = await res.text();
-      if (!res.ok) {
-        setLoadErr(describeFailedResponse(res.status, text, "Paketler yüklenemedi."));
-        return;
+      const res = await fetch("/api/super-admin/features", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setPlatformFeatures(data);
       }
-      const json = JSON.parse(text) as Plan[];
-      setPlans(json);
     } catch {
-      setLoadErr("Paketler yüklenemedi.");
+      /* silent */
     }
   }, []);
 
   React.useEffect(() => {
-    void loadPlans();
-  }, [loadPlans]);
+    void loadFeatures();
+  }, [loadFeatures]);
+
+  const toggleFeature = (plan: PlanType, featureId: string) => {
+    setSelectedFeatures((prev) => {
+      const current = prev[plan] || [];
+      const has = current.includes(featureId);
+      return {
+        ...prev,
+        [plan]: has ? current.filter((f) => f !== featureId) : [...current, featureId],
+      };
+    });
+  };
 
   const handleSave = async () => {
     if (!editing) return;
-    if (!editing.name || editing.price <= 0) {
-      setLoadErr("Paket adı ve fiyat zorunludur.");
-      return;
-    }
-
     setSaving(true);
-    setLoadErr("");
     try {
-      const payload = {
-        ...editing,
-        features: JSON.stringify(editing.features),
-      };
+      const res = await fetch(`/api/super-admin/plans/${editing}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ featureIds: selectedFeatures[editing] }),
+      });
 
-      let res: Response;
-      if (isCreating) {
-        res = await fetch("/api/super-admin/plans", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+      if (res.ok) {
+        await showAlert({ message: "Paket güncellendi.", variant: "success" });
+        setEditing(null);
       } else {
-        res = await fetch(`/api/super-admin/plans/${editing.id}`, {
-          method: "PATCH",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      if (!res.ok) {
         const text = await res.text();
-        setLoadErr(describeFailedResponse(res.status, text, "Kaydedilemedi."));
-        return;
+        await showAlert({ message: describeFailedResponse(res.status, text, "Güncellenemedi."), variant: "error" });
       }
-
-      setEditing(null);
-      setIsCreating(false);
-      await loadPlans();
     } catch {
-      setLoadErr("Kaydetme hatası.");
+      await showAlert({ message: "Kaydetme hatası.", variant: "error" });
     }
     setSaving(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Bu paketi silmek istediğinize emin misiniz?")) return;
-
-    try {
-      const res = await fetch(`/api/super-admin/plans/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        setLoadErr(describeFailedResponse(res.status, text, "Silinemedi."));
-        return;
-      }
-      await loadPlans();
-    } catch {
-      setLoadErr("Silme hatası.");
-    }
-  };
-
-  const toggleActive = async (plan: Plan) => {
-    try {
-      const res = await fetch(`/api/super-admin/plans/${plan.id}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ active: !plan.active }),
-      });
-      if (res.ok) await loadPlans();
-    } catch {
-      /* silent */
-    }
-  };
-
-  const addFeature = () => {
-    if (!featureInput.trim() || !editing) return;
-    setEditing({ ...editing, features: [...editing.features, featureInput.trim()] });
-    setFeatureInput("");
-  };
-
-  const removeFeature = (idx: number) => {
-    if (!editing) return;
-    setEditing({ ...editing, features: editing.features.filter((_, i) => i !== idx) });
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-100 via-zinc-50 to-white dark:from-[#060a12] dark:via-[#0b0f19] dark:to-zinc-950 text-zinc-900 dark:text-zinc-100">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <SuperAdminTopBar
         title="Paket Yönetimi"
-        subtitle="Fiyatlandırma paketlerini düzenleyin"
+        subtitle="Her paket için hangi özellikler aktif olacağını düzenleyin"
         actions={
           <Link
             href="/super-admin"
@@ -182,308 +155,186 @@ export default function SuperAdminPlansPage() {
         }
       />
 
-      <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
-        {loadErr && (
-          <div className="rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/30 p-4 text-sm text-amber-950 dark:text-amber-100">
-            {loadErr}
-          </div>
-        )}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+        {/* Plan Cards */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {(Object.keys(PLAN_DETAILS) as PlanType[]).map((planKey) => {
+            const plan = PLAN_DETAILS[planKey];
+            const features = PLAN_FEATURES[planKey];
+            const PlanIcon = PLAN_ICONS[planKey];
+            const color = PLAN_COLORS[planKey];
+            const isEditing = editing === planKey;
 
-        {/* Yeni paket butonu */}
-        {!editing && (
-          <button
-            type="button"
-            onClick={() => {
-              setEditing({ ...emptyPlan, id: "" });
-              setIsCreating(true);
-            }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-500 shadow-md"
-          >
-            <Plus className="h-4 w-4" />
-            Yeni Paket Ekle
-          </button>
-        )}
-
-        {/* Düzenleme formu */}
-        {editing && (
-          <div className="rounded-3xl border-2 border-indigo-300 dark:border-indigo-700 bg-white dark:bg-zinc-900 p-6 space-y-5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold">{isCreating ? "Yeni Paket" : "Paketi Düzenle"}</h3>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditing(null);
-                  setIsCreating(false);
-                }}
-                className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            return (
+              <div
+                key={planKey}
+                className={`flex flex-col rounded-2xl border-2 transition-all ${
+                  isEditing
+                    ? "border-indigo-500 shadow-lg"
+                    : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                } bg-white dark:bg-zinc-900`}
               >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-bold text-zinc-500 mb-1 block">Paket Adı *</label>
-                <input
-                  type="text"
-                  value={editing.name}
-                  onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2.5 text-sm"
-                  placeholder="Örn: Başlangıç"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-zinc-500 mb-1 block">Açıklama</label>
-                <input
-                  type="text"
-                  value={editing.description ?? ""}
-                  onChange={(e) => setEditing({ ...editing, description: e.target.value })}
-                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2.5 text-sm"
-                  placeholder="Örn: Küçük siteler için ideal"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-zinc-500 mb-1 block">Fiyat (TL) *</label>
-                <input
-                  type="number"
-                  value={editing.price}
-                  onChange={(e) => setEditing({ ...editing, price: Number(e.target.value) })}
-                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2.5 text-sm"
-                  min={0}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-zinc-500 mb-1 block">Orijinal Fiyat (TL)</label>
-                <input
-                  type="number"
-                  value={editing.originalPrice ?? ""}
-                  onChange={(e) => setEditing({ ...editing, originalPrice: e.target.value ? Number(e.target.value) : null })}
-                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2.5 text-sm"
-                  min={0}
-                  placeholder="İndirim göstermek için"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-zinc-500 mb-1 block">Dönem</label>
-                <input
-                  type="text"
-                  value={editing.period}
-                  onChange={(e) => setEditing({ ...editing, period: e.target.value })}
-                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2.5 text-sm"
-                  placeholder="/ay"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-zinc-500 mb-1 block">CTA Butonu</label>
-                <input
-                  type="text"
-                  value={editing.cta}
-                  onChange={(e) => setEditing({ ...editing, cta: e.target.value })}
-                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2.5 text-sm"
-                  placeholder="Hemen Başla"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-zinc-500 mb-1 block">Badge</label>
-                <input
-                  type="text"
-                  value={editing.badge ?? ""}
-                  onChange={(e) => setEditing({ ...editing, badge: e.target.value || null })}
-                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2.5 text-sm"
-                  placeholder="Örn: En Popüler"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-zinc-500 mb-1 block">Sıra</label>
-                <input
-                  type="number"
-                  value={editing.sortOrder}
-                  onChange={(e) => setEditing({ ...editing, sortOrder: Number(e.target.value) })}
-                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2.5 text-sm"
-                  min={0}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-6">
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={editing.highlight}
-                  onChange={(e) => setEditing({ ...editing, highlight: e.target.checked })}
-                  className="rounded border-zinc-300 dark:border-zinc-600"
-                />
-                <Star className="h-4 w-4 text-amber-500" />
-                Öne çıkarılmış
-              </label>
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={editing.active}
-                  onChange={(e) => setEditing({ ...editing, active: e.target.checked })}
-                  className="rounded border-zinc-300 dark:border-zinc-600"
-                />
-                Aktif
-              </label>
-            </div>
-
-            {/* Özellikler */}
-            <div>
-              <label className="text-xs font-bold text-zinc-500 mb-2 block">Özellikler</label>
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  value={featureInput}
-                  onChange={(e) => setFeatureInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addFeature();
-                    }
-                  }}
-                  className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2.5 text-sm"
-                  placeholder="Yeni özellik ekle..."
-                />
-                <button
-                  type="button"
-                  onClick={addFeature}
-                  className="px-4 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-sm font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700"
-                >
-                  Ekle
-                </button>
-              </div>
-              <div className="space-y-2">
-                {editing.features.map((f, i) => (
-                  <div key={i} className="flex items-center gap-2 p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
-                    <GripVertical className="h-4 w-4 text-zinc-400" />
-                    <span className="flex-1 text-sm">{f}</span>
+                <div className="p-5 border-b border-zinc-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`p-2 rounded-xl ${color}`}>
+                      <PlanIcon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-zinc-900 dark:text-zinc-50">{plan.name}</h3>
+                      <p className="text-xs text-zinc-500">
+                        {plan.monthlyPrice} TL/ay · {plan.maxSites === Infinity ? "Sınırsız" : plan.maxSites} site
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                      {features.length} statik özellik
+                    </span>
                     <button
                       type="button"
-                      onClick={() => removeFeature(i)}
-                      className="p-1 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
+                      onClick={() => {
+                        setEditing(isEditing ? null : planKey);
+                        setSelectedFeatures((prev) => ({
+                          ...prev,
+                          [planKey]: [...features],
+                        }));
+                      }}
+                      className="ml-auto inline-flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Pencil className="h-3 w-3" />
+                      {isEditing ? "Kapat" : "Düzenle"}
                     </button>
                   </div>
-                ))}
-                {editing.features.length === 0 && (
-                  <p className="text-xs text-zinc-400">Henüz özellik eklenmedi.</p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-500 disabled:opacity-50"
-              >
-                <Save className="h-4 w-4" />
-                {saving ? "Kaydediliyor..." : "Kaydet"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditing(null);
-                  setIsCreating(false);
-                }}
-                className="px-6 py-2.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-sm font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700"
-              >
-                İptal
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Paket listesi */}
-        <div className="grid gap-4 md:grid-cols-3">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              className={`relative flex flex-col p-5 rounded-2xl border-2 transition-all ${
-                plan.highlight
-                  ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20"
-                  : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
-              } ${!plan.active ? "opacity-50" : ""}`}
-            >
-              {plan.badge && (
-                <span className="absolute -top-2.5 left-4 px-3 py-0.5 text-[10px] font-bold text-white bg-indigo-600 rounded-full">
-                  {plan.badge}
-                </span>
-              )}
-
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-bold text-lg">{plan.name}</h3>
-                  {plan.description && (
-                    <p className="text-xs text-zinc-500 mt-0.5">{plan.description}</p>
-                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => toggleActive(plan)}
-                  className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                  title={plan.active ? "Pasifleştir" : "Aktifleştir"}
-                >
-                  {plan.active ? (
-                    <Eye className="h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <EyeOff className="h-4 w-4 text-zinc-400" />
-                  )}
-                </button>
+
+                <div className="flex-1 p-5">
+                  <div className="space-y-1">
+                    {features.slice(0, 8).map((f) => {
+                      const FIcon = FEATURE_ICONS[f] || CheckCircle;
+                      return (
+                        <div key={f} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-400">
+                          <FIcon className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                          {FEATURE_LABELS[f]}
+                        </div>
+                      );
+                    })}
+                    {features.length > 8 && (
+                      <p className="text-[10px] text-zinc-400 text-center pt-1">+{features.length - 8} daha</p>
+                    )}
+                  </div>
+                </div>
               </div>
+            );
+          })}
+        </div>
 
-              <div className="mb-3">
-                <span className="text-3xl font-extrabold">{plan.price}</span>
-                <span className="text-sm text-zinc-500 ml-1">TL{plan.period}</span>
-                {plan.originalPrice && (
-                  <div className="text-xs text-zinc-400 line-through">{plan.originalPrice} TL</div>
-                )}
+        {/* Feature Selection Panel */}
+        {editing && (
+          <div className="rounded-2xl border-2 border-indigo-300 dark:border-indigo-700 bg-white dark:bg-zinc-900 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-bold text-zinc-900 dark:text-zinc-50">
+                  {PLAN_DETAILS[editing].name} — Özellik Seçimi
+                </h3>
+                <p className="text-xs text-zinc-500 mt-1">Bu pakete hangi özellikler dahil olacak seçin</p>
               </div>
-
-              <ul className="space-y-1.5 mb-4 flex-1">
-                {plan.features.slice(0, 5).map((f, i) => (
-                  <li key={i} className="text-xs text-zinc-600 dark:text-zinc-400 flex items-start gap-1.5">
-                    <span className="text-emerald-500 mt-0.5">✓</span>
-                    {f}
-                  </li>
-                ))}
-                {plan.features.length > 5 && (
-                  <li className="text-xs text-zinc-400">+{plan.features.length - 5} özellik daha</li>
-                )}
-              </ul>
-
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setEditing(plan);
-                    setIsCreating(false);
-                  }}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-500 disabled:opacity-50"
                 >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Düzenle
+                  <Save className="h-3.5 w-3.5" />
+                  {saving ? "Kaydediliyor..." : "Kaydet"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleDelete(plan.id)}
-                  className="px-3 py-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/40"
+                  onClick={() => setEditing(null)}
+                  className="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
-          ))}
 
-          {plans.length === 0 && !editing && (
-            <div className="col-span-full text-center py-16 text-zinc-500">
-              <CreditCard className="h-12 w-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600" />
-              <p className="font-medium">Henüz paket yok</p>
-              <p className="text-sm mt-1">Yukarıdaki &quot;Yeni Paket Ekle&quot; butonuyla başlayın.</p>
-            </div>
-          )}
+            {FEATURE_CATEGORIES.map((cat) => (
+              <div key={cat.name} className="mb-6">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">{cat.name}</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                  {cat.features.map((f) => {
+                    const isSelected = selectedFeatures[editing]?.includes(f) ?? false;
+                    return (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => toggleFeature(editing, f)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                          isSelected
+                            ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700"
+                            : "bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 border border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                        }`}
+                      >
+                        {isSelected ? (
+                          <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                        ) : (
+                          <span className="h-3.5 w-3.5 rounded-full border-2 border-zinc-300 dark:border-zinc-600 shrink-0" />
+                        )}
+                        {FEATURE_LABELS[f]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Feature Comparison */}
+        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
+          <div className="p-5 border-b border-zinc-100 dark:border-zinc-800">
+            <h2 className="font-bold text-zinc-900 dark:text-zinc-50">Özellik Karşılaştırması</h2>
+            <p className="text-xs text-zinc-500 mt-1">Hangi pakette hangi özellikler mevcut</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr className="border-b border-zinc-200 dark:border-zinc-700">
+                  <th className="py-3 px-4 text-xs font-bold uppercase text-zinc-500">Özellik</th>
+                  {(Object.keys(PLAN_DETAILS) as PlanType[]).map((pk) => (
+                    <th key={pk} className="py-3 px-4 text-center text-xs font-bold uppercase text-zinc-500">
+                      {PLAN_DETAILS[pk].name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {FEATURE_CATEGORIES.map((cat) => (
+                  <React.Fragment key={cat.name}>
+                    <tr className="bg-zinc-50 dark:bg-zinc-800/30">
+                      <td colSpan={4} className="py-2 px-4 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                        {cat.name}
+                      </td>
+                    </tr>
+                    {cat.features.map((f) => (
+                      <tr key={f} className="border-b border-zinc-100 dark:border-zinc-800/50">
+                        <td className="py-2 px-4 text-xs text-zinc-600 dark:text-zinc-400">{FEATURE_LABELS[f]}</td>
+                        {(Object.keys(PLAN_DETAILS) as PlanType[]).map((pk) => (
+                          <td key={pk} className="py-2 px-4 text-center">
+                            {PLAN_FEATURES[pk].includes(f) ? (
+                              <CheckCircle className="h-4 w-4 text-emerald-500 mx-auto" />
+                            ) : (
+                              <span className="block h-4 w-4 rounded-full bg-zinc-200 dark:bg-zinc-700 mx-auto" />
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </main>
     </div>
