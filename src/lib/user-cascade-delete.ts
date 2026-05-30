@@ -4,6 +4,7 @@ import {
   adminSupportTickets,
   announcements,
   emailVerificationCodes,
+  notifications,
   passwordResetTokens,
   payments,
   requests,
@@ -18,6 +19,7 @@ export async function deleteUserCascade(db: PlatformDatabase, userId: string) {
   await db.delete(emailVerificationCodes).where(eq(emailVerificationCodes.userId, userId));
   await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId));
   await db.delete(userPresence).where(eq(userPresence.userId, userId));
+  await db.delete(notifications).where(eq(notifications.userId, userId));
   await db.delete(adminSupportTickets).where(eq(adminSupportTickets.adminUserId, userId));
   await db.delete(requests).where(eq(requests.userId, userId));
   await db.delete(payments).where(eq(payments.userId, userId));

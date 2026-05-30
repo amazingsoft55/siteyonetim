@@ -22,6 +22,7 @@ export default function AnnouncementsPage() {
   const [category, setCategory] = React.useState("Genel");
   const [content, setContent] = React.useState("");
   const [loadErr, setLoadErr] = React.useState("");
+  const [submitting, setSubmitting] = React.useState(false);
 
   async function reload() {
     setLoadErr("");
@@ -41,25 +42,30 @@ export default function AnnouncementsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !content) return;
+    if (!title || !content || submitting) return;
+    setSubmitting(true);
 
-    const res = await fetch("/api/announcements", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, content, category }),
-    });
-    if (!res.ok) {
-      await showAlert({ message: "Duyuru kaydedilemedi.", variant: "error" });
-      return;
+    try {
+      const res = await fetch("/api/announcements", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, content, category }),
+      });
+      if (!res.ok) {
+        await showAlert({ message: "Duyuru kaydedilemedi.", variant: "error" });
+        return;
+      }
+
+      setTitle("");
+      setContent("");
+      setCategory("Genel");
+      setShowForm(false);
+      await reload();
+      await showAlert({ message: "Duyuru yayınlandı.", variant: "success" });
+    } finally {
+      setSubmitting(false);
     }
-
-    setTitle("");
-    setContent("");
-    setCategory("Genel");
-    setShowForm(false);
-    await reload();
-    await showAlert({ message: "Duyuru yayınlandı.", variant: "success" });
   };
 
   const handleDelete = async (id: string) => {
@@ -166,9 +172,10 @@ export default function AnnouncementsPage() {
               </button>
               <button 
                 type="submit" 
-                className="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl font-bold shadow-md shadow-rose-600/10 transition-colors"
+                disabled={submitting}
+                className="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl font-bold shadow-md shadow-rose-600/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Yayınla
+                {submitting ? "Yayınlanıyor..." : "Yayınla"}
               </button>
             </div>
           </form>

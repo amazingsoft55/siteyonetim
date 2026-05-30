@@ -22,6 +22,7 @@ export default function ResidentRequestsPage() {
   const [category, setCategory] = React.useState("Arıza");
   const [description, setDescription] = React.useState("");
   const [loadErr, setLoadErr] = React.useState("");
+  const [submitting, setSubmitting] = React.useState(false);
 
   async function reload() {
     setLoadErr("");
@@ -41,28 +42,33 @@ export default function ResidentRequestsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !description) return;
+    if (!title || !description || submitting) return;
+    setSubmitting(true);
 
-    const res = await fetch("/api/requests", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title,
-        category,
-        description,
-      }),
-    });
-    if (!res.ok) {
-      await showAlert({ message: "Talep gönderilemedi.", variant: "error" });
-      return;
+    try {
+      const res = await fetch("/api/requests", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          category,
+          description,
+        }),
+      });
+      if (!res.ok) {
+        await showAlert({ message: "Talep gönderilemedi.", variant: "error" });
+        return;
+      }
+
+      setTitle("");
+      setDescription("");
+      setShowForm(false);
+      await reload();
+      await showAlert({ message: "Talebiniz yönetime iletildi.", variant: "success" });
+    } finally {
+      setSubmitting(false);
     }
-
-    setTitle("");
-    setDescription("");
-    setShowForm(false);
-    await reload();
-    await showAlert({ message: "Talebiniz yönetime iletildi.", variant: "success" });
   };
 
   const getStatusIcon = (status: string) => {
