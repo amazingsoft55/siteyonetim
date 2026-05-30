@@ -2,14 +2,15 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const jwtSecretEnv = process.env.JWT_SECRET;
-if (!jwtSecretEnv && process.env.NODE_ENV === "production") {
-  throw new Error("CRITICAL SECURITY ERROR: JWT_SECRET environment variable is missing!");
+function getSecretKey() {
+  const jwtSecretEnv = process.env.JWT_SECRET;
+  if (!jwtSecretEnv && process.env.NODE_ENV === "production") {
+    throw new Error("CRITICAL SECURITY ERROR: JWT_SECRET environment variable is missing!");
+  }
+  return new TextEncoder().encode(
+    jwtSecretEnv || "dev-only-fallback-insecure-key-never-use-in-prod"
+  );
 }
-
-const SECRET_KEY = new TextEncoder().encode(
-  jwtSecretEnv || "dev-only-fallback-insecure-key-never-use-in-prod"
-);
 
 function isPublicApiPath(path: string): boolean {
   const publicPaths = [
@@ -50,7 +51,7 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
-      const { payload } = await jwtVerify(token, SECRET_KEY);
+      const { payload } = await jwtVerify(token, getSecretKey());
       const role = payload.role as string;
 
       if (payload.mcp === true && path !== "/api/auth/complete-password") {
@@ -94,7 +95,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
     try {
-      const { payload } = await jwtVerify(token, SECRET_KEY);
+      const { payload } = await jwtVerify(token, getSecretKey());
       if (payload.mcp !== true) {
         return redirectByRole(payload.role as string, request);
       }
@@ -117,7 +118,7 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    const { payload } = await jwtVerify(token, SECRET_KEY);
+    const { payload } = await jwtVerify(token, getSecretKey());
     const role = payload.role as string;
 
     if (payload.mcp === true) {
