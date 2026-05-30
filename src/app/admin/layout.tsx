@@ -7,6 +7,7 @@ import { PresenceHeartbeat } from "@/components/PresenceHeartbeat";
 import { SiteLogo } from "@/components/SiteLogo";
 import { SITE_BRAND_NAME } from "@/lib/brand";
 import type { LucideIcon } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
 import {
   Users,
   Megaphone,
@@ -110,18 +111,21 @@ export default function AdminLayout({
 
         <div className="mt-auto border-t border-zinc-100 dark:border-zinc-800/80 pt-4 flex justify-between items-center px-2">
           <ThemeToggle />
-          <button
-            type="button"
-            onClick={() => {
-              document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-              localStorage.removeItem("user");
-              router.push("/login");
-            }}
-            className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 font-bold hover:underline"
-          >
-            <LogOut className="h-4 w-4" />
-            Çıkış Yap
-          </button>
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <button
+              type="button"
+              onClick={() => {
+                document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                localStorage.removeItem("user");
+                router.push("/login");
+              }}
+              className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 font-bold hover:underline"
+            >
+              <LogOut className="h-4 w-4" />
+              Çıkış Yap
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -133,9 +137,10 @@ export default function AdminLayout({
             </div>
             <h1 className="text-sm font-bold text-zinc-950 dark:text-zinc-50 truncate">{SITE_BRAND_NAME}</h1>
           </div>
-          <ThemeToggle />
-        </div>
-        <div className="h-full">{children}</div>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <ThemeToggle />
+          </div>
       </main>
 
       <nav className="sm:hidden fixed bottom-0 w-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200/60 dark:border-zinc-800/80 flex items-center justify-around pb-safe z-50">

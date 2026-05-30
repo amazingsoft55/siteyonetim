@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { PresenceHeartbeat } from "@/components/PresenceHeartbeat";
 import { SiteLogo } from "@/components/SiteLogo";
 import { SITE_BRAND_NAME } from "@/lib/brand";
+import { NotificationBell } from "@/components/NotificationBell";
 import { Home, CreditCard, Megaphone, Wrench, LogOut } from "lucide-react";
 
 export default function DashboardLayout({
@@ -93,16 +94,19 @@ export default function DashboardLayout({
         
         <div className="mt-auto border-t border-zinc-100 dark:border-zinc-800/80 pt-4 flex justify-between items-center px-2">
           <ThemeToggle />
-          <button 
-            onClick={() => {
-              localStorage.removeItem("user");
-              router.push("/login");
-            }}
-            className="flex items-center gap-1.5 text-sm text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 font-semibold hover:underline"
-          >
-            <LogOut className="h-4 w-4" />
-            Çıkış Yap
-          </button>
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <button 
+              onClick={() => {
+                localStorage.removeItem("user");
+                router.push("/login");
+              }}
+              className="flex items-center gap-1.5 text-sm text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 font-semibold hover:underline"
+            >
+              <LogOut className="h-4 w-4" />
+              Çıkış Yap
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -115,7 +119,10 @@ export default function DashboardLayout({
             </div>
             <span className="text-md font-bold text-zinc-950 dark:text-zinc-50">Sakin Paneli</span>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <ThemeToggle />
+          </div>
         </div>
         <div className="h-full">
           {children}

@@ -17,7 +17,7 @@ export const users = sqliteTable("users", {
   siteId: text("site_id").references(() => sites.id),
   apartmentNo: text("apartment_no"),
   lastLoginAt: text("last_login_at"),
-  /** 1 = ilk girişte kalıcı şifre zorunlu (JWT’de mcp) */
+  /** 1 = ilk girişte kalıcı şifre zorunlu (JWT'de mcp) */
   mustChangePassword: integer("must_change_password", { mode: "boolean" }).notNull().default(false),
   /** E-posta/şifre kaç kez değiştirildi (0 = bir kez ücretsiz değişiklik hakkı) */
   accountChangesCount: integer("account_changes_count").notNull().default(0),
@@ -151,4 +151,18 @@ export const platformInsights = sqliteTable("platform_insights", {
   key: text("key").primaryKey(),
   json: text("json").notNull(),
   updatedAt: text("updated_at").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+/** Kullanıcı bildirimleri — hoşgeldin, aidat, duyuru, talep durumu vb. */
+export const notifications = sqliteTable("notifications", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  type: text("type", {
+    enum: ["WELCOME", "PAYMENT", "ANNOUNCEMENT", "REQUEST", "SYSTEM"],
+  }).notNull().default("SYSTEM"),
+  href: text("href"),
+  readAt: text("read_at"),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
