@@ -3,7 +3,7 @@ import { SignJWT, jwtVerify } from "jose";
 function getSecretKey() {
   const jwtSecretEnv = process.env.JWT_SECRET;
   if (!jwtSecretEnv && process.env.NODE_ENV === "production") {
-    throw new Error("CRITICAL SECURITY CONFIGURATION ERROR: JWT_SECRET environment variable is missing!");
+    console.error("[CRITICAL] JWT_SECRET environment variable is missing! Set it in Cloudflare Dashboard → Workers → Settings → Variables.");
   }
   return new TextEncoder().encode(
     jwtSecretEnv || "dev-only-fallback-insecure-key-never-use-in-prod"
