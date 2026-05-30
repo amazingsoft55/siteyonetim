@@ -6,6 +6,7 @@ import {
   Activity,
   ArrowRight,
   Building2,
+  CreditCard,
   Cpu,
   Eye,
   Gauge,
@@ -267,8 +268,8 @@ export default function SuperAdminDashboard() {
           {[
             { href: "/super-admin/kullanicilar", title: "Siteler & kullanıcılar", desc: "Hesap ve proje yönetimi", icon: Users },
             { href: "/super-admin/destek", title: "Destek talepleri", desc: "Yönetici destek kuyruğu", icon: Activity },
+            { href: "/super-admin/plans", title: "Paket yönetimi", desc: "Fiyatlandırma paketleri", icon: CreditCard },
             { href: "/kurulum", title: "Kurulum rehberi", desc: "Şema ve ortam değişkenleri", icon: Gauge },
-            { href: "/api/setup/status", title: "Kurulum durumu API", desc: "Sağlık ve teşhis (JSON)", icon: Cpu },
           ].map((c) => (
             <Link
               key={c.href}

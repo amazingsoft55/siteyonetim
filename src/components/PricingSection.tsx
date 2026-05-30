@@ -4,89 +4,37 @@ import * as React from "react";
 import Link from "next/link";
 import {
   CreditCard, CheckCircle, Flame, TrendingUp, Percent,
-  Timer, ShieldCheck, Heart, Zap, Award,
+  Timer, ShieldCheck, Heart, Zap,
 } from "lucide-react";
 
 type Plan = {
+  id: string;
   name: string;
-  monthlyPrice: number;
-  yearlyPrice: number;
-  monthlyOriginal?: number;
-  yearlyOriginal?: number;
-  description: string;
-  highlight?: boolean;
-  badge?: string;
+  price: number;
+  originalPrice: number | null;
+  period: string;
+  description: string | null;
+  highlight: boolean;
+  badge: string | null;
   features: string[];
   cta: string;
-  ctaHref: string;
+  sortOrder: number;
 };
-
-const plans: Plan[] = [
-  {
-    name: "Başlangıç",
-    monthlyPrice: 49,
-    yearlyPrice: 29,
-    monthlyOriginal: 99,
-    yearlyOriginal: 59,
-    description: "Küçük siteler için ideal",
-    features: [
-      "1 site yönetimi",
-      "50 sakine kadar",
-      "Aidat takibi",
-      "Duyuru sistemi",
-      "Arıza talep yönetimi",
-      "E-posta bildirimleri",
-      "Web paneli",
-    ],
-    cta: "14 Gün Ücretsiz Dene",
-    ctaHref: "/destek",
-  },
-  {
-    name: "Profesyonel",
-    monthlyPrice: 99,
-    yearlyPrice: 59,
-    monthlyOriginal: 199,
-    yearlyOriginal: 119,
-    description: "Büyüyen siteler için en popüler",
-    highlight: true,
-    badge: "En Popüler",
-    features: [
-      "3 site yönetimi",
-      "200 sakine kadar",
-      "Tüm Başlangıç özellikleri",
-      "Mobil uygulama (PWA)",
-      "Push bildirimleri",
-      "Email bildirimleri",
-      "Detaylı raporlama",
-      "Öncelikli teknik destek",
-    ],
-    cta: "Hemen Başla",
-    ctaHref: "/destek",
-  },
-  {
-    name: "Kurumsal",
-    monthlyPrice: 199,
-    yearlyPrice: 119,
-    monthlyOriginal: 399,
-    yearlyOriginal: 239,
-    description: "Çoklu site yönetimi için",
-    features: [
-      "Sınırsız site yönetimi",
-      "Sınırsız sakin",
-      "Tüm Profesyonel özellikleri",
-      "Çoklu dil desteği",
-      "API erişimi",
-      "Özel entegrasyonlar",
-      "Dedicated hesap yöneticisi",
-      "SLA garanti",
-    ],
-    cta: "İletişime Geçin",
-    ctaHref: "/iletisim",
-  },
-];
 
 export function PricingSection() {
   const [annual, setAnnual] = React.useState(false);
+  const [plans, setPlans] = React.useState<Plan[]>([]);
+
+  React.useEffect(() => {
+    fetch("/api/plans")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setPlans(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  if (plans.length === 0) return null;
 
   return (
     <section id="fiyatlandirma" className="py-28 px-6 bg-white dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800/50">
@@ -106,7 +54,6 @@ export function PricingSection() {
             Rakiplerinizden çok daha ucuz. Aynı kalite, çok daha az maliyet.
           </p>
 
-          {/* ── Aylık / Yıllık Toggle ── */}
           <div className="mt-8 inline-flex items-center gap-3 p-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
             <button
               type="button"
@@ -136,7 +83,6 @@ export function PricingSection() {
           </div>
         </div>
 
-        {/* Comparison banner */}
         <div className="mb-10 p-6 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
             <div className="flex items-center gap-3">
@@ -146,7 +92,7 @@ export function PricingSection() {
                 <p className="text-sm text-emerald-600 dark:text-emerald-400">
                   Bizim fiyatlarımız:{" "}
                   <span className="font-extrabold text-lg">
-                    {annual ? "17" : "49"} TL&apos;den başlıyor!
+                    {annual ? Math.round(plans[0]?.price * 0.6) : plans[0]?.price} TL&apos;den başlıyor!
                   </span>
                 </p>
               </div>
@@ -160,13 +106,15 @@ export function PricingSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-start">
           {plans.map((plan) => {
-            const price = annual ? plan.yearlyPrice : plan.monthlyPrice;
-            const original = annual ? plan.yearlyOriginal : plan.monthlyOriginal;
+            const price = annual ? Math.round(plan.price * 0.6) : plan.price;
+            const original = plan.originalPrice
+              ? annual ? Math.round(plan.originalPrice * 0.6) : plan.originalPrice
+              : null;
             const savings = original ? Math.round((1 - price / original) * 100) : 0;
 
             return (
               <div
-                key={plan.name}
+                key={plan.id}
                 className={`relative flex flex-col p-8 rounded-3xl border-2 transition-all duration-300 ${
                   plan.highlight
                     ? "bg-gradient-to-b from-indigo-50 to-white dark:from-indigo-950/30 dark:to-zinc-900 border-indigo-500 shadow-2xl shadow-indigo-500/10 scale-[1.02]"
@@ -185,11 +133,11 @@ export function PricingSection() {
                 <div className="mt-6 mb-6">
                   <div className="flex items-baseline gap-2">
                     <span className="text-5xl font-extrabold text-zinc-900 dark:text-zinc-50">{price}</span>
-                    <span className="text-lg text-zinc-500 dark:text-zinc-400 font-medium">TL/ay</span>
+                    <span className="text-lg text-zinc-500 dark:text-zinc-400 font-medium">TL{plan.period}</span>
                   </div>
                   {original && (
                     <div className="mt-1 flex items-center gap-2">
-                      <span className="text-sm text-zinc-400 line-through">{original} TL/ay</span>
+                      <span className="text-sm text-zinc-400 line-through">{original} TL{plan.period}</span>
                       <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
                         %{savings} İNDİRİM
                       </span>
@@ -212,7 +160,7 @@ export function PricingSection() {
                 </ul>
 
                 <Link
-                  href={plan.ctaHref}
+                  href="/destek"
                   className={`block w-full text-center py-3.5 rounded-2xl font-bold text-sm transition-all ${
                     plan.highlight
                       ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 shadow-lg shadow-indigo-600/20"
@@ -226,7 +174,6 @@ export function PricingSection() {
           })}
         </div>
 
-        {/* Money back guarantee */}
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-zinc-500 dark:text-zinc-400">
           <span className="flex items-center gap-2">
             <Timer className="h-4 w-4 text-indigo-500" />
