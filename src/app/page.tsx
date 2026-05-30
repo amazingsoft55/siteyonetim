@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AppDownloadButtons } from "@/components/AppDownloadButtons";
+import { PlatformDownloadButtons } from "@/components/PlatformDownloadButtons";
 import { PricingSection } from "@/components/PricingSection";
 import {
   CreditCard, Megaphone, Wrench, ArrowRight, Shield, Sparkles,
@@ -397,10 +398,12 @@ export default function Home() {
               </div>
               <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl">Cebinizde taşıyın</h2>
               <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto">
-                Android ve iPhone için optimize edilmiş PWA uygulamamızı indirin. Uygulama mağazasına gerek yok, tarayıcıdan yükleyin.
+                Android ve iPhone için uygulamamızı indirin veya tarayıcınızdan yükleyin.
               </p>
             </div>
-            <AppDownloadButtons variant="site" />
+            <div className="flex justify-center">
+              <PlatformDownloadButtons showTitle={false} />
+            </div>
           </div>
         </section>
 
@@ -436,6 +439,9 @@ export default function Home() {
               >
                 Bize Ulaşın
               </Link>
+            </div>
+            <div className="mt-10 flex justify-center">
+              <PlatformDownloadButtons showTitle={false} variant="light" />
             </div>
           </div>
         </section>
