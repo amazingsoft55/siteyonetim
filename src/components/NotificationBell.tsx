@@ -47,11 +47,11 @@ export function NotificationBell() {
     try {
       const res = await fetch("/api/notifications");
       if (!res.ok) return;
-      const data = await res.json();
+      const data = (await res.json()) as { notifications?: NotificationItem[]; unreadCount?: number };
       setItems(data.notifications ?? []);
       setUnreadCount(data.unreadCount ?? 0);
 
-      if (data.unreadCount > 0 && "Notification" in window && Notification.permission === "granted") {
+      if ((data.unreadCount ?? 0) > 0 && "Notification" in window && Notification.permission === "granted") {
         const latest = data.notifications?.find((n: NotificationItem) => !n.read);
         if (latest && !sessionStorage.getItem(`notif-shown-${latest.id}`)) {
           sessionStorage.setItem(`notif-shown-${latest.id}`, "1");
