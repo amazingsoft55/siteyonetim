@@ -25,9 +25,9 @@ export function FeatureGateProvider({ children }: { children: React.ReactNode })
   React.useEffect(() => {
     fetch("/api/site/plan", { credentials: "include" })
       .then((r) => r.json())
-      .then((data) => {
-        if (data && data.plan) {
-          setPlanInfo(data);
+      .then((data: unknown) => {
+        if (data && typeof data === "object" && "plan" in data) {
+          setPlanInfo(data as PlanInfo);
         }
       })
       .catch(() => {});
