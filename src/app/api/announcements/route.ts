@@ -3,8 +3,9 @@ import { and, desc, eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
-import { announcements } from "@/db/schema";
+import { announcements, users } from "@/db/schema";
 import { announcementToClient } from "@/lib/announcement-ui";
+import { createBulkNotifications } from "@/lib/notify";
 
 
 function forbidden() {
@@ -93,6 +94,25 @@ export async function POST(request: Request) {
     });
 
     const row = await d.db.select().from(announcements).where(eq(announcements.id, id)).limit(1);
+
+    // Sitedeki tüm kullanıcılarına bildirim gönder
+    try {
+      const siteUsers = await d.db
+        .select({ id: users.id })
+        .from(users)
+        .where(and(eq(users.siteId, session.siteId), eq(users.role, "USER")));
+      const userIds = siteUsers.map((u) => u.id);
+      if (userIds.length > 0) {
+        await createBulkNotifications(d.db, userIds, {
+          title: `Yeni Duyuru: ${title}`,
+          body: content.length > 100 ? content.slice(0, 100) + "..." : content,
+          type: "ANNOUNCEMENT",
+          href: "/dashboard/announcements",
+        });
+      }
+    } catch {
+      /* bildirim hatası ana işlemi bozmasın */
+    }
 
     return NextResponse.json({
       success: true,

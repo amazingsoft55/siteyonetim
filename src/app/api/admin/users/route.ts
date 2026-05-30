@@ -6,6 +6,7 @@ import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { deleteUserCascade } from "@/lib/user-cascade-delete";
 import { users } from "@/db/schema";
+import { createNotification } from "@/lib/notify";
 
 function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
@@ -105,6 +106,19 @@ export async function POST(request: Request) {
     });
 
     const row = await d.db.select(publicUserColumns).from(users).where(eq(users.id, id)).limit(1);
+
+    // Yeni kullanıcıya hoşgeldin bildirimi gönder
+    const siteName = session.siteId
+      ? (await d.db.select({ name: users.name }).from(users).where(eq(users.id, session.id)).limit(1))[0]?.name ?? "Site yönetimi"
+      : "Site yönetimi";
+    createNotification(d.db, {
+      userId: id,
+      title: "Hoş Geldiniz!",
+      body: `${siteName} sitesine başarıyla eklendiniz. Giriş bilgilerinizle panele erişebilirsiniz.`,
+      type: "WELCOME",
+      href: role === "ADMIN" ? "/admin" : "/dashboard",
+    });
+
     return NextResponse.json(row[0]);
   } catch (e) {
     return jsonSqlError(e, "Hesap oluşturulamadı.");

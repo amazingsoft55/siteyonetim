@@ -141,6 +141,8 @@ export default function AdminLayout({
             <NotificationBell />
             <ThemeToggle />
           </div>
+        </div>
+        <div className="h-full">{children}</div>
       </main>
 
       <nav className="sm:hidden fixed bottom-0 w-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200/60 dark:border-zinc-800/80 flex items-center justify-around pb-safe z-50">

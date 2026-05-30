@@ -5,6 +5,7 @@ import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { payments, users } from "@/db/schema";
+import { createNotification } from "@/lib/notify";
 
 
 function forbidden() {
@@ -124,6 +125,15 @@ export async function POST(request: Request) {
         paidAt: nowIso,
       });
       const row = await d.db.select().from(payments).where(eq(payments.id, id)).limit(1);
+
+      createNotification(d.db, {
+        userId: session.id,
+        title: "Aidat Ödemesi Alındı",
+        body: `${period} dönemine ait ${amount.toLocaleString("tr-TR")} TL ödemeniz kaydedildi.`,
+        type: "PAYMENT",
+        href: "/dashboard/payments",
+      });
+
       return NextResponse.json({ success: true, payment: row[0] ? toClientPayment(row[0]) : null });
     }
 
@@ -154,6 +164,17 @@ export async function POST(request: Request) {
       });
 
       const row = await d.db.select().from(payments).where(eq(payments.id, id)).limit(1);
+
+      createNotification(d.db, {
+        userId: targetUser,
+        title: markPaid ? "Aidat Ödemesi Tamamlandı" : "Yeni Aidat Borcu",
+        body: markPaid
+          ? `${period} dönemine ait ${amount.toLocaleString("tr-TR")} TL ödemeniz yönetici tarafından onaylandı.`
+          : `${period} dönemine ait ${amount.toLocaleString("tr-TR")} TL aidat borcunuz eklendi.`,
+        type: "PAYMENT",
+        href: "/dashboard/payments",
+      });
+
       return NextResponse.json({ success: true, payment: row[0] ? toClientPayment(row[0]) : null });
     }
 

@@ -3,8 +3,9 @@ import { and, desc, eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
-import { requests as residentRequests } from "@/db/schema";
+import { requests as residentRequests, users } from "@/db/schema";
 import { dbRequestToClient, uiStatusToDb, type ClientRequestItem } from "@/lib/request-ui";
+import { createNotification } from "@/lib/notify";
 
 
 function forbidden() {
@@ -115,6 +116,26 @@ export async function POST(request: Request) {
 
     const row = await d.db.select().from(residentRequests).where(eq(residentRequests.id, id)).limit(1);
     const mapped = row[0] ? dbRequestToClient(row[0]) : null;
+
+    // Site yöneticisine bildirim gönder
+    try {
+      const admins = await d.db
+        .select({ id: users.id })
+        .from(users)
+        .where(and(eq(users.siteId, session.siteId), eq(users.role, "ADMIN")));
+      for (const admin of admins) {
+        await createNotification(d.db, {
+          userId: admin.id,
+          title: `Yeni Talep: ${subject}`,
+          body: `${session.name ?? "Bir sakin"} "${category}" kategorisinde yeni bir talep oluşturdu.`,
+          type: "REQUEST",
+          href: "/admin/requests",
+        });
+      }
+    } catch {
+      /* bildirim hatası ana işlemi bozmasın */
+    }
+
     return NextResponse.json({ success: true, request: mapped });
   } catch (e) {
     return jsonSqlError(e, "Talep eklenemedi.");
@@ -168,6 +189,18 @@ export async function PUT(request: Request) {
       .where(eq(residentRequests.id, id));
 
     const row = await d.db.select().from(residentRequests).where(eq(residentRequests.id, id)).limit(1);
+
+    // Talep sahibine durum değişikliği bildirimi
+    if (row[0]) {
+      const statusLabel = uiStatus === "Bekliyor" ? "Beklemede" : uiStatus === "İşlemde" ? "İşlemde" : "Çözüldü";
+      createNotification(d.db, {
+        userId: row[0].userId,
+        title: `Talep Durumu Güncellendi`,
+        body: `"${row[0].subject}" talebinin durumu "${statusLabel}" olarak güncellendi.`,
+        type: "REQUEST",
+        href: "/dashboard/requests",
+      });
+    }
 
     return NextResponse.json({
       success: true,

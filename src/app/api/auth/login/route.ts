@@ -7,6 +7,7 @@ import { signJwt } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { databaseUnavailable } from "@/server/database/access";
 import type { PlatformDatabase } from "@/db/platform";
+import { createNotification } from "@/lib/notify";
 
 type LoginBody = {
   usernameOrPhone?: unknown;
@@ -81,6 +82,19 @@ export async function POST(request: Request) {
       path: "/",
       maxAge: 60 * 60 * 24,
     });
+
+    // Hoşgeldin bildirimi (her girişte — sadece USER rolüne)
+    if (user.role === "USER") {
+      const hour = new Date().getHours();
+      const greeting = hour < 12 ? "Günaydın" : hour < 18 ? "İyi günler" : "İyi akşamlar";
+      createNotification(db, {
+        userId: user.id,
+        title: `${greeting}, ${user.name}!`,
+        body: "Site yönetim platformuna hoş geldiniz. Aidatlarınızı görüntüleyebilir, duyuruları takip edebilir ve taleplerinizi iletebilirsiniz.",
+        type: "WELCOME",
+        href: "/dashboard",
+      });
+    }
 
     return NextResponse.json({
       message: "Giriş başarılı",

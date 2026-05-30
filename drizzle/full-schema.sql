@@ -178,3 +178,22 @@ CREATE TABLE IF NOT EXISTS `platform_insights` (
   `json` text NOT NULL,
   `updated_at` text DEFAULT (CURRENT_TIMESTAMP)
 );
+
+-- -----------------------------------------------------------------------------
+-- [C] BİLDİRİMLER
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `id` text PRIMARY KEY NOT NULL,
+  `user_id` text NOT NULL,
+  `title` text NOT NULL,
+  `body` text NOT NULL,
+  `type` text NOT NULL DEFAULT 'SYSTEM',
+  `href` text,
+  `read_at` text,
+  `created_at` text DEFAULT (CURRENT_TIMESTAMP),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+);
+
+CREATE INDEX IF NOT EXISTS `idx_notifications_user_unread` ON `notifications` (`user_id`, `read_at`);
+CREATE INDEX IF NOT EXISTS `idx_notifications_created` ON `notifications` (`created_at`);
