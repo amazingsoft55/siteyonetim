@@ -10,6 +10,8 @@ import {
   buildOrganizationJsonLd,
   buildSoftwareApplicationJsonLd,
   buildWebsiteJsonLd,
+  buildFAQJsonLd,
+  buildLocalBusinessJsonLd,
 } from "@/lib/seo-constants";
 
 const geistSans = Geist({
@@ -40,6 +42,8 @@ const jsonLdBlocks = [
   buildOrganizationJsonLd(),
   buildSoftwareApplicationJsonLd(),
   buildWebsiteJsonLd(),
+  buildFAQJsonLd(),
+  buildLocalBusinessJsonLd(),
 ];
 
 /** PWA: service worker + beforeinstallprompt sayfa yüklenmeden yakalanır (statik dosya — __name hatası önlenir). */

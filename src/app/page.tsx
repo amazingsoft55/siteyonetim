@@ -30,9 +30,9 @@ export const metadata: Metadata = {
 };
 
 const stats = [
-  { value: "500+", label: "Aktif Site", icon: Building2 },
-  { value: "12.000+", label: "Kayıtlı Sakin", icon: Users },
-  { value: "%98", label: "Müşteri Memnuniyeti", icon: ThumbsUp },
+  { value: "Ücretsiz Deneme", label: "14 Gün", icon: Clock },
+  { value: "49 TL", label: "Başlangıç Fiyatı", icon: CreditCard },
+  { value: "%99.9", label: "Çalışma Süresi", icon: Shield },
   { value: "7/24", label: "Teknik Destek", icon: HeadphonesIcon },
 ];
 
@@ -90,22 +90,22 @@ const howItWorks = [
 
 const testimonials = [
   {
-    name: "Ayşe Kaya",
-    role: "Site Sakini — İstanbul",
-    text: "Aidatlarımı artık uygulamadan görüyorum. Yöneticiyi aramak zorunda kalmıyorum, her şey çok şeffaf.",
+    name: "Beta Kullanıcı",
+    role: "Site Yöneticisi — İstanbul",
+    text: "Uygulamayı test ediyorum, aidat takibi ve duyuru sistemi çok kullanışlı. Site sakinleri de memnun.",
     stars: 5,
   },
   {
-    name: "Mehmet Demir",
-    role: "Site Yöneticisi — Ankara",
-    text: "50 dairenin aidat takibini tek ekrandan yapıyorum. Talepleri kategorize edebilmek büyük kolaylık oldu.",
-    stars: 5,
+    name: "Beta Kullanıcı",
+    role: "Site Sakini — Ankara",
+    text: "Yöneticimiz bu uygulamayı deniyor. Aidatlarımı görebiliyorum, taleplerimi iletebiliyorum. Güzel bir girişim.",
+    stars: 4,
   },
   {
-    name: "Zeynep Arslan",
-    role: "Site Sakini — İzmir",
-    text: "Asansör arızasını uygulamadan bildirdim, 2 saat içinde teknik geri döndü. Harika bir sistem.",
-    stars: 5,
+    name: "Beta Kullanıcı",
+    role: "Yönetici Adayı — İzmir",
+    text: "Henüz yeni bir platform ama potansiyeli var. Ücretsiz deneme süresi olması büyük avantaj.",
+    stars: 4,
   },
 ];
 
@@ -294,7 +294,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Neden Ucuzuz? ── */}
+        {/* ── Neden Biz? ── */}
         <section className="py-20 px-6 bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 relative overflow-hidden">
           <div className="absolute inset-0 -z-0 opacity-5" aria-hidden>
             <Building2 className="absolute h-96 w-96 -right-20 -bottom-20 text-white" />
@@ -312,22 +312,22 @@ export default function Home() {
                 <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-4">
                   <Globe className="h-6 w-6" />
                 </div>
-                <h3 className="font-bold text-lg mb-2">Bulut Altyapı</h3>
-                <p className="text-indigo-200 text-sm">Sunucu maliyetlerini Cloudflare ile en aza indirdik.</p>
+                <h3 className="font-bold text-lg mb-2">Düşük Altyapı Maliyeti</h3>
+                <p className="text-indigo-200 text-sm">Cloudflare altyapısı sayesinde sunucu maliyetlerimiz çok düşük. Bu tasarrufu size yansıtıyoruz.</p>
               </div>
               <div className="p-6 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20">
                 <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-4">
                   <Zap className="h-6 w-6" />
                 </div>
-                <h3 className="font-bold text-lg mb-2">Otomasyon</h3>
-                <p className="text-indigo-200 text-sm">Manuel işleri otomatikleştirerek maliyetleri düşürdük.</p>
+                <h3 className="font-bold text-lg mb-2">Yeni Platform</h3>
+                <p className="text-indigo-200 text-sm">Henüz yeni bir platformuz. Büyüme aşamasında olduğumuz için uygun fiyatlar sunuyoruz.</p>
               </div>
               <div className="p-6 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20">
                 <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-4">
                   <Heart className="h-6 w-6" />
                 </div>
-                <h3 className="font-bold text-lg mb-2">Topluluk Odaklı</h3>
-                <p className="text-indigo-200 text-sm">Amacımız kar değil, her siteye erişilebilir yönetim.</p>
+                <h3 className="font-bold text-lg mb-2">Erişilebilirlik</h3>
+                <p className="text-indigo-200 text-sm">Amacımız her site yönetimini dijitalleştirmek. Fiyatları erişilebilir tutuyoruz.</p>
               </div>
             </div>
           </div>
@@ -340,7 +340,7 @@ export default function Home() {
               <div className="inline-flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-4">
                 <Star className="h-3.5 w-3.5 fill-current" /> Kullanıcı yorumları
               </div>
-              <h2 className="text-3xl font-extrabold tracking-tight sm:text-5xl">Binlerce site bize güveniyor</h2>
+              <h2 className="text-3xl font-extrabold tracking-tight sm:text-5xl">Beta kullanıcılarımız ne diyor?</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

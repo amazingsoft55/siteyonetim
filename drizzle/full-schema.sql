@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS `sites` (
   `id` text PRIMARY KEY NOT NULL,
   `name` text NOT NULL,
   `address` text,
+  `plan` text NOT NULL DEFAULT 'starter',
+  `plan_expires_at` text,
   `created_at` text DEFAULT (CURRENT_TIMESTAMP)
 );
 

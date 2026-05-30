@@ -2,13 +2,12 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { CreditCard, ShieldCheck, ChevronLeft, CheckCircle2 } from "lucide-react";
+import { CreditCard, ShieldCheck, ChevronLeft, CheckCircle2, AlertCircle, Lock } from "lucide-react";
 import Link from "next/link";
-import { useAlert, useConfirm } from "@/components/ModalProvider";
+import { useAlert } from "@/components/ModalProvider";
 
 export default function PaymentPage() {
   const showAlert = useAlert();
-  const showConfirm = useConfirm();
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
@@ -16,6 +15,13 @@ export default function PaymentPage() {
   const [amount, setAmount] = React.useState(0);
   const [periodLabel, setPeriodLabel] = React.useState("");
   const [paidSummary, setPaidSummary] = React.useState<number | null>(null);
+  const [paymentId, setPaymentId] = React.useState<string | null>(null);
+
+  const [cardName, setCardName] = React.useState("");
+  const [cardNumber, setCardNumber] = React.useState("");
+  const [expireMonth, setExpireMonth] = React.useState("");
+  const [expireYear, setExpireYear] = React.useState("");
+  const [cvc, setCvc] = React.useState("");
 
   React.useEffect(() => {
     let cancelled = false;
@@ -82,37 +88,69 @@ export default function PaymentPage() {
     };
   }, []);
 
+  const formatCardNumber = (value: string) => {
+    const v = value.replace(/\D/g, "").slice(0, 16);
+    return v.replace(/(.{4})/g, "$1 ").trim();
+  };
+
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading || amount <= 0) return;
 
-    setLoading(true);
-    setInitErr("");
-
-    const res = await fetch("/api/payments", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        amount,
-        period: periodLabel || undefined,
-        type: "Ödeme (panel)",
-      }),
-    });
-    const j: unknown = await res.json().catch(() => null);
-    setLoading(false);
-
-    if (!res.ok) {
-      let msg = "Ödeme kaydı oluşturulamadı.";
-      if (j && typeof j === "object" && "error" in j && typeof (j as { error?: unknown }).error === "string") {
-        msg = (j as { error: string }).error;
-      }
-      await showAlert({ message: msg, variant: "error" });
+    if (!cardNumber || cardNumber.replace(/\s/g, "").length < 16) {
+      await showAlert({ message: "Geçerli bir kart numarası girin.", variant: "error" });
       return;
     }
 
-    setPaidSummary(amount);
-    setSuccess(true);
+    if (!expireMonth || !expireYear || expireMonth.length < 2 || expireYear.length < 2) {
+      await showAlert({ message: "Son kullanma tarihini girin.", variant: "error" });
+      return;
+    }
+
+    if (!cvc || cvc.length < 3) {
+      await showAlert({ message: "CVV kodunu girin.", variant: "error" });
+      return;
+    }
+
+    setLoading(true);
+    setInitErr("");
+
+    try {
+      const res = await fetch("/api/payment", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          cardHolderName: cardName || "TEST",
+          cardNumber: cardNumber.replace(/\s/g, ""),
+          expireMonth,
+          expireYear: `20${expireYear}`,
+          cvc,
+          period: periodLabel || undefined,
+        }),
+      });
+
+      const j: unknown = await res.json().catch(() => null);
+      setLoading(false);
+
+      if (!res.ok) {
+        let msg = "Ödeme oluşturulamadı.";
+        if (j && typeof j === "object" && "error" in j && typeof (j as { error?: unknown }).error === "string") {
+          msg = (j as { error: string }).error;
+        }
+        await showAlert({ message: msg, variant: "error" });
+        return;
+      }
+
+      const data = j as { paymentId?: string; testMode?: boolean };
+      setPaymentId(data.paymentId || null);
+      setPaidSummary(amount);
+      setSuccess(true);
+    } catch {
+      setLoading(false);
+      await showAlert({ message: "Bağlantı hatası. Tekrar deneyin.", variant: "error" });
+    }
   };
 
   const amountDisplay = `${amount.toLocaleString("tr-TR", {
@@ -126,21 +164,29 @@ export default function PaymentPage() {
         <div className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 p-4 rounded-full mb-6">
           <CheckCircle2 className="h-16 w-16" />
         </div>
-        <h2 className="text-3xl font-bold mb-2">Ödeme kaydı alındı</h2>
-        <p className="text-zinc-600 dark:text-zinc-400 mb-4 max-w-md">
-          {`${paidSummary.toLocaleString("tr-TR")} ₺ tutarındaki işlem sistemde görünür.`}
-          {" Borç özeti güncellenmiş olabilir; güncel listeyi "}
-          <Link href="/dashboard/payments" className="underline font-semibold text-indigo-600 dark:text-indigo-400">
-            Aidat ve ödemeler
-          </Link>
-          {" ekranından kontrol edin."}
+        <h2 className="text-3xl font-bold mb-2">Ödeme Başarılı</h2>
+        <p className="text-zinc-600 dark:text-zinc-400 mb-2 max-w-md">
+          {`${paidSummary.toLocaleString("tr-TR")} ₺ tutarındaki ödeme başarıyla işlendi.`}
         </p>
-        <button
-          onClick={() => router.push("/dashboard")}
-          className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
-        >
-          Panele dön
-        </button>
+        {paymentId && (
+          <p className="text-xs text-zinc-500 mb-4">
+            İşlem No: <span className="font-mono">{paymentId}</span>
+          </p>
+        )}
+        <div className="flex gap-3">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
+          >
+            Panele dön
+          </button>
+          <Link
+            href="/dashboard/payments"
+            className="px-6 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 rounded-xl font-semibold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+          >
+            Ödeme geçmişi
+          </Link>
+        </div>
       </div>
     );
   }
@@ -154,14 +200,14 @@ export default function PaymentPage() {
         <ChevronLeft className="h-4 w-4 mr-1" /> Geri dön
       </button>
 
-      <h2 className="text-2xl font-bold tracking-tight mb-2">Ödeme onayı</h2>
+      <h2 className="text-2xl font-bold tracking-tight mb-2">Güvenli Ödeme</h2>
       <p className="text-zinc-500 mb-8">
-        Bu ekranda tutar sistemde borç olarak görünürse işlem doğrudan yerel veritabanınıza yazılır. Gerçek kart
-        işlemi bankanız ile entegre değildir.
+        Kart bilgileriniz 256-bit SSL ile şifrelenir. Sunucularımızda kart numarası saklanmaz.
       </p>
 
       {initErr && (
-        <div className="mb-6 rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/25 p-4 text-sm text-amber-950 dark:text-amber-100">
+        <div className="mb-6 rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/25 p-4 text-sm text-amber-950 dark:text-amber-100 flex items-start gap-2">
+          <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
           {initErr}
         </div>
       )}
@@ -173,28 +219,32 @@ export default function PaymentPage() {
             <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{amountDisplay}</p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-medium text-zinc-500">Dönem / açıklama</p>
+            <p className="text-sm font-medium text-zinc-500">Dönem</p>
             <p className="text-lg font-semibold mt-1 max-w-[12rem] line-clamp-2">{periodLabel || "—"}</p>
           </div>
         </div>
 
-        <form onSubmit={handlePayment} className="space-y-6">
+        <form onSubmit={handlePayment} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium mb-1.5">Kart üzerindeki isim (isteğe bağlı)</label>
+            <label className="block text-sm font-medium mb-1.5">Kart üzerindeki isim</label>
             <input
               type="text"
               maxLength={80}
+              value={cardName}
+              onChange={(e) => setCardName(e.target.value)}
               className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 py-3 px-4 focus:ring-2 focus:ring-indigo-600 outline-none"
               placeholder="AD SOYAD"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5">Kart numarası (gerçek ödeme yapılmaz)</label>
+            <label className="block text-sm font-medium mb-1.5">Kart numarası</label>
             <div className="relative">
               <input
                 type="text"
                 maxLength={19}
+                value={cardNumber}
+                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
                 className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 py-3 pl-4 pr-12 focus:ring-2 focus:ring-indigo-600 outline-none"
                 placeholder="0000 0000 0000 0000"
               />
@@ -202,38 +252,65 @@ export default function PaymentPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1.5">Son kullanma (isteğe bağlı)</label>
+              <label className="block text-sm font-medium mb-1.5">Ay</label>
               <input
                 type="text"
-                maxLength={5}
+                maxLength={2}
+                value={expireMonth}
+                onChange={(e) => setExpireMonth(e.target.value.replace(/\D/g, "").slice(0, 2))}
                 className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 py-3 px-4 focus:ring-2 focus:ring-indigo-600 outline-none"
-                placeholder="12/28"
+                placeholder="12"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1.5">CVV (isteğe bağlı)</label>
+              <label className="block text-sm font-medium mb-1.5">Yıl</label>
+              <input
+                type="text"
+                maxLength={2}
+                value={expireYear}
+                onChange={(e) => setExpireYear(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 py-3 px-4 focus:ring-2 focus:ring-indigo-600 outline-none"
+                placeholder="28"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1.5">CVV</label>
               <input
                 type="text"
                 maxLength={3}
+                value={cvc}
+                onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 3))}
                 className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 py-3 px-4 focus:ring-2 focus:ring-indigo-600 outline-none"
                 placeholder="123"
               />
             </div>
           </div>
 
-          <div className="pt-4 flex items-center justify-center gap-2 text-sm text-emerald-600 dark:text-emerald-500 font-medium">
-            <ShieldCheck className="h-5 w-5" />
-            Oturum çereziniz güvenli; kart bilgileri sunucuya kaydedilmez.
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800">
+            <Lock className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="text-xs text-emerald-700 dark:text-emerald-300">
+              256-bit SSL şifreleme ile güvenli ödeme. Kart bilgileriniz saklanmaz.
+            </span>
           </div>
 
           <button
             type="submit"
             disabled={loading || amount <= 0}
-            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg transition-colors flex items-center justify-center disabled:opacity-55"
+            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl font-bold text-lg transition-all flex items-center justify-center disabled:opacity-55 shadow-lg shadow-indigo-600/20"
           >
-            {loading ? "Kaydediliyor…" : `${amountDisplay} kaydet`}
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                İşleniyor...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5" />
+                {amountDisplay} Öde
+              </span>
+            )}
           </button>
         </form>
       </div>
