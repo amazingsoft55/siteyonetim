@@ -118,8 +118,14 @@ export async function POST(request: Request) {
         const emailsToSend = siteUsers.filter(
           (u) => u.id !== session.id && looksLikeEmail(u.emailOrPhone),
         );
+        console.log(`[announcements] ${emailsToSend.length} kullanıcıya email gönderilecek`);
         for (const u of emailsToSend) {
-          sendAnnouncementEmail(u.emailOrPhone, u.name, title, content, category).catch(() => {});
+          const result = await sendAnnouncementEmail(u.emailOrPhone, u.name, title, content, category);
+          if (!result.ok) {
+            console.error(`[announcements] Email gönderilemedi: ${u.emailOrPhone} — ${result.error}`);
+          } else {
+            console.log(`[announcements] Email gönderildi: ${u.emailOrPhone}`);
+          }
         }
       }
     } catch {
