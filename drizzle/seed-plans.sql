@@ -1,0 +1,5 @@
+-- Varsayılan fiyatlandırma paketleri
+INSERT OR IGNORE INTO `plans` (`id`, `name`, `description`, `price`, `original_price`, `period`, `features`, `highlight`, `badge`, `cta`, `sort_order`, `active`) VALUES
+('plan_baslangic', 'Başlangıç', 'Küçük siteler için ideal', 49, 99, '/ay', '["1 site yönetimi","50 sakine kadar","Aidat takibi","Duyuru sistemi","Arıza talep yönetimi","E-posta bildirimleri","Web paneli"]', 0, NULL, '14 Gün Ücretsiz Dene', 0, 1),
+('plan_profesyonel', 'Profesyonel', 'Büyüyen siteler için en popüler', 99, 199, '/ay', '["3 site yönetimi","200 sakine kadar","Tüm Başlangıç özellikleri","Mobil uygulama (PWA)","Push bildirimleri","Email bildirimleri","Detaylı raporlama","Öncelikli teknik destek"]', 1, 'En Popüler', 'Hemen Başla', 1, 1),
+('plan_kurumsal', 'Kurumsal', 'Çoklu site yönetimi için', 199, 399, '/ay', '["Sınırsız site yönetimi","Sınırsız sakin","Tüm Profesyonel özellikleri","Çoklu dil desteği","API erişimi","Özel entegrasyonlar","Dedicated hesap yöneticisi","SLA garanti"]', 0, NULL, 'İletişime Geçin', 2, 1);

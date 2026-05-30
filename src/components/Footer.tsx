@@ -20,7 +20,7 @@ const footerLinks = {
   yasal: {
     title: "Yasal",
     links: [
-      { href: "/gizlilik", label: "Gizlilik Politikası" },
+      { href: "/gizlilik-politikasi", label: "Gizlilik Politikası" },
       { href: "/kullanim-sartlari", label: "Kullanım Şartları" },
     ],
   },
