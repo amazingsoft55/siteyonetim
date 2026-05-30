@@ -52,9 +52,12 @@ function ResetFormInner() {
         j !== null && typeof j === "object" && "message" in j && typeof (j as { message: unknown }).message === "string"
           ? (j as { message: string }).message
           : "Tamam.";
-      setOkMsg(m);
+      setOkMsg(`${m} Giriş sayfasına yönlendiriliyorsunuz...`);
       setNp("");
       setNp2("");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 2500);
     } catch {
       setErr("Sunucuya ulaşılamadı.");
     }
