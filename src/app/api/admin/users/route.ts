@@ -125,7 +125,12 @@ export async function POST(request: Request) {
     // Kullanıcıya hoşgeldin emaili gönder
     if (looksLikeEmail(emailOrPhone)) {
       const base = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000").replace(/\/$/, "");
-      sendBrandedEmail({
+      const hasGmailSmtp = !!process.env.GMAIL_APP_PASSWORD?.trim();
+      const hasGmailOAuth = !!(process.env.GMAIL_CLIENT_ID?.trim() && process.env.GMAIL_CLIENT_SECRET?.trim() && process.env.GMAIL_REFRESH_TOKEN?.trim());
+      const hasResend = !!process.env.RESEND_API_KEY?.trim();
+      console.log(`[admin/users] Email provider durumu: SMTP=${hasGmailSmtp}, OAuth=${hasGmailOAuth}, Resend=${hasResend}`);
+
+      const emailResult = await sendBrandedEmail({
         to: emailOrPhone,
         subject: `Hoş Geldiniz — ${siteName}`,
         html: buildBrandedEmailHtml({
@@ -141,7 +146,15 @@ export async function POST(request: Request) {
           ctaLabel: "Panele Giriş Yap",
           footerNote: "Bu hesap site yönetimi tarafından oluşturulmuştur. İlk girişte şifrenizi değiştirmeniz istenebilir.",
         }),
-      }).catch(() => {});
+      });
+      if (!emailResult.ok) {
+        console.error(`[admin/users] Hoşgeldin emaili BAŞARISIZ: ${emailOrPhone} — ${emailResult.error}`);
+      } else {
+        console.log(`[admin/users] Hoşgeldin emaili BAŞARILI: ${emailOrPhone}`);
+      }
+    } else {
+      console.log(`[admin/users] Email adresi değil, hoşgeldin emaili atlandı: ${emailOrPhone}`);
+    }
     }
 
     return NextResponse.json(row[0]);

@@ -8,6 +8,10 @@ import { cookies } from "next/headers";
 import { databaseUnavailable } from "@/server/database/access";
 import type { PlatformDatabase } from "@/db/platform";
 import { createNotification } from "@/lib/notify";
+import { sendBrandedEmail } from "@/lib/send-email";
+import { buildBrandedEmailHtml } from "@/lib/email-template";
+import { looksLikeEmail } from "@/lib/password-reset";
+import { getPublicSiteUrl } from "@/lib/site-url";
 
 type LoginBody = {
   usernameOrPhone?: unknown;
@@ -83,7 +87,7 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24,
     });
 
-    // Hoşgeldin bildirimi (her girişte — sadece USER rolüne)
+    // Hoşgeldin bildirimi + email (her girişte — sadece USER rolüne)
     if (user.role === "USER") {
       const hour = new Date().getHours();
       const greeting = hour < 12 ? "Günaydın" : hour < 18 ? "İyi günler" : "İyi akşamlar";
@@ -94,6 +98,24 @@ export async function POST(request: Request) {
         type: "WELCOME",
         href: "/dashboard",
       });
+
+      // İlk girişte hoşgeldin emaili
+      if (looksLikeEmail(user.emailOrPhone)) {
+        const siteUrl = getPublicSiteUrl();
+        const emailResult = await sendBrandedEmail({
+          to: user.emailOrPhone,
+          subject: `${greeting}, ${user.name}! — Hoş Geldiniz`,
+          html: buildBrandedEmailHtml({
+            title: `${greeting}!`,
+            intro: `Sitemize başarıyla giriş yaptınız. Portal üzerinden aidatlarınızı görüntüleyebilir, duyuruları takip edebilir ve taleplerinizi iletebilirsiniz.`,
+            ctaHref: `${siteUrl}/dashboard`,
+            ctaLabel: "Panele Git",
+          }),
+        });
+        if (!emailResult.ok) {
+          console.error(`[login] Hoşgeldin emaili gönderilemedi: ${user.emailOrPhone} — ${emailResult.error}`);
+        }
+      }
     }
 
     return NextResponse.json({
