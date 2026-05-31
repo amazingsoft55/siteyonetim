@@ -63,7 +63,7 @@ export function AppDownloadButtons({ variant }: { variant: AppDownloadVariant; c
           </svg>
         </div>
         <div className="text-left flex-1">
-          <p className="text-sm font-black">Android'e Yükle</p>
+          <p className="text-sm font-black">Android&apos;e Yükle</p>
           <p className="text-[11px] font-medium text-emerald-100/80">
             {installed ? "Yüklendi!" : installReady ? "Tek dokunuşla kur" : "Rehber ile kur"}
           </p>
@@ -83,7 +83,7 @@ export function AppDownloadButtons({ variant }: { variant: AppDownloadVariant; c
           </svg>
         </div>
         <div className="text-left flex-1">
-          <p className="text-sm font-black">iPhone'a Yükle</p>
+          <p className="text-sm font-black">iPhone&apos;a Yükle</p>
           <p className="text-[11px] font-medium text-zinc-400">Safari ile kurulum rehberi</p>
         </div>
         <Download className="h-5 w-5 shrink-0" />
