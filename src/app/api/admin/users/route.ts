@@ -155,7 +155,6 @@ export async function POST(request: Request) {
     } else {
       console.log(`[admin/users] Email adresi değil, hoşgeldin emaili atlandı: ${emailOrPhone}`);
     }
-    }
 
     return NextResponse.json(row[0]);
   } catch (e) {
