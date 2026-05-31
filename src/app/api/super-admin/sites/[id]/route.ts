@@ -49,10 +49,13 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     if (plan) updateData.plan = plan;
     if (planExpiresAt !== undefined) updateData.planExpiresAt = planExpiresAt || null;
 
+    console.log(`[sites PATCH] siteId=${siteId} updateData=`, JSON.stringify(updateData));
     await d.db.update(sites).set(updateData).where(eq(sites.id, siteId));
     const updated = await d.db.select().from(sites).where(eq(sites.id, siteId)).limit(1);
+    console.log(`[sites PATCH] success updated plan=${updated[0]?.plan}`);
     return NextResponse.json(updated[0]);
   } catch (e) {
+    console.error("[sites PATCH] error:", e);
     return jsonSqlError(e, "Site güncellenemedi.");
   }
 }

@@ -307,7 +307,9 @@ function SuperAdminUsersPageInner() {
     });
     const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
-      setErr(readJsonError(j, "Plan değiştirilemedi."));
+      const detail = j && typeof j === "object" && "error" in j ? String((j as { error: unknown }).error) : "";
+      const code = j && typeof j === "object" && "code" in j ? String((j as { code: unknown }).code) : "";
+      setErr(`Plan değiştirilemedi. ${detail} ${code ? `(${code})` : ""}`.trim());
       return;
     }
     setMsg(`Plan "${PLAN_DETAILS[newPlan as PlanType]?.name ?? newPlan}" olarak güncellendi.`);
