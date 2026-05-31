@@ -19,11 +19,14 @@ import {
   Menu,
   X,
   Zap,
+  ListChecks,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { name: "Dashboard", href: "/super-admin", icon: LayoutDashboard },
   { name: "Kullanıcılar", href: "/super-admin/kullanicilar", icon: Users },
+  { name: "Paketler", href: "/super-admin/plans", icon: CreditCard },
+  { name: "Özellikler", href: "/super-admin/ozellikler", icon: ListChecks },
   { name: "Destek", href: "/super-admin/destek", icon: LifeBuoy },
   { name: "Hesabım", href: "/super-admin/hesabim", icon: UserCog },
 ];
