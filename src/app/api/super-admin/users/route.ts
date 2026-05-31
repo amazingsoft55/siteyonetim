@@ -5,6 +5,11 @@ import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { users } from "@/db/schema";
+import { createNotification } from "@/lib/notify";
+import { sendBrandedEmail } from "@/lib/send-email";
+import { buildBrandedEmailHtml } from "@/lib/email-template";
+import { looksLikeEmail } from "@/lib/password-reset";
+import { getPublicSiteUrl } from "@/lib/site-url";
 
 
 function forbidden() {
@@ -113,6 +118,38 @@ export async function POST(request: Request) {
     });
 
     const row = await d.db.select(publicUserColumns).from(users).where(eq(users.id, id)).limit(1);
+
+    // Hoşgeldin bildirimi
+    createNotification(d.db, {
+      userId: id,
+      title: "Hoş Geldiniz!",
+      body: "Platformumuza başarıyla eklendiniz. Giriş bilgilerinizle panele erişebilirsiniz.",
+      type: "WELCOME",
+      href: role === "ADMIN" ? "/admin" : "/dashboard",
+    });
+
+    // Hoşgeldin emaili
+    if (looksLikeEmail(emailOrPhone)) {
+      const base = getPublicSiteUrl();
+      const result = await sendBrandedEmail({
+        to: emailOrPhone,
+        subject: `Hoş Geldiniz — Site Yönetimi`,
+        html: buildBrandedEmailHtml({
+          title: "Hoş Geldiniz!",
+          intro: `Merhaba ${name}, Site Yönetimi platformuna başarıyla eklendiniz.`,
+          bodyHtml: `
+            <p style="margin:0 0 8px;font-size:14px;color:#3f3f46">Giriş bilgileriniz:</p>
+            <p style="margin:0 0 4px;font-size:14px;color:#3f3f46"><strong>E-posta:</strong> ${emailOrPhone}</p>
+            <p style="margin:0 0 4px;font-size:14px;color:#3f3f46"><strong>Şifre:</strong> ${password}</p>
+            ${apartmentNo ? `<p style="margin:0 0 4px;font-size:14px;color:#3f3f46"><strong>Daire:</strong> ${apartmentNo}</p>` : ""}
+            <p style="margin:8px 0 0;font-size:12px;color:#a1a1aa">Güvenliğiniz için ilk girişte şifrenizi değiştirmenizi öneririz.</p>
+          `,
+          ctaHref: `${base}/login`,
+          ctaLabel: "Panele Giriş Yap",
+        }),
+      });
+      console.log(`[super-admin/users] Hoşgeldin emaili ${result.ok ? "BAŞARILI" : "BAŞARISIZ"}: ${emailOrPhone}`, result.ok ? "" : result.error);
+    }
 
     return NextResponse.json(row[0]);
   } catch (e) {
