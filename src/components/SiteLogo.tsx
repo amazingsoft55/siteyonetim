@@ -25,7 +25,6 @@ export function SiteLogo({
       className={`flex items-center justify-center bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-extrabold select-none ${className}`}
       style={{ width, height, borderRadius, fontSize, lineHeight: 1, letterSpacing: "-0.5px" }}
       role="img"
-      alt={alt}
       aria-label={alt}
     >
       {initials}
