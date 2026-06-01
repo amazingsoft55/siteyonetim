@@ -29,42 +29,38 @@ export default function DashboardLayout({
       if (typeof u.name === "string" && u.name.trim()) setAsideName(u.name.trim());
       const apt = typeof u.apartmentNo === "string" ? u.apartmentNo.trim() : "";
       setAsideMeta(apt ? `Daire ${apt}` : "Kayıtlı sakin");
-    } catch {
-      /* ignore */
-    }
+    } catch { /* ignore */ }
   }, []);
 
-  // Protect route
   React.useEffect(() => {
     const user = localStorage.getItem("user");
-    if (!user) {
-      router.push("/login");
-    }
+    if (!user) router.push("/login");
   }, [router]);
 
   const isActive = (path: string) => pathname === path;
 
   const menuItems = [
-    { name: "Ana Sayfa", href: "/dashboard", icon: Home },
-    { name: "Aidat & Ödemeler", href: "/dashboard/payments", icon: CreditCard },
-    { name: "Duyurular", href: "/dashboard/announcements", icon: Megaphone },
-    { name: "Taleplerim", href: "/dashboard/requests", icon: Wrench },
+    { name: "Ana Sayfa", shortName: "Anasayfa", href: "/dashboard", icon: Home },
+    { name: "Aidat & Ödemeler", shortName: "Aidat", href: "/dashboard/payments", icon: CreditCard },
+    { name: "Duyurular", shortName: "Duyuru", href: "/dashboard/announcements", icon: Megaphone },
+    { name: "Taleplerim", shortName: "Talep", href: "/dashboard/requests", icon: Wrench },
   ];
 
   return (
-    <div className="flex h-screen bg-zinc-50 dark:bg-[#0b0f19] flex-col sm:flex-row transition-colors duration-300">
+    <div className="flex h-dvh bg-zinc-50 dark:bg-[#0b0f19] flex-col sm:flex-row overflow-hidden">
       <PresenceHeartbeat />
-      {/* Sidebar for Desktop */}
-      <aside className="hidden sm:flex flex-col w-64 border-r border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 h-full p-4">
+
+      {/* ══════ DESKTOP SIDEBAR ══════ */}
+      <aside className="hidden sm:flex flex-col w-64 border-r border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 h-full p-4 shrink-0">
         <div className="px-2 py-4 mb-4 border-b border-zinc-100 dark:border-zinc-800/80 space-y-3">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 overflow-hidden shrink-0">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
               <SiteLogo width={32} height={32} className="h-7 w-7 brightness-0 invert" alt="" />
             </div>
             <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300 truncate">{SITE_BRAND_NAME}</p>
           </div>
           <div className="flex items-center gap-2 px-1">
-            <div className="h-8 w-8 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-900/30 text-xs font-bold">
+            <div className="h-8 w-8 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-900/30 text-xs font-bold shrink-0">
               {asideName.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
@@ -73,7 +69,7 @@ export default function DashboardLayout({
             </div>
           </div>
         </div>
-        
+
         <nav className="flex-1 space-y-1.5">
           {menuItems.map((item) => {
             const active = isActive(item.href);
@@ -84,7 +80,7 @@ export default function DashboardLayout({
                 className={`flex items-center gap-3 px-3 py-3 rounded-2xl transition-all duration-200 font-medium text-sm ${
                   active
                     ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/10"
-                    : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200"
+                    : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 }`}
               >
                 <item.icon className="h-5 w-5" />
@@ -93,18 +89,18 @@ export default function DashboardLayout({
             );
           })}
         </nav>
-        
+
         <div className="mt-auto border-t border-zinc-100 dark:border-zinc-800/80 pt-4 flex justify-between items-center px-2">
           <ThemeToggle />
           <div className="flex items-center gap-1">
             <NotificationBell />
-            <button 
+            <button
               onClick={async () => {
                 try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
                 localStorage.removeItem("user");
                 router.push("/login");
               }}
-              className="flex items-center gap-1.5 text-sm text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 font-semibold hover:underline"
+              className="flex items-center gap-1.5 text-sm text-red-500 dark:text-red-400 hover:text-red-600 font-semibold"
             >
               <LogOut className="h-4 w-4" />
               Çıkış Yap
@@ -113,31 +109,33 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pb-20 sm:pb-0">
-        <div className="sm:hidden flex items-center justify-between p-4 border-b border-zinc-200/60 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 sticky top-0 z-10">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-sm">
-              <Home className="h-4 w-4" />
-            </div>
-            <span className="text-md font-bold text-zinc-950 dark:text-zinc-50">Sakin Paneli</span>
+      {/* ══════ MOBILE HEADER ══════ */}
+      <header className="sm:hidden flex items-center justify-between px-4 h-14 border-b border-zinc-200/60 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shrink-0">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm shrink-0">
+            <SiteLogo width={24} height={24} className="h-5 w-5 brightness-0 invert" alt="" />
           </div>
-          <div className="flex items-center gap-2">
-            <NotificationBell />
-            <ThemeToggle />
-            <button
-              onClick={async () => {
-                try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
-                localStorage.removeItem("user");
-                router.push("/login");
-              }}
-              className="p-2 rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-              title="Çıkış Yap"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
+          <span className="text-sm font-bold text-zinc-950 dark:text-zinc-50 truncate">Sakin Paneli</span>
         </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <NotificationBell />
+          <ThemeToggle />
+          <button
+            onClick={async () => {
+              try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
+              localStorage.removeItem("user");
+              router.push("/login");
+            }}
+            className="p-2 rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            title="Çıkış Yap"
+          >
+            <LogOut className="h-4.5 w-4.5" />
+          </button>
+        </div>
+      </header>
+
+      {/* ══════ MAIN CONTENT ══════ */}
+      <main className="flex-1 overflow-y-auto overscroll-contain sm:pb-0 pb-20">
         <div className="h-full">
           <PushNotificationProvider>
             <FeatureGateProvider>
@@ -147,34 +145,29 @@ export default function DashboardLayout({
         </div>
       </main>
 
-      {/* Bottom Navigation for Mobile */}
-      <nav className="sm:hidden fixed bottom-0 w-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200/60 dark:border-zinc-800/80 flex items-center justify-around pb-safe z-50">
-        {menuItems.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <a
-              key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center gap-1 py-3 px-2 flex-1 transition-colors ${
-                active ? "text-indigo-600 dark:text-indigo-400" : "text-zinc-400 dark:text-zinc-500"
-              }`}
-            >
-              <item.icon className="h-5.5 w-5.5" />
-              <span className="text-[10px] font-semibold">{item.name.split(" ")[0]}</span>
-            </a>
-          );
-        })}
-        <button
-          onClick={async () => {
-            try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
-            localStorage.removeItem("user");
-            router.push("/login");
-          }}
-          className="flex flex-col items-center gap-1 py-3 px-2 flex-1 text-red-400 dark:text-red-500 transition-colors"
-        >
-          <LogOut className="h-5.5 w-5.5" />
-          <span className="text-[10px] font-semibold">Çıkış</span>
-        </button>
+      {/* ══════ MOBILE BOTTOM NAV ══════ */}
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-zinc-900 border-t border-zinc-200/60 dark:border-zinc-800/80 z-50" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+        <div className="flex items-center justify-around h-16">
+          {menuItems.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
+                  active
+                    ? "text-indigo-600 dark:text-indigo-400"
+                    : "text-zinc-400 dark:text-zinc-500 active:text-zinc-600"
+                }`}
+              >
+                <div className={`p-1.5 rounded-xl transition-colors ${active ? "bg-indigo-50 dark:bg-indigo-950/40" : ""}`}>
+                  <item.icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
+                </div>
+                <span className={`text-[10px] ${active ? "font-bold" : "font-medium"}`}>{item.shortName}</span>
+              </a>
+            );
+          })}
+        </div>
       </nav>
     </div>
   );

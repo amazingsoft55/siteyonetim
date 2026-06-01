@@ -22,19 +22,19 @@ import {
 
 const ADMIN_MENU: {
   name: string;
+  shortName: string;
   href: string;
   icon: LucideIcon;
-  /** Sadece atanmış site yöneticisi (ADMIN); süper yönetici admin panelinde görünmez */
   siteManagerOnly?: boolean;
 }[] = [
-  { name: "Özet Durum", href: "/admin", icon: LayoutDashboard },
-  { name: "Yönetim kurulu", href: "/admin/kullanicilar", icon: UserSquare2, siteManagerOnly: true },
-  { name: "Hesabım", href: "/admin/hesabim", icon: UserCog, siteManagerOnly: true },
-  { name: "Sakinler & Aidatlar", href: "/admin/residents", icon: Users },
-  { name: "Duyuru Yönetimi", href: "/admin/announcements", icon: Megaphone },
-  { name: "Arıza & Talepler", href: "/admin/requests", icon: Wrench },
-  { name: "Platform Destek", href: "/admin/destek", icon: LifeBuoy, siteManagerOnly: true },
-  { name: "Site Ayarları", href: "/admin/settings", icon: Settings },
+  { name: "Özet Durum", shortName: "Özet", href: "/admin", icon: LayoutDashboard },
+  { name: "Yönetim kurulu", shortName: "Kurul", href: "/admin/kullanicilar", icon: UserSquare2, siteManagerOnly: true },
+  { name: "Hesabım", shortName: "Hesap", href: "/admin/hesabim", icon: UserCog, siteManagerOnly: true },
+  { name: "Sakinler & Aidatlar", shortName: "Sakinler", href: "/admin/residents", icon: Users },
+  { name: "Duyuru Yönetimi", shortName: "Duyuru", href: "/admin/announcements", icon: Megaphone },
+  { name: "Arıza & Talepler", shortName: "Talepler", href: "/admin/requests", icon: Wrench },
+  { name: "Platform Destek", shortName: "Destek", href: "/admin/destek", icon: LifeBuoy, siteManagerOnly: true },
+  { name: "Site Ayarları", shortName: "Ayarlar", href: "/admin/settings", icon: Settings },
 ];
 
 export default function AdminLayout({
@@ -76,11 +76,13 @@ export default function AdminLayout({
   const isActive = (path: string) => pathname === path;
 
   return (
-    <div className="flex h-screen bg-rose-50/10 dark:bg-[#0b0f19] flex-col sm:flex-row transition-colors duration-300">
+    <div className="flex h-dvh bg-rose-50/10 dark:bg-[#0b0f19] flex-col sm:flex-row overflow-hidden">
       <PresenceHeartbeat />
+
+      {/* ══════ DESKTOP SIDEBAR ══════ */}
       <aside className="hidden sm:flex flex-col w-64 border-r border-rose-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 h-full p-4 shrink-0">
         <div className="flex items-center gap-2.5 px-2 py-4 mb-6 border-b border-zinc-100 dark:border-zinc-800/80">
-          <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg shadow-rose-500/25 overflow-hidden shrink-0">
+          <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg shadow-rose-500/25 shrink-0">
             <SiteLogo width={40} height={40} className="h-9 w-9 brightness-0 invert" alt="" />
           </div>
           <div className="min-w-0">
@@ -99,7 +101,7 @@ export default function AdminLayout({
                 className={`flex items-center gap-3 px-3 py-3 rounded-2xl transition-all duration-200 font-medium text-sm ${
                   active
                     ? "bg-rose-600 text-white shadow-md shadow-rose-600/10"
-                    : "text-zinc-600 dark:text-zinc-400 hover:bg-rose-50 dark:hover:bg-zinc-800 hover:text-rose-600 dark:hover:text-rose-400"
+                    : "text-zinc-600 dark:text-zinc-400 hover:bg-rose-50 dark:hover:bg-zinc-800"
                 }`}
               >
                 <item.icon className="h-5 w-5" />
@@ -114,13 +116,12 @@ export default function AdminLayout({
           <div className="flex items-center gap-1">
             <NotificationBell />
             <button
-              type="button"
               onClick={async () => {
                 try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
                 localStorage.removeItem("user");
                 router.push("/login");
               }}
-              className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 font-bold hover:underline"
+              className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-rose-600 font-bold"
             >
               <LogOut className="h-4 w-4" />
               Çıkış Yap
@@ -129,60 +130,59 @@ export default function AdminLayout({
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto pb-20 sm:pb-0">
-        <div className="sm:hidden flex items-center justify-between p-4 border-b border-rose-200/50 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 sticky top-0 z-10">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg shadow-rose-500/25 overflow-hidden shrink-0">
-              <SiteLogo width={32} height={32} className="h-7 w-7 brightness-0 invert" alt="" />
-            </div>
-            <h1 className="text-sm font-bold text-zinc-950 dark:text-zinc-50 truncate">{SITE_BRAND_NAME}</h1>
+      {/* ══════ MOBILE HEADER ══════ */}
+      <header className="sm:hidden flex items-center justify-between px-4 h-14 border-b border-rose-200/50 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shrink-0">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-sm shrink-0">
+            <SiteLogo width={24} height={24} className="h-5 w-5 brightness-0 invert" alt="" />
           </div>
-          <div className="flex items-center gap-2">
-            <NotificationBell />
-            <ThemeToggle />
-            <button
-              onClick={async () => {
-                try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
-                localStorage.removeItem("user");
-                router.push("/login");
-              }}
-              className="p-2 rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-              title="Çıkış Yap"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
+          <span className="text-sm font-bold text-zinc-950 dark:text-zinc-50 truncate">{SITE_BRAND_NAME}</span>
         </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <NotificationBell />
+          <ThemeToggle />
+          <button
+            onClick={async () => {
+              try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
+              localStorage.removeItem("user");
+              router.push("/login");
+            }}
+            className="p-2 rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            title="Çıkış Yap"
+          >
+            <LogOut className="h-4.5 w-4.5" />
+          </button>
+        </div>
+      </header>
+
+      {/* ══════ MAIN CONTENT ══════ */}
+      <main className="flex-1 overflow-y-auto overscroll-contain sm:pb-0 pb-20">
         <div className="h-full">{children}</div>
       </main>
 
-      <nav className="sm:hidden fixed bottom-0 w-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200/60 dark:border-zinc-800/80 flex items-center justify-around pb-safe z-50">
-        {menuItems.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <a
-              key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center gap-1 py-3 px-1 flex-1 transition-colors ${
-                active ? "text-rose-600 dark:text-rose-400" : "text-zinc-400 dark:text-zinc-500"
-              }`}
-            >
-              <item.icon className="h-5.5 w-5.5" />
-              <span className="text-[9px] font-semibold">{item.name.split(" ")[0]}</span>
-            </a>
-          );
-        })}
-        <button
-          onClick={async () => {
-            try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
-            localStorage.removeItem("user");
-            router.push("/login");
-          }}
-          className="flex flex-col items-center gap-1 py-3 px-1 flex-1 text-red-400 dark:text-red-500 transition-colors"
-        >
-          <LogOut className="h-5.5 w-5.5" />
-          <span className="text-[9px] font-semibold">Çıkış</span>
-        </button>
+      {/* ══════ MOBILE BOTTOM NAV ══════ */}
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-zinc-900 border-t border-zinc-200/60 dark:border-zinc-800/80 z-50" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+        <div className="flex items-center justify-around h-16">
+          {menuItems.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
+                  active
+                    ? "text-rose-600 dark:text-rose-400"
+                    : "text-zinc-400 dark:text-zinc-500 active:text-zinc-600"
+                }`}
+              >
+                <div className={`p-1.5 rounded-xl transition-colors ${active ? "bg-rose-50 dark:bg-rose-950/40" : ""}`}>
+                  <item.icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
+                </div>
+                <span className={`text-[10px] ${active ? "font-bold" : "font-medium"}`}>{item.shortName}</span>
+              </a>
+            );
+          })}
+        </div>
       </nav>
     </div>
   );
