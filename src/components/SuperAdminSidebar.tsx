@@ -53,9 +53,7 @@ export function SuperAdminSidebar({ children }: { children: React.ReactNode }) {
       >
         {/* Logo */}
         <div className={`flex items-center gap-3 px-4 h-16 border-b border-zinc-100 dark:border-zinc-800/80 shrink-0 ${collapsed ? "justify-center" : ""}`}>
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
-            <SiteLogo width={32} height={32} className="h-7 w-7 brightness-0 invert" alt="" />
-          </div>
+          <SiteLogo width={36} height={36} className="shrink-0" alt="" />
           {!collapsed && (
             <div className="min-w-0">
               <p className="text-sm font-extrabold text-zinc-900 dark:text-zinc-50 truncate">{SITE_BRAND_NAME}</p>
@@ -125,9 +123,7 @@ export function SuperAdminSidebar({ children }: { children: React.ReactNode }) {
           <aside className="absolute left-0 top-0 bottom-0 w-[260px] bg-white dark:bg-zinc-900 shadow-2xl flex flex-col">
             <div className="flex items-center justify-between px-4 h-16 border-b border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-                  <SiteLogo width={32} height={32} className="h-7 w-7 brightness-0 invert" alt="" />
-                </div>
+                <SiteLogo width={36} height={36} alt="" />
                 <div>
                   <p className="text-sm font-extrabold text-zinc-900 dark:text-zinc-50">{SITE_BRAND_NAME}</p>
                   <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">Süper Yönetici</p>

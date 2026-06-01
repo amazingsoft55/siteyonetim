@@ -54,9 +54,7 @@ export default function DashboardLayout({
       <aside className="hidden sm:flex flex-col w-64 border-r border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 h-full p-4 shrink-0">
         <div className="px-2 py-4 mb-4 border-b border-zinc-100 dark:border-zinc-800/80 space-y-3">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
-              <SiteLogo width={32} height={32} className="h-7 w-7 brightness-0 invert" alt="" />
-            </div>
+            <SiteLogo width={36} height={36} alt="" />
             <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300 truncate">{SITE_BRAND_NAME}</p>
           </div>
           <div className="flex items-center gap-2 px-1">
@@ -112,9 +110,7 @@ export default function DashboardLayout({
       {/* ══════ MOBILE HEADER ══════ */}
       <header className="sm:hidden flex items-center justify-between px-4 h-14 border-b border-zinc-200/60 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm shrink-0">
-            <SiteLogo width={24} height={24} className="h-5 w-5 brightness-0 invert" alt="" />
-          </div>
+          <SiteLogo width={28} height={28} alt="" />
           <span className="text-sm font-bold text-zinc-950 dark:text-zinc-50 truncate">Sakin Paneli</span>
         </div>
         <div className="flex items-center gap-0.5 shrink-0">

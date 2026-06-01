@@ -82,9 +82,7 @@ export default function AdminLayout({
       {/* ══════ DESKTOP SIDEBAR ══════ */}
       <aside className="hidden sm:flex flex-col w-64 border-r border-rose-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 h-full p-4 shrink-0">
         <div className="flex items-center gap-2.5 px-2 py-4 mb-6 border-b border-zinc-100 dark:border-zinc-800/80">
-          <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg shadow-rose-500/25 shrink-0">
-            <SiteLogo width={40} height={40} className="h-9 w-9 brightness-0 invert" alt="" />
-          </div>
+          <SiteLogo width={40} height={40} alt="" />
           <div className="min-w-0">
             <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50 truncate">{SITE_BRAND_NAME}</p>
             <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">Yönetici paneli</p>
@@ -133,9 +131,7 @@ export default function AdminLayout({
       {/* ══════ MOBILE HEADER ══════ */}
       <header className="sm:hidden flex items-center justify-between px-4 h-14 border-b border-rose-200/50 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-sm shrink-0">
-            <SiteLogo width={24} height={24} className="h-5 w-5 brightness-0 invert" alt="" />
-          </div>
+          <SiteLogo width={28} height={28} alt="" />
           <span className="text-sm font-bold text-zinc-950 dark:text-zinc-50 truncate">{SITE_BRAND_NAME}</span>
         </div>
         <div className="flex items-center gap-0.5 shrink-0">
