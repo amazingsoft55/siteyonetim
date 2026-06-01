@@ -68,7 +68,11 @@ export const requests = sqliteTable("requests", {
   subject: text("subject").notNull(),
   description: text("description").notNull(),
   category: text("category"),
-  status: text("status", { enum: ["OPEN", "IN_PROGRESS", "RESOLVED"] }).notNull().default("OPEN"),
+  status: text("status", { enum: ["OPEN", "IN_PROGRESS", "RESOLVED", "REJECTED"] }).notNull().default("OPEN"),
+  resolutionNote: text("resolution_note"),
+  resolutionImageUrl: text("resolution_image_url"),
+  rejectedNote: text("rejected_note"),
+  rejectedImageUrl: text("rejected_image_url"),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 

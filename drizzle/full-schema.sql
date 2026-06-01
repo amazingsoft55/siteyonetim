@@ -113,6 +113,10 @@ CREATE TABLE IF NOT EXISTS `requests` (
   `description` text NOT NULL,
   `category` text,
   `status` text NOT NULL DEFAULT 'OPEN',
+  `resolution_note` text,
+  `resolution_image_url` text,
+  `rejected_note` text,
+  `rejected_image_url` text,
   `created_at` text DEFAULT (CURRENT_TIMESTAMP),
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),
   FOREIGN KEY (`site_id`) REFERENCES `sites`(`id`)
