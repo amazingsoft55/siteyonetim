@@ -16,7 +16,6 @@ interface Payment {
 
 export default function ResidentPaymentsPage() {
   const showAlert = useAlert();
-  const showConfirm = useConfirm();
   const [payments, setPayments] = React.useState<Payment[]>([]);
   const [selectedPayment, setSelectedPayment] = React.useState<Payment | null>(null);
   const [loadErr, setLoadErr] = React.useState("");
