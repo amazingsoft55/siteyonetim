@@ -8,27 +8,26 @@ type Props = {
   rounded?: boolean;
 };
 
-/** Site logosu — text tabanlı, her cihazda çalışır. */
+/** Site logosu — /logo.png dosyasını kullanır. */
 export function SiteLogo({
   width = 40,
   height = 40,
   className = "",
-  alt = `${SITE_BRAND_NAME} logosu`,
+  alt = SITE_BRAND_NAME,
   rounded = false,
 }: Props) {
-  const initials = SITE_BRAND_NAME.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
-  const fontSize = Math.floor(height * 0.42);
   const borderRadius = rounded ? Math.floor(width * 0.22) : Math.floor(width * 0.18);
 
   return (
-    <div
-      className={`flex items-center justify-center bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-extrabold select-none ${className}`}
-      style={{ width, height, borderRadius, fontSize, lineHeight: 1, letterSpacing: "-0.5px" }}
-      role="img"
-      aria-label={alt}
-    >
-      {initials}
-    </div>
+    <img
+      src="/logo.png"
+      alt={alt}
+      width={width}
+      height={height}
+      className={`object-contain ${className}`}
+      style={{ borderRadius }}
+      draggable={false}
+    />
   );
 }
 
