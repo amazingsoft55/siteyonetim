@@ -57,8 +57,8 @@ export default function DashboardLayout({
       <aside className="hidden sm:flex flex-col w-64 border-r border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 h-full p-4">
         <div className="px-2 py-4 mb-4 border-b border-zinc-100 dark:border-zinc-800/80 space-y-3">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-white dark:bg-zinc-950 ring-1 ring-zinc-200/80 dark:ring-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
-              <SiteLogo width={32} height={32} className="h-7 w-7" alt="" />
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 overflow-hidden shrink-0">
+              <SiteLogo width={32} height={32} className="h-7 w-7 brightness-0 invert" alt="" />
             </div>
             <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300 truncate">{SITE_BRAND_NAME}</p>
           </div>
