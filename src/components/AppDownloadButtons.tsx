@@ -1,48 +1,22 @@
 "use client";
 
 import * as React from "react";
-import { Download, Smartphone, Monitor } from "lucide-react";
+import { Download, Monitor } from "lucide-react";
 import type { AppDownloadVariant } from "@/lib/app-download-links";
+import { getAppDownloadUrl } from "@/lib/app-download-links";
 import { detectClientPlatform } from "@/lib/detect-platform";
-import { getDeferredInstallPrompt, triggerInstallPrompt, isStandaloneDisplay } from "@/lib/pwa-install";
 
-const APP_NAMES: Record<AppDownloadVariant, string> = {
-  site: "Site Yönetim",
-  "super-admin": "SY Süper",
-};
 
 export function AppDownloadButtons({ variant }: { variant: AppDownloadVariant; compact?: boolean }) {
   const [client, setClient] = React.useState<"ios" | "android" | "desktop" | "unknown">("unknown");
-  const [installReady, setInstallReady] = React.useState(false);
-  const [installing, setInstalling] = React.useState(false);
-  const [installed, setInstalled] = React.useState(false);
-  const [showGuide, setShowGuide] = React.useState<"ios" | "android" | null>(null);
+  const [showGuide, setShowGuide] = React.useState<"ios" | null>(null);
 
   React.useEffect(() => {
     const ua = navigator.userAgent;
     setClient(detectClientPlatform(ua, navigator.maxTouchPoints));
-    setInstallReady(getDeferredInstallPrompt() !== null);
   }, []);
 
-  const handleAndroidInstall = async () => {
-    // Otomatik PWA kurulumu dene
-    if (installReady) {
-      setInstalling(true);
-      try {
-        const result = await triggerInstallPrompt();
-        if (result === "accepted") {
-          setInstalled(true);
-          setInstalling(false);
-          return;
-        }
-      } catch {
-        // sessiz
-      }
-      setInstalling(false);
-    }
-    // Kurulamıyorsa rehber göster
-    setShowGuide("android");
-  };
+  const androidUrl = getAppDownloadUrl(variant, "android");
 
   const handleIosInstall = () => {
     setShowGuide("ios");
@@ -50,12 +24,11 @@ export function AppDownloadButtons({ variant }: { variant: AppDownloadVariant; c
 
   return (
     <div className="space-y-3">
-      {/* Android Butonu */}
-      <button
-        type="button"
-        onClick={handleAndroidInstall}
-        disabled={installing || installed}
-        className="w-full flex items-center gap-4 rounded-2xl py-4 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold shadow-lg shadow-emerald-600/25 disabled:opacity-70 transition-all active:scale-[0.98]"
+      {/* Android Butonu — direkt APK indirme */}
+      <a
+        href={androidUrl}
+        download
+        className="w-full flex items-center gap-4 rounded-2xl py-4 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold shadow-lg shadow-emerald-600/25 transition-all active:scale-[0.98]"
       >
         <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
           <svg viewBox="0 0 24 24" className="h-6 w-6 fill-current" xmlns="http://www.w3.org/2000/svg">
@@ -64,12 +37,10 @@ export function AppDownloadButtons({ variant }: { variant: AppDownloadVariant; c
         </div>
         <div className="text-left flex-1">
           <p className="text-sm font-black">Android&apos;e Yükle</p>
-          <p className="text-[11px] font-medium text-emerald-100/80">
-            {installed ? "Yüklendi!" : installReady ? "Tek dokunuşla kur" : "Rehber ile kur"}
-          </p>
+          <p className="text-[11px] font-medium text-emerald-100/80">APK indir</p>
         </div>
-        {!installed && <Download className="h-5 w-5 shrink-0" />}
-      </button>
+        <Download className="h-5 w-5 shrink-0" />
+      </a>
 
       {/* iPhone Butonu */}
       <button
@@ -91,9 +62,9 @@ export function AppDownloadButtons({ variant }: { variant: AppDownloadVariant; c
 
       {/* PC Butonu */}
       {client === "desktop" && (
-        <button
-          type="button"
-          onClick={() => setShowGuide(showGuide === "android" ? null : "android")}
+        <a
+          href={androidUrl}
+          download
           className="w-full flex items-center gap-4 rounded-2xl py-4 px-5 bg-white dark:bg-zinc-800 border-2 border-zinc-200 dark:border-zinc-700 hover:border-indigo-300 dark:hover:border-indigo-600 text-zinc-900 dark:text-zinc-50 font-extrabold transition-all active:scale-[0.98]"
         >
           <div className="h-10 w-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center shrink-0">
@@ -101,46 +72,10 @@ export function AppDownloadButtons({ variant }: { variant: AppDownloadVariant; c
           </div>
           <div className="text-left flex-1">
             <p className="text-sm font-black">Bilgisayara Yükle</p>
-            <p className="text-[11px] font-medium text-zinc-500">Chrome ile kurulum</p>
+            <p className="text-[11px] font-medium text-zinc-500">APK indir</p>
           </div>
           <Download className="h-5 w-5 shrink-0" />
-        </button>
-      )}
-
-      {/* Android Rehber Modal */}
-      {showGuide === "android" && (
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowGuide(null)} />
-          <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-black text-zinc-900 dark:text-zinc-50">Android Kurulum</h3>
-              <button type="button" onClick={() => setShowGuide(null)} className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                <span className="text-zinc-400">✕</span>
-              </button>
-            </div>
-            <div className="space-y-3 text-sm text-zinc-600 dark:text-zinc-400">
-              <div className="flex gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
-                <span className="h-6 w-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold shrink-0">1</span>
-                <p>Chrome tarayıcısında bu sayfayı açın</p>
-              </div>
-              <div className="flex gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
-                <span className="h-6 w-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold shrink-0">2</span>
-                <p>Adres çubuğunun yanındaki <strong>⋮ (üç nokta)</strong> menüsüne tıklayın</p>
-              </div>
-              <div className="flex gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
-                <span className="h-6 w-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold shrink-0">3</span>
-                <p><strong>&quot;Ana ekrana ekle&quot;</strong> veya <strong>&quot;Yükle&quot;</strong> seçeneğine tıklayın</p>
-              </div>
-              <div className="flex gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
-                <span className="h-6 w-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold shrink-0">4</span>
-                <p><strong>&quot;Yükle&quot;</strong> butonuna basın — uygulama ana ekrana eklenir</p>
-              </div>
-            </div>
-            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-xs text-emerald-700 dark:text-emerald-300 text-center font-semibold">
-              Kurulumdan sonra uygulama doğrudan ana ekrandan açılabilir
-            </div>
-          </div>
-        </div>
+        </a>
       )}
 
       {/* iOS Rehber Modal */}

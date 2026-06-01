@@ -17,7 +17,6 @@ import {
   Puzzle,
   RefreshCw,
   Search,
-  Settings,
   Shield,
   TrendingUp,
   Users,
@@ -204,7 +203,6 @@ export default function SuperAdminDashboard() {
           <div className="rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/30 p-4 text-sm text-amber-950 dark:text-amber-100">
             <p className="font-semibold">{loadErr}</p>
             <div className="flex flex-wrap gap-3 mt-2">
-              <Link href="/kurulum" className="text-xs font-bold underline text-indigo-700 dark:text-indigo-400">Kurulum rehberi</Link>
               <button type="button" onClick={refreshNow} className="text-xs font-bold underline">Tekrar dene</button>
             </div>
           </div>
@@ -217,7 +215,6 @@ export default function SuperAdminDashboard() {
             { href: "/super-admin/destek", title: "Destek", desc: "Talep ve mesaj yönetimi", icon: LifeBuoy, color: "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/30" },
             { href: "/super-admin/features", title: "Özellikler", desc: "Platform özellikleri", icon: Puzzle, color: "text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/30" },
             { href: "/super-admin/plans", title: "Paketler", desc: "Fiyatlandırma yönetimi", icon: CreditCard, color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30" },
-            { href: "/kurulum", title: "Kurulum", desc: "Sistem yapılandırması", icon: Settings, color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30" },
           ].map((c) => (
             <Link
               key={c.href}
