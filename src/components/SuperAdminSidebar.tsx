@@ -157,6 +157,21 @@ export function SuperAdminSidebar({ children }: { children: React.ReactNode }) {
                 );
               })}
             </nav>
+            <div className="border-t border-zinc-100 dark:border-zinc-800 p-3">
+              <button
+                type="button"
+                onClick={async () => {
+                  setMobileOpen(false);
+                  try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
+                  localStorage.removeItem("user");
+                  router.push("/login");
+                }}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors w-full"
+              >
+                <LogOut className="h-5 w-5 shrink-0" />
+                <span className="text-sm font-semibold">Çıkış Yap</span>
+              </button>
+            </div>
           </aside>
         </div>
       )}
