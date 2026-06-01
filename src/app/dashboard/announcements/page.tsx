@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Megaphone, Search, Calendar } from "lucide-react";
+import { Megaphone, Search, Calendar, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 interface Announcement {
   id: string;
@@ -10,6 +11,7 @@ interface Announcement {
   content: string;
   category?: string;
   imageUrl?: string | null;
+  images?: string[];
   isNew?: boolean;
 }
 
@@ -87,53 +89,70 @@ export default function ResidentAnnouncementsPage() {
               : "Aramanızla eşleşen duyuru bulunamadı."}
           </div>
         ) : (
-          filtered.map((a) => (
-            <div 
-              key={a.id} 
-              className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-3xl overflow-hidden shadow-sm hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-all duration-200"
-            >
-              {a.imageUrl && (
-                <img 
-                  src={a.imageUrl} 
-                  alt={a.title}
-                  className="w-full h-48 object-cover"
-                />
-              )}
-              <div className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 p-3.5 rounded-2xl shrink-0 border border-indigo-100 dark:border-indigo-900/30">
-                    <Megaphone className="h-6 w-6" />
+          filtered.map((a) => {
+            const allImages = a.images && a.images.length > 0 ? a.images : (a.imageUrl ? [a.imageUrl] : []);
+            return (
+              <Link
+                key={a.id}
+                href={`/dashboard/announcements/${a.id}`}
+                className="block bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-3xl overflow-hidden shadow-sm hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-all duration-200"
+              >
+                {/* Görseller */}
+                {allImages.length > 0 && (
+                  <div className={`grid ${allImages.length > 1 ? "grid-cols-2" : "grid-cols-1"} gap-0.5`}>
+                    {allImages.slice(0, 2).map((img, idx) => (
+                      <img 
+                        key={idx}
+                        src={img} 
+                        alt={a.title}
+                        className="w-full h-44 object-cover"
+                      />
+                    ))}
                   </div>
-                  <div className="space-y-2 w-full">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50">{a.title}</h3>
-                        {a.isNew && (
-                          <span className="px-2 py-0.5 text-[10px] font-bold bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-full">
-                            YENİ
-                          </span>
-                        )}
-                      </div>
-                      <span className="flex items-center gap-1 text-xs text-zinc-400">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {a.date}
-                      </span>
+                )}
+
+                <div className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 p-3.5 rounded-2xl shrink-0 border border-indigo-100 dark:border-indigo-900/30">
+                      <Megaphone className="h-6 w-6" />
                     </div>
-                    
-                    {a.category && (
-                      <span className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-full ${getCategoryColor(a.category)}`}>
-                        {a.category}
-                      </span>
-                    )}
-                    
-                    <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed pt-1">
-                      {a.content}
-                    </p>
+                    <div className="space-y-2 w-full">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50">{a.title}</h3>
+                          {a.isNew && (
+                            <span className="px-2 py-0.5 text-[10px] font-bold bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-full">
+                              YENİ
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {allImages.length > 0 && (
+                            <span className="text-xs text-zinc-400">📷 {allImages.length}</span>
+                          )}
+                          <span className="flex items-center gap-1 text-xs text-zinc-400">
+                            <Calendar className="h-3.5 w-3.5" />
+                            {a.date}
+                          </span>
+                          <ChevronRight className="h-4 w-4 text-zinc-400" />
+                        </div>
+                      </div>
+                      
+                      {a.category && (
+                        <span className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-full ${getCategoryColor(a.category)}`}>
+                          {a.category}
+                        </span>
+                      )}
+                      
+                      <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed pt-1 line-clamp-2">
+                        {a.content}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          ))
+              </Link>
+            );
+          })
         )}
       </div>
     </div>

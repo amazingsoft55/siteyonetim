@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS `announcements` (
   `content` text NOT NULL,
   `category` text,
   `image_url` text,
+  `images` text DEFAULT '[]',
   `created_at` text DEFAULT (CURRENT_TIMESTAMP),
   FOREIGN KEY (`site_id`) REFERENCES `sites`(`id`)
 );
@@ -228,3 +229,18 @@ CREATE TABLE IF NOT EXISTS `notifications` (
 
 CREATE INDEX IF NOT EXISTS `idx_notifications_user_unread` ON `notifications` (`user_id`, `read_at`);
 CREATE INDEX IF NOT EXISTS `idx_notifications_created` ON `notifications` (`created_at`);
+
+-- Push notification abonelikleri
+CREATE TABLE IF NOT EXISTS `push_subscriptions` (
+  `id` text PRIMARY KEY NOT NULL,
+  `user_id` text NOT NULL,
+  `endpoint` text NOT NULL,
+  `p256dh` text NOT NULL,
+  `auth` text NOT NULL,
+  `user_agent` text,
+  `created_at` text DEFAULT (CURRENT_TIMESTAMP),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+);
+
+CREATE INDEX IF NOT EXISTS `idx_push_subscriptions_user` ON `push_subscriptions` (`user_id`);
+CREATE INDEX IF NOT EXISTS `idx_push_subscriptions_endpoint` ON `push_subscriptions` (`endpoint`);

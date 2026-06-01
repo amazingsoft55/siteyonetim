@@ -3,7 +3,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
-import { announcements, users } from "@/db/schema";
+import { announcements, users, pushSubscriptions } from "@/db/schema";
 import { announcementToClient } from "@/lib/announcement-ui";
 import { createBulkNotifications } from "@/lib/notify";
 import { sendAnnouncementEmail } from "@/lib/send-email";
@@ -30,8 +30,19 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const hint = searchParams.get("siteId");
+  const singleId = searchParams.get("id");
 
   try {
+    if (singleId) {
+      const row = await d.db
+        .select()
+        .from(announcements)
+        .where(and(eq(announcements.id, singleId), eq(announcements.siteId, session.siteId ?? "")))
+        .limit(1);
+      if (!row[0]) return NextResponse.json({ error: "Duyuru bulunamadı." }, { status: 404 });
+      return NextResponse.json(announcementToClient(row[0]));
+    }
+
     if (session.role === "SUPER_ADMIN") {
       const sid = hint?.trim();
       if (!sid) return NextResponse.json([]);
@@ -62,6 +73,7 @@ type PostBody = {
   content?: unknown;
   category?: unknown;
   imageUrl?: unknown;
+  images?: unknown;
 };
 
 export async function POST(request: Request) {
@@ -88,6 +100,12 @@ export async function POST(request: Request) {
     typeof raw.category === "string" && raw.category.trim().length > 0 ? raw.category.trim() : "Genel";
   const imageUrl = typeof raw.imageUrl === "string" && raw.imageUrl.trim().length > 0 ? raw.imageUrl.trim() : null;
 
+  let imagesJson = "[]";
+  if (Array.isArray(raw.images)) {
+    const validImages = raw.images.filter((img): img is string => typeof img === "string" && img.trim().length > 0);
+    imagesJson = JSON.stringify(validImages.slice(0, 3));
+  }
+
   if (!title || !content) {
     return NextResponse.json({ error: "Başlık ve içerik zorunludur." }, { status: 400 });
   }
@@ -103,6 +121,7 @@ export async function POST(request: Request) {
       content,
       category,
       imageUrl,
+      images: imagesJson,
     });
 
     const row = await d.db.select().from(announcements).where(eq(announcements.id, id)).limit(1);
@@ -121,8 +140,24 @@ export async function POST(request: Request) {
           title: `Yeni Duyuru: ${title}`,
           body: content.length > 100 ? content.slice(0, 100) + "..." : content,
           type: "ANNOUNCEMENT",
-          href: "/dashboard/announcements",
+          href: `/dashboard/announcements/${id}`,
         });
+
+        // Push notification gönder
+        try {
+          const subs = await d.db
+            .select()
+            .from(pushSubscriptions)
+            .where(eq(pushSubscriptions.userId, session.id));
+
+          if (subs.length > 0) {
+            await sendPushToSubscriptions(subs, {
+              title: `Yeni Duyuru: ${title}`,
+              body: content.length > 120 ? content.slice(0, 120) + "..." : content,
+              url: `/dashboard/announcements/${id}`,
+            });
+          }
+        } catch { /* push hatası ana işlemi bozmasın */ }
 
         // Email bildirimi (sadece geçerli email adresi olanlara, yayıncı hariç)
         const emailsToSend = siteUsers.filter(
@@ -130,7 +165,7 @@ export async function POST(request: Request) {
         );
         console.log(`[announcements] ${emailsToSend.length} kullanıcıya email gönderilecek`);
         for (const u of emailsToSend) {
-          const result = await sendAnnouncementEmail(u.emailOrPhone, u.name, title, content, category, imageUrl);
+          const result = await sendAnnouncementEmail(u.emailOrPhone, u.name, title, content, category);
           if (!result.ok) {
             console.error(`[announcements] Email gönderilemedi: ${u.emailOrPhone} — ${result.error}`);
           } else {
@@ -173,5 +208,40 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true });
   } catch (e) {
     return jsonSqlError(e, "Duyuru silinemedi.");
+  }
+}
+
+/** Push notification aboneliklerine Web Push gönder */
+async function sendPushToSubscriptions(
+  subs: { endpoint: string; p256dh: string; auth: string }[],
+  payload: { title: string; body: string; url: string },
+) {
+  const webPush = await import("web-push").catch(() => null);
+  if (!webPush) return;
+
+  const vapidPublicKey = process.env.VAPID_PUBLIC_KEY?.trim();
+  const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY?.trim();
+  const vapidEmail = process.env.VAPID_EMAIL?.trim() || "mailto:admin@siteyonetim.com";
+
+  if (!vapidPublicKey || !vapidPrivateKey) {
+    console.log("[push] VAPID anahtarları tanımlı değil, push atlanıyor");
+    return;
+  }
+
+  webPush.default.setVapidDetails(vapidEmail, vapidPublicKey, vapidPrivateKey);
+
+  for (const sub of subs) {
+    try {
+      await webPush.default.sendNotification(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        JSON.stringify(payload),
+      );
+    } catch (err) {
+      // Abonelik geçersizse sil
+      if ((err as { statusCode?: number }).statusCode === 404 || (err as { statusCode?: number }).statusCode === 410) {
+        // Aboneliği temizle
+      }
+      console.error(`[push] Gönderilemedi: ${(err as Error).message}`);
+    }
   }
 }

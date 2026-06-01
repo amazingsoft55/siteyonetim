@@ -159,7 +159,6 @@ export async function sendAnnouncementEmail(
   announcementTitle: string,
   announcementContent: string,
   category: string,
-  imageUrl?: string | null,
 ): Promise<SendResult> {
   const base = getPublicSiteUrl().replace(/\/$/, "");
   const truncated = announcementContent.length > 300 ? announcementContent.slice(0, 300) + "..." : announcementContent;
@@ -168,7 +167,6 @@ export async function sendAnnouncementEmail(
     title: `Yeni Duyuru`,
     intro: `Merhaba <strong>${recipientName || "Değerli Sakin"}</strong>, yeni bir duyuru yayınlandı.`,
     bodyHtml: `
-      ${imageUrl ? `<img src="${imageUrl}" alt="${announcementTitle}" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin:0 0 16px;border:1px solid #eee" />` : ""}
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fafafa;border:1px solid #eee;border-radius:12px;margin:0 0 20px">
         <tr><td style="padding:20px">
           <p style="margin:0 0 10px;display:inline-block;background:#ede9fe;color:#7c3aed;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px">${category}</p>
@@ -176,9 +174,10 @@ export async function sendAnnouncementEmail(
           <p style="margin:0;font-size:14px;line-height:1.7;color:#555">${truncated}</p>
         </td></tr>
       </table>
+      <p style="margin:0 0 16px;font-size:12px;color:#999;text-align:center">Duyurunun tüm içeriğini ve görsellerini görüntülemek için panele giriş yapın.</p>
     `,
     ctaHref: `${base}/dashboard/announcements`,
-    ctaLabel: "Duyuruyu Görüntüle",
+    ctaLabel: "Duyuruları Görüntüle",
     footerNote: "Bu e-posta site yönetimi tarafından gönderilen bir duyuru bildirimdir.",
     accentColor: "#7c3aed",
   });

@@ -20,6 +20,19 @@ export default function LoginPage() {
     setApiOriginDraft(getStoredApiBase());
   }, []);
 
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem("user");
+      if (!raw) return;
+      const u = JSON.parse(raw) as { role?: string };
+      if (u.role === "SUPER_ADMIN") router.push("/super-admin");
+      else if (u.role === "ADMIN") router.push("/admin");
+      else router.push("/dashboard");
+    } catch {
+      /* ignore */
+    }
+  }, [router]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!usernameOrPhone || !password) {

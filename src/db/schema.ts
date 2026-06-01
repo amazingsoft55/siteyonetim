@@ -57,6 +57,7 @@ export const announcements = sqliteTable("announcements", {
   content: text("content").notNull(),
   category: text("category"),
   imageUrl: text("image_url"),
+  images: text("images").default("[]"),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
@@ -197,5 +198,16 @@ export const notifications = sqliteTable("notifications", {
   }).notNull().default("SYSTEM"),
   href: text("href"),
   readAt: text("read_at"),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+/** Push notification abonelikleri — tarayıcı push için */
+export const pushSubscriptions = sqliteTable("push_subscriptions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  endpoint: text("endpoint").notNull(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  userAgent: text("user_agent"),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
