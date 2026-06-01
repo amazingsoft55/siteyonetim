@@ -42,6 +42,11 @@ export async function POST(request: Request) {
         .set({ userId: session.id, p256dh, auth, userAgent: request.headers.get("user-agent") || null })
         .where(eq(pushSubscriptions.endpoint, endpoint));
     } else {
+      // Bu kullanıcıya ait eski abonelikleri temizle (sadece 1 tane kalsın)
+      await d.db
+        .delete(pushSubscriptions)
+        .where(eq(pushSubscriptions.userId, session.id));
+
       const id =
         typeof crypto !== "undefined" && crypto.randomUUID
           ? crypto.randomUUID()

@@ -259,7 +259,9 @@ export default function Home() {
         </section>
 
         {/* ── Fiyatlandırma ── */}
-        <PricingSection />
+        <div className="hidden sm:block">
+          <PricingSection />
+        </div>
 
         {/* ── Nasıl Çalışır ── */}
         <section className="py-28 px-6 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800/50">
@@ -421,7 +423,7 @@ export default function Home() {
                 Bize Ulaşın
               </Link>
             </div>
-            <div className="mt-10 flex justify-center">
+            <div className="mt-10 justify-center hidden sm:flex">
               <PlatformDownloadButtons showTitle={false} variant="light" />
             </div>
           </div>

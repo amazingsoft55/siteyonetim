@@ -11,7 +11,6 @@ import { usePathname } from "next/navigation";
 const navLinks = [
   { href: "/", label: "Ana Sayfa" },
   { href: "/paketler", label: "Paketler" },
-  { href: "/mobil", label: "İndirme" },
   { href: "/destek", label: "Destek" },
   { href: "/hakkimizda", label: "Hakkımızda" },
   { href: "/iletisim", label: "İletişim" },

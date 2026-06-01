@@ -17,16 +17,24 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
   React.useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
+    // Daha önce abone olduysa tekrar deneme
+    if (sessionStorage.getItem("push_subscribed")) return;
+
     let cancelled = false;
 
     async function init() {
       try {
-        // Zaten izin verilmiş mi kontrol et
         const permission = await Notification.requestPermission();
         if (permission !== "granted" || cancelled) return;
 
-        // Service worker'ın hazır olmasını bekle
         const reg = await navigator.serviceWorker.ready;
+
+        // Zaten abone miyiz?
+        const existingSub = await reg.pushManager.getSubscription();
+        if (existingSub) {
+          sessionStorage.setItem("push_subscribed", "1");
+          return;
+        }
 
         // VAPID public key al
         const keyRes = await fetch("/api/push/vapid-key", { credentials: "include" });
@@ -34,25 +42,6 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
         const keyData = await keyRes.json() as { publicKey?: string };
         const publicKey = keyData.publicKey;
         if (!publicKey || cancelled) return;
-
-        // Mevcut aboneliği kontrol et
-        const existingSub = await reg.pushManager.getSubscription();
-
-        if (existingSub) {
-          // Mevcut aboneliği sunucuya kaydet
-          const subJson = existingSub.toJSON();
-          await fetch("/api/push/subscribe", {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              endpoint: existingSub.endpoint,
-              p256dh: subJson.keys?.p256dh,
-              auth: subJson.keys?.auth,
-            }),
-          });
-          return;
-        }
 
         // Yeni abonelik oluştur
         const subscription = await reg.pushManager.subscribe({
@@ -71,13 +60,14 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
             auth: subJson.keys?.auth,
           }),
         });
+
+        sessionStorage.setItem("push_subscribed", "1");
       } catch {
-        // Push notification başarısızsa sessizce devam et
+        // sessiz
       }
     }
 
-    // Sayfa yüklendiğinde 2 saniye bekle, sonra dene
-    const timer = setTimeout(init, 2000);
+    const timer = setTimeout(init, 3000);
     return () => { cancelled = true; clearTimeout(timer); };
   }, []);
 
