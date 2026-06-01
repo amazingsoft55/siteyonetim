@@ -101,6 +101,15 @@ export function NotificationBell() {
     };
   }, [open]);
 
+  // ESC ile kapat
+  React.useEffect(() => {
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    if (open) document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [open]);
+
   const requestPermission = async () => {
     if (!("Notification" in window)) return;
     const result = await Notification.requestPermission();
@@ -205,7 +214,7 @@ export function NotificationBell() {
         <>
           {/* === MOBİL: Tam ekran bottom sheet === */}
           <div className="fixed inset-0 z-[9998] bg-black/40 sm:hidden" onClick={() => setOpen(false)} />
-          <div className="fixed inset-x-0 bottom-0 top-14 z-[9999] sm:hidden flex flex-col bg-white dark:bg-zinc-900 rounded-t-2xl shadow-2xl animate-in slide-in-from-bottom duration-200">
+          <div className="fixed inset-x-0 bottom-0 top-14 z-[9999] sm:hidden flex flex-col bg-white dark:bg-zinc-900 rounded-t-2xl shadow-2xl animate-in slide-in-from-bottom duration-200" style={{ touchAction: "pan-y" }}>
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600" />
@@ -237,14 +246,14 @@ export function NotificationBell() {
               </div>
             </div>
             {/* List */}
-            <div className="flex-1 overflow-y-auto overscroll-contain">
+            <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
               {renderList()}
             </div>
           </div>
 
           {/* === TABLET / DESKTOP: Dropdown === */}
           <div className="hidden sm:block fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="hidden sm:flex absolute right-0 top-full mt-2 w-[380px] max-h-[70vh] flex-col rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="hidden sm:flex absolute right-0 top-full mt-2 w-[380px] max-h-[70vh] flex-col rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150" style={{ touchAction: "pan-y" }}>
             {/* Header */}
             <div className="px-5 pt-4 pb-3 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
               <div className="flex items-center justify-between mb-2">
@@ -270,7 +279,7 @@ export function NotificationBell() {
               )}
             </div>
             {/* List */}
-            <div className="overflow-y-auto flex-1 min-h-0 overscroll-contain">
+            <div className="overflow-y-auto flex-1 min-h-0 overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
               {renderList()}
             </div>
           </div>
