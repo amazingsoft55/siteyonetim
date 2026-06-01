@@ -138,19 +138,21 @@ export async function POST(request: Request) {
           title: "Hoş Geldiniz!",
           intro: `Merhaba <strong>${name}</strong>, Site Yönetimi platformuna başarıyla eklendiniz. Aşağıda hesap bilgilerinizi bulabilirsiniz.`,
           bodyHtml: `
-            <table style="width:100%;margin:0 0 20px;font-size:14px;border-collapse:separate;border-spacing:0">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;font-size:14px">
               <tr>
-                <td style="padding:10px 14px;background:#f4f4f5;border-radius:10px 0 0 10px;color:#71717a;font-weight:600;width:120px;border-bottom:1px solid #e4e4e7">E-posta</td>
-                <td style="padding:10px 14px;background:#f4f4f5;border-radius:0 10px 10px 0;color:#18181b;font-weight:700;border-bottom:1px solid #e4e4e7">${emailOrPhone}</td>
+                <td style="padding:10px 14px;background:#f4f4f5;color:#888;font-weight:600;width:120px;border-bottom:1px solid #eee">E-posta</td>
+                <td style="padding:10px 14px;background:#f4f4f5;color:#1a1a2e;font-weight:700;border-bottom:1px solid #eee">${emailOrPhone}</td>
               </tr>
               ${apartmentNo ? `<tr>
-                <td style="padding:10px 14px;background:#f4f4f5;border-radius:0 0 0 10px;color:#71717a;font-weight:600">Daire</td>
-                <td style="padding:10px 14px;background:#f4f4f5;border-radius:0 0 10px 0;color:#18181b;font-weight:700">${apartmentNo}</td>
+                <td style="padding:10px 14px;background:#f4f4f5;color:#888;font-weight:600">Daire</td>
+                <td style="padding:10px 14px;background:#f4f4f5;color:#1a1a2e;font-weight:700">${apartmentNo}</td>
               </tr>` : ""}
             </table>
-            <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:14px 18px;border-radius:0 10px 10px 0;margin:0 0 20px">
-              <p style="margin:0;font-size:13px;color:#1e40af"><strong>Bilgi:</strong> Şifreniz yöneticiniz tarafından oluşturulmuştur. İlk girişinizde size özel bir şifre belirlemeniz istenecektir.</p>
-            </div>
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eff6ff;border-left:3px solid #3b82f6;margin:0 0 20px">
+              <tr><td style="padding:14px 16px">
+                <p style="margin:0;font-size:13px;color:#1e40af"><strong>Bilgi:</strong> Şifreniz yöneticiniz tarafından oluşturulmuştur. İlk girişinizde size özel bir şifre belirlemeniz istenecektir.</p>
+              </td></tr>
+            </table>
           `,
           ctaHref: `${base}/login`,
           ctaLabel: "Panele Giriş Yap",

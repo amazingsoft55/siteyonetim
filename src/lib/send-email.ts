@@ -116,9 +116,11 @@ export async function sendPasswordResetEmail(
     title: "Şifre Sıfırlama",
     intro: `${greeting} hesabınız için şifre sıfırlama isteği alındı. Aşağıdaki düğmeye tıklayarak yeni şifrenizi belirleyebilirsiniz.`,
     bodyHtml: `
-      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px 18px;margin:0 0 20px">
-        <p style="margin:0;font-size:13px;color:#991b1b"><strong>Güvenlik Uyarısı:</strong> Bu bağlantı yaklaşık <strong>1 saat</strong> geçerlidir. Eğer bu isteği siz yapmadıysanız, lütfen bu e-postayı görmezden gelin ve şifrenizi değiştirmeyin.</p>
-      </div>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;margin:0 0 20px">
+        <tr><td style="padding:16px 18px">
+          <p style="margin:0;font-size:13px;color:#991b1b"><strong>Güvenlik Uyarısı:</strong> Bu bağlantı yaklaşık <strong>1 saat</strong> geçerlidir. Eğer bu isteği siz yapmadıysanız, lütfen bu e-postayı görmezden gelin.</p>
+        </td></tr>
+      </table>
     `,
     ctaHref: url,
     ctaLabel: "Yeni Şifre Belirle",
@@ -135,11 +137,13 @@ export async function sendAccountVerificationEmail(to: string, code: string): Pr
     title: "Doğrulama Kodu",
     intro: "Hesabınızda e-posta veya şifre değişikliği için doğrulama kodunuz aşağıdadır:",
     bodyHtml: `
-      <div style="background:#f0fdf4;border:2px dashed #22c55e;border-radius:12px;padding:24px;text-align:center;margin:0 0 20px">
-        <p style="margin:0 0 8px;font-size:12px;color:#16a34a;font-weight:600;text-transform:uppercase;letter-spacing:1px">Doğrulama Kodu</p>
-        <p style="margin:0;font-size:32px;font-weight:800;letter-spacing:8px;color:#15803d;font-family:monospace">${code}</p>
-      </div>
-      <p style="margin:0;font-size:13px;color:#71717a;text-align:center">Kod yaklaşık <strong>15 dakika</strong> geçerlidir.</p>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f0fdf4;border:2px dashed #22c55e;border-radius:12px;margin:0 0 16px">
+        <tr><td style="padding:24px;text-align:center">
+          <p style="margin:0 0 8px;font-size:11px;color:#16a34a;font-weight:700;text-transform:uppercase;letter-spacing:1px">Doğrulama Kodu</p>
+          <p style="margin:0;font-size:30px;font-weight:700;letter-spacing:6px;color:#15803d;font-family:'Courier New',monospace">${code}</p>
+        </td></tr>
+      </table>
+      <p style="margin:0;font-size:12px;color:#777;text-align:center">Kod yaklaşık <strong>15 dakika</strong> geçerlidir.</p>
     `,
     footerNote: "Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz.",
     accentColor: "#22c55e",
@@ -163,13 +167,13 @@ export async function sendAnnouncementEmail(
     title: `Yeni Duyuru`,
     intro: `Merhaba <strong>${recipientName || "Değerli Sakin"}</strong>, yeni bir duyuru yayınlandı.`,
     bodyHtml: `
-      <div style="background:#fafafa;border:1px solid #e4e4e7;border-radius:12px;padding:20px;margin:0 0 20px">
-        <div style="display:flex;align-items:center;margin:0 0 12px">
-          <span style="display:inline-block;background:#ede9fe;color:#7c3aed;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px">${category}</span>
-        </div>
-        <h2 style="margin:0 0 10px;font-size:17px;font-weight:700;color:#18181b;line-height:1.4">${announcementTitle}</h2>
-        <p style="margin:0;font-size:14px;line-height:1.7;color:#52525b;white-space:pre-wrap">${truncated}</p>
-      </div>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fafafa;border:1px solid #eee;border-radius:12px;margin:0 0 20px">
+        <tr><td style="padding:20px">
+          <p style="margin:0 0 10px;display:inline-block;background:#ede9fe;color:#7c3aed;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px">${category}</p>
+          <h2 style="margin:12px 0 8px;font-size:16px;font-weight:700;color:#1a1a2e;line-height:1.4">${announcementTitle}</h2>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:#555">${truncated}</p>
+        </td></tr>
+      </table>
     `,
     ctaHref: `${base}/dashboard/announcements`,
     ctaLabel: "Duyuruyu Görüntüle",

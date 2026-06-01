@@ -137,19 +137,21 @@ export async function POST(request: Request) {
           title: "Hoş Geldiniz!",
           intro: `Merhaba <strong>${name}</strong>, <strong>${siteName}</strong> sitesine başarıyla eklendiniz. Aşağıda hesap bilgilerinizi bulabilirsiniz.`,
           bodyHtml: `
-            <table style="width:100%;margin:0 0 20px;font-size:14px;border-collapse:separate;border-spacing:0">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;font-size:14px">
               <tr>
-                <td style="padding:10px 14px;background:#f4f4f5;border-radius:10px 0 0 10px;color:#71717a;font-weight:600;width:130px;border-bottom:1px solid #e4e4e7">Kullanıcı Adı</td>
-                <td style="padding:10px 14px;background:#f4f4f5;border-radius:0 10px 10px 0;color:#18181b;font-weight:700;border-bottom:1px solid #e4e4e7">${emailOrPhone}</td>
+                <td style="padding:10px 14px;background:#f4f4f5;color:#888;font-weight:600;width:130px;border-bottom:1px solid #eee">Kullanıcı Adı</td>
+                <td style="padding:10px 14px;background:#f4f4f5;color:#1a1a2e;font-weight:700;border-bottom:1px solid #eee">${emailOrPhone}</td>
               </tr>
               ${role === "USER" && apartmentNo ? `<tr>
-                <td style="padding:10px 14px;background:#f4f4f5;border-radius:0 0 0 10px;color:#71717a;font-weight:600">Daire No</td>
-                <td style="padding:10px 14px;background:#f4f4f5;border-radius:0 0 10px 0;color:#18181b;font-weight:700">${apartmentNo}</td>
+                <td style="padding:10px 14px;background:#f4f4f5;color:#888;font-weight:600">Daire No</td>
+                <td style="padding:10px 14px;background:#f4f4f5;color:#1a1a2e;font-weight:700">${apartmentNo}</td>
               </tr>` : ""}
             </table>
-            <div style="background:${role === "ADMIN" ? "#eff6ff" : "#f0fdf4"};border-left:4px solid ${role === "ADMIN" ? "#3b82f6" : "#22c55e"};padding:14px 18px;border-radius:0 10px 10px 0;margin:0 0 20px">
-              <p style="margin:0;font-size:13px;color:${role === "ADMIN" ? "#1e40af" : "#166534"}"><strong>Güvenlik Notu:</strong> Şifreniz yöneticiniz tarafından oluşturulmuştur. İlk girişinizde size özel bir şifre belirlemeniz istenecektir. Hesabınızı güvende tutmak için güçlü bir şifre seçmenizi öneririz.</p>
-            </div>
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${role === "ADMIN" ? "#eff6ff" : "#f0fdf4"};border-left:3px solid ${role === "ADMIN" ? "#3b82f6" : "#22c55e"};margin:0 0 20px">
+              <tr><td style="padding:14px 16px">
+                <p style="margin:0;font-size:13px;color:${role === "ADMIN" ? "#1e40af" : "#166534"}"><strong>Güvenlik Notu:</strong> Şifreniz yöneticiniz tarafından oluşturulmuştur. İlk girişinizde size özel bir şifre belirlemeniz istenecektir.</p>
+              </td></tr>
+            </table>
           `,
           ctaHref: `${base}/login`,
           ctaLabel: "Panele Giriş Yap",
