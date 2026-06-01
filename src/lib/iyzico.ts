@@ -67,6 +67,8 @@ export type IyzicoPaymentResult = {
   paymentId: string;
   fraudStatus: number;
   resultCode: string;
+  resultMessage: string;
+  errorMessage?: string;
   merchantCommissionRate: number;
   merchantCommissionRateAmount: number;
   paidWithStoredCard: boolean;

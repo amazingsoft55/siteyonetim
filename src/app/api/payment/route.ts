@@ -38,9 +38,6 @@ export async function POST(req: Request) {
     const conversationId = `conv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
     if (isIyzicoConfigured()) {
-      const cardDigits = cardNumber.replace(/\s/g, "").slice(0, 6);
-      const cardLastDigits = cardNumber.replace(/\s/g, "").slice(-4);
-
       // Kullanıcı bilgilerini veritabanından çek
       const userList = await d.db.select({
         name: users.name,
@@ -74,7 +71,7 @@ export async function POST(req: Request) {
           surname: lastName,
           gsmNumber: isEmail ? "" : userEmail.replace(/[^0-9+]/g, ""),
           email: isEmail ? userEmail : `${session.id}@siteyonetim.app`,
-          identityNumber: "00000000000",
+          identityNumber: "11111111111",
           lastLoginDate: new Date().toISOString(),
           registrationDate: new Date().toISOString(),
           registrationAddress: "Türkiye",
@@ -129,21 +126,25 @@ export async function POST(req: Request) {
             message: "Ödeme başarıyla tamamlandı.",
           });
         } else {
+          const errorMsg = result.errorMessage || result.resultMessage || "Ödeme başarısız oldu.";
+          console.error(`[api/payment POST] Iyzico başarısız: ${result.resultCode} - ${errorMsg}`);
           return NextResponse.json({
             ok: false,
             status: "failed",
-            error: result.resultCode || "Ödeme başarısız oldu.",
+            error: errorMsg,
+            resultCode: result.resultCode,
           }, { status: 400 });
         }
       } catch (paymentError) {
-        console.error("[api/payment POST] Iyzico error:", paymentError);
+        console.error("[api/payment POST] Iyzico hatası:", paymentError);
         return NextResponse.json({
           ok: false,
           status: "error",
-          error: "Ödeme sırasında bir hata oluştu.",
+          error: "Ödeme ağ hatası. Lütfen tekrar deneyin.",
         }, { status: 500 });
       }
     } else {
+      // Iyzico yapılandırılmamış — test modu
       await d.db.insert(payments).values({
         id: `pay_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
         userId: session.id,
@@ -156,8 +157,8 @@ export async function POST(req: Request) {
       return NextResponse.json({
         ok: true,
         status: "success",
-        paymentId: `mock_${conversationId}`,
-        message: "Ödeme kaydı alındı (test modu).",
+        paymentId: `test_${conversationId}`,
+        message: "Ödeme test modunda kaydedildi. Gerçek ödeme için Iyzico yapılandırılmalıdır.",
         testMode: true,
       });
     }

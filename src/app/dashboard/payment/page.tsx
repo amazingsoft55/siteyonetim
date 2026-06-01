@@ -16,12 +16,14 @@ export default function PaymentPage() {
   const [periodLabel, setPeriodLabel] = React.useState("");
   const [paidSummary, setPaidSummary] = React.useState<number | null>(null);
   const [paymentId, setPaymentId] = React.useState<string | null>(null);
+  const [testMode, setTestMode] = React.useState(false);
 
   const [cardName, setCardName] = React.useState("");
   const [cardNumber, setCardNumber] = React.useState("");
   const [expireMonth, setExpireMonth] = React.useState("");
   const [expireYear, setExpireYear] = React.useState("");
   const [cvc, setCvc] = React.useState("");
+  const [iyzicoReady, setIyzicoReady] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -29,10 +31,19 @@ export default function PaymentPage() {
       setInitErr("");
       const cred = { credentials: "include" as const };
       try {
-        const [settRes, payRes] = await Promise.all([
+        const [settRes, payRes, payConfRes] = await Promise.all([
           fetch("/api/settings", cred),
           fetch("/api/payments", cred),
+          fetch("/api/payment/config", cred),
         ]);
+
+        // Iyzico durumunu kontrol et
+        if (payConfRes.ok) {
+          const conf = await payConfRes.json().catch(() => null) as { configured?: boolean } | null;
+          if (!cancelled && conf) setIyzicoReady(!!conf.configured);
+        } else if (!cancelled) {
+          setIyzicoReady(false);
+        }
         let defaultAidat = 0;
         if (settRes.ok) {
           const s: unknown = await settRes.json().catch(() => null);
@@ -143,9 +154,10 @@ export default function PaymentPage() {
         return;
       }
 
-      const data = j as { paymentId?: string; testMode?: boolean };
+      const data = j as { paymentId?: string; testMode?: boolean; error?: string; resultCode?: string };
       setPaymentId(data.paymentId || null);
       setPaidSummary(amount);
+      setTestMode(!!data.testMode);
       setSuccess(true);
     } catch {
       setLoading(false);
@@ -168,6 +180,11 @@ export default function PaymentPage() {
         <p className="text-zinc-600 dark:text-zinc-400 mb-2 max-w-md">
           {`${paidSummary.toLocaleString("tr-TR")} ₺ tutarındaki ödeme başarıyla işlendi.`}
         </p>
+        {testMode && (
+          <div className="mb-4 px-4 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-sm text-amber-700 dark:text-amber-300 font-semibold">
+            Test modu — Gerçek ücret tahsil edilmedi. Iyzico yapılandırıldığında gerçek ödeme alınacaktır.
+          </div>
+        )}
         {paymentId && (
           <p className="text-xs text-zinc-500 mb-4">
             İşlem No: <span className="font-mono">{paymentId}</span>
@@ -204,6 +221,16 @@ export default function PaymentPage() {
       <p className="text-zinc-500 mb-8">
         Kart bilgileriniz 256-bit SSL ile şifrelenir. Sunucularımızda kart numarası saklanmaz.
       </p>
+
+      {iyzicoReady === false && (
+        <div className="mb-6 rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/25 p-4 text-sm text-amber-950 dark:text-amber-100 flex items-start gap-2">
+          <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold">Test Modu</p>
+            <p className="mt-1">Iyzico ödeme altyapısı yapılandırılmamış. Yapılan ödemeler sadece kayıt altına alınır, gerçek ücret tahsil edilmez. Gerçek ödeme için Iyzico API anahtarlarını yapılandırın.</p>
+          </div>
+        </div>
+      )}
 
       {initErr && (
         <div className="mb-6 rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/25 p-4 text-sm text-amber-950 dark:text-amber-100 flex items-start gap-2">
