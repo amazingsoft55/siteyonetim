@@ -73,8 +73,9 @@ export function NotificationBell() {
   }, []);
 
   React.useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node) && btnRef.current && !btnRef.current.contains(e.target as Node)) {
+    function handleClickOutside(e: Event) {
+      const target = e.target as Node;
+      if (panelRef.current && !panelRef.current.contains(target) && btnRef.current && !btnRef.current.contains(target)) {
         setOpen(false);
       }
     }
