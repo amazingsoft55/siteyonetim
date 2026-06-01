@@ -6,7 +6,11 @@ export type ClientRequestItem = {
   category: string;
   description: string;
   date: string;
-  status: "Bekliyor" | "İşlemde" | "Çözüldü";
+  status: "Bekliyor" | "İşlemde" | "Çözüldü" | "Reddedildi";
+  resolutionNote?: string | null;
+  resolutionImageUrl?: string | null;
+  rejectedNote?: string | null;
+  rejectedImageUrl?: string | null;
 };
 
 export function dbRequestToClient(row: {
@@ -15,6 +19,10 @@ export function dbRequestToClient(row: {
   description: string;
   category: string | null;
   status: string;
+  resolutionNote?: string | null;
+  resolutionImageUrl?: string | null;
+  rejectedNote?: string | null;
+  rejectedImageUrl?: string | null;
   createdAt: string | null;
 }): ClientRequestItem {
   return {
@@ -28,12 +36,18 @@ export function dbRequestToClient(row: {
     status:
       row.status === "IN_PROGRESS" ? "İşlemde"
       : row.status === "RESOLVED" ? "Çözüldü"
+      : row.status === "REJECTED" ? "Reddedildi"
       : "Bekliyor",
+    resolutionNote: row.resolutionNote ?? null,
+    resolutionImageUrl: row.resolutionImageUrl ?? null,
+    rejectedNote: row.rejectedNote ?? null,
+    rejectedImageUrl: row.rejectedImageUrl ?? null,
   };
 }
 
-export function uiStatusToDb(s: string): "OPEN" | "IN_PROGRESS" | "RESOLVED" {
+export function uiStatusToDb(s: string): "OPEN" | "IN_PROGRESS" | "RESOLVED" | "REJECTED" {
   if (s === "İşlemde") return "IN_PROGRESS";
   if (s === "Çözüldü") return "RESOLVED";
+  if (s === "Reddedildi") return "REJECTED";
   return "OPEN";
 }

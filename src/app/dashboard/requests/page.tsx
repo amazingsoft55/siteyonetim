@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Wrench, PlusCircle, Clock, CheckCircle2, AlertCircle, X } from "lucide-react";
+import { Wrench, PlusCircle, Clock, CheckCircle2, AlertCircle, XCircle, X } from "lucide-react";
 import { useAlert, useConfirm } from "@/components/ModalProvider";
 
 interface RequestItem {
@@ -10,7 +10,11 @@ interface RequestItem {
   category: string;
   description: string;
   date: string;
-  status: "Bekliyor" | "İşlemde" | "Çözüldü";
+  status: "Bekliyor" | "İşlemde" | "Çözüldü" | "Reddedildi";
+  resolutionNote?: string | null;
+  resolutionImageUrl?: string | null;
+  rejectedNote?: string | null;
+  rejectedImageUrl?: string | null;
 }
 
 export default function ResidentRequestsPage() {
@@ -79,6 +83,8 @@ export default function ResidentRequestsPage() {
         return <AlertCircle className="h-5 w-5 text-blue-500" />;
       case "Çözüldü":
         return <CheckCircle2 className="h-5 w-5 text-emerald-500" />;
+      case "Reddedildi":
+        return <XCircle className="h-5 w-5 text-red-500" />;
       default:
         return null;
     }
@@ -92,6 +98,8 @@ export default function ResidentRequestsPage() {
         return "bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/30";
       case "Çözüldü":
         return "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/30";
+      case "Reddedildi":
+        return "bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border border-red-200/50 dark:border-red-900/30";
       default:
         return "";
     }
@@ -202,28 +210,50 @@ export default function ResidentRequestsPage() {
           requests.map((req) => (
             <div 
               key={req.id} 
-              className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-3xl p-6 flex flex-col sm:flex-row justify-between gap-4 shadow-sm hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-all duration-200"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-3xl overflow-hidden shadow-sm hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-all duration-200"
             >
-              <div className="flex gap-4">
-                <div className="bg-zinc-50 dark:bg-zinc-950 text-indigo-600 dark:text-indigo-400 p-3 rounded-2xl h-fit border border-zinc-100 dark:border-zinc-800/60">
-                  <Wrench className="h-6 w-6" />
+              {/* Resolution/Rejection Note */}
+              {req.status === "Çözüldü" && req.resolutionNote && (
+                <div className="px-6 py-3 bg-emerald-50 dark:bg-emerald-950/20 border-b border-emerald-100 dark:border-emerald-900/30">
+                  <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1">Çözüm Notu</p>
+                  <p className="text-sm text-emerald-900 dark:text-emerald-200">{req.resolutionNote}</p>
+                  {req.resolutionImageUrl && (
+                    <img src={req.resolutionImageUrl} alt="Çözüm görseli" className="mt-2 max-h-32 rounded-xl object-cover" />
+                  )}
                 </div>
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-xs text-zinc-400 font-semibold">{req.id}</span>
-                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-semibold">
-                      {req.category}
-                    </span>
-                    <span className="text-xs text-zinc-400">{req.date}</span>
+              )}
+              {req.status === "Reddedildi" && req.rejectedNote && (
+                <div className="px-6 py-3 bg-red-50 dark:bg-red-950/20 border-b border-red-100 dark:border-red-900/30">
+                  <p className="text-xs font-bold text-red-700 dark:text-red-400 mb-1">Red Nedeni</p>
+                  <p className="text-sm text-red-900 dark:text-red-200">{req.rejectedNote}</p>
+                  {req.rejectedImageUrl && (
+                    <img src={req.rejectedImageUrl} alt="Red görseli" className="mt-2 max-h-32 rounded-xl object-cover" />
+                  )}
+                </div>
+              )}
+
+              <div className="p-6 flex flex-col sm:flex-row justify-between gap-4">
+                <div className="flex gap-4">
+                  <div className="bg-zinc-50 dark:bg-zinc-950 text-indigo-600 dark:text-indigo-400 p-3 rounded-2xl h-fit border border-zinc-100 dark:border-zinc-800/60">
+                    <Wrench className="h-6 w-6" />
                   </div>
-                  <h4 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50 mt-1.5">{req.title}</h4>
-                  <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-1 leading-relaxed">{req.description}</p>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-xs text-zinc-400 font-semibold">{req.id}</span>
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-semibold">
+                        {req.category}
+                      </span>
+                      <span className="text-xs text-zinc-400">{req.date}</span>
+                    </div>
+                    <h4 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50 mt-1.5">{req.title}</h4>
+                    <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-1 leading-relaxed">{req.description}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="sm:self-center shrink-0">
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${getStatusStyles(req.status)}`}>
-                  {getStatusIcon(req.status)}
-                  {req.status}
+                <div className="sm:self-center shrink-0">
+                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${getStatusStyles(req.status)}`}>
+                    {getStatusIcon(req.status)}
+                    {req.status}
+                  </div>
                 </div>
               </div>
             </div>

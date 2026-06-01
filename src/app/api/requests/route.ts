@@ -152,6 +152,8 @@ export async function POST(request: Request) {
 type PutBody = {
   id?: unknown;
   status?: unknown;
+  note?: unknown;
+  imageUrl?: unknown;
 };
 
 export async function PUT(request: Request) {
@@ -173,7 +175,9 @@ export async function PUT(request: Request) {
     typeof raw.status === "string" ?
       raw.status.trim()
     : "";
-  const allowed = ["Bekliyor", "İşlemde", "Çözüldü"];
+  const allowed = ["Bekliyor", "İşlemde", "Çözüldü", "Reddedildi"];
+  const note = typeof raw.note === "string" ? raw.note.trim() : null;
+  const imageUrl = typeof raw.imageUrl === "string" && raw.imageUrl.trim().length > 0 ? raw.imageUrl.trim() : null;
 
   if (!id || !allowed.includes(uiStatus)) {
     return NextResponse.json({ error: "Geçersiz kimlik veya durum." }, { status: 400 });
@@ -190,20 +194,35 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Talep bulunamadı." }, { status: 404 });
     }
 
+    const dbStatus = uiStatusToDb(uiStatus);
+    const updateData: Record<string, unknown> = { status: dbStatus };
+
+    if (uiStatus === "Çözüldü") {
+      updateData.resolutionNote = note;
+      updateData.resolutionImageUrl = imageUrl;
+    } else if (uiStatus === "Reddedildi") {
+      updateData.rejectedNote = note;
+      updateData.rejectedImageUrl = imageUrl;
+    }
+
     await d.db
       .update(residentRequests)
-      .set({ status: uiStatusToDb(uiStatus) })
+      .set(updateData)
       .where(eq(residentRequests.id, id));
 
     const row = await d.db.select().from(residentRequests).where(eq(residentRequests.id, id)).limit(1);
 
     // Talep sahibine durum değişikliği bildirimi
     if (row[0]) {
-      const statusLabel = uiStatus === "Bekliyor" ? "Beklemede" : uiStatus === "İşlemde" ? "İşlemde" : "Çözüldü";
+      const statusLabel = uiStatus === "Bekliyor" ? "Beklemede" : uiStatus === "İşlemde" ? "İşlemde" : uiStatus === "Çözüldü" ? "Çözüldü" : "Reddedildi";
+      let bodyText = `"${row[0].subject}" talebinin durumu "${statusLabel}" olarak güncellendi.`;
+      if (note && uiStatus === "Çözüldü") bodyText += ` Çözüm notu: ${note}`;
+      if (note && uiStatus === "Reddedildi") bodyText += ` Red nedeni: ${note}`;
+
       createNotification(d.db, {
         userId: row[0].userId,
         title: `Talep Durumu Güncellendi`,
-        body: `"${row[0].subject}" talebinin durumu "${statusLabel}" olarak güncellendi.`,
+        body: bodyText,
         type: "REQUEST",
         href: "/dashboard/requests",
       });
