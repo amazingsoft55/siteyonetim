@@ -32,53 +32,6 @@ function WindowsIcon({ className }: { className?: string }) {
   );
 }
 
-function StoreButtons({ variant = "dark" }: { variant?: Variant }) {
-  const isDark = variant === "dark";
-
-  const androidUrl = getAppDownloadUrl("site", "android");
-  const iosUrl = getAppDownloadUrl("site", "ios");
-  const androidFallback = mobilGuideHref("site", "android");
-  const iosFallback = mobilGuideHref("site", "ios");
-
-  return (
-    <div className="flex flex-col sm:flex-row items-center gap-3">
-      {/* Google Play */}
-      <Link
-        href={androidUrl || androidFallback}
-        {...(androidUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-        className={`inline-flex items-center gap-3 px-5 py-3 rounded-xl transition-all hover:scale-105 ${
-          isDark
-            ? "bg-black text-white hover:bg-zinc-800"
-            : "bg-white text-black border border-zinc-300 hover:bg-zinc-50"
-        }`}
-      >
-        <GooglePlayIcon className="h-7 w-7" />
-        <div className="text-left">
-          <p className="text-[10px] leading-tight opacity-80">GET IT ON</p>
-          <p className="text-sm font-bold leading-tight">Google Play</p>
-        </div>
-      </Link>
-
-      {/* App Store */}
-      <Link
-        href={iosUrl || iosFallback}
-        {...(iosUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-        className={`inline-flex items-center gap-3 px-5 py-3 rounded-xl transition-all hover:scale-105 ${
-          isDark
-            ? "bg-black text-white hover:bg-zinc-800"
-            : "bg-white text-black border border-zinc-300 hover:bg-zinc-50"
-        }`}
-      >
-        <AppleIcon className="h-7 w-7" />
-        <div className="text-left">
-          <p className="text-[10px] leading-tight opacity-80">Download on the</p>
-          <p className="text-sm font-bold leading-tight">App Store</p>
-        </div>
-      </Link>
-    </div>
-  );
-}
-
 export function PlatformDownloadButtons({
   showTitle = true,
   variant = "dark",
@@ -92,7 +45,19 @@ export function PlatformDownloadButtons({
     setClient(detectClientPlatform(navigator.userAgent, navigator.maxTouchPoints));
   }, []);
 
-  const isMobile = client === "android" || client === "ios";
+  const isDark = variant === "dark";
+  const btnBase = `inline-flex items-center gap-3 px-5 py-3 rounded-xl transition-all hover:scale-105 ${
+    isDark
+      ? "bg-black text-white hover:bg-zinc-800"
+      : "bg-white text-black border border-zinc-300 hover:bg-zinc-50"
+  }`;
+  const mobileBtn = "w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-500 transition-all";
+
+  const androidUrl = getAppDownloadUrl("site", "android");
+  const iosUrl = getAppDownloadUrl("site", "ios");
+  const windowsUrl = getAppDownloadUrl("site", "windows");
+  const androidFallback = mobilGuideHref("site", "android");
+  const iosFallback = mobilGuideHref("site", "ios");
 
   return (
     <div className="space-y-4">
@@ -107,29 +72,100 @@ export function PlatformDownloadButtons({
         </div>
       )}
 
-      {/* Tüm platformlar için mağaza butonları */}
-      <StoreButtons variant={variant} />
-
-      {/* Mobilde otomatik kurulum butonu */}
-      {isMobile && (
-        <div className="pt-2">
+      {/* PC */}
+      {client === "desktop" && (
+        <div className="flex flex-col sm:flex-row items-center gap-3">
           <Link
-            href={client === "android" ? (getAppDownloadUrl("site", "android") || mobilGuideHref("site", "android")) : (getAppDownloadUrl("site", "ios") || mobilGuideHref("site", "ios"))}
-            {...(client === "android" && getAppDownloadUrl("site", "android") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-            {...(client === "ios" && getAppDownloadUrl("site", "ios") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-            className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-500 transition-all"
+            href={windowsUrl || "/mobil?app=site&platform=windows#windows"}
+            {...(windowsUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            className={btnBase}
           >
-            <Download className="h-4 w-4" />
-            {client === "android" ? "Android'de Aç" : "iPhone'da Aç"}
+            <WindowsIcon className="h-7 w-7" />
+            <div className="text-left">
+              <p className="text-[10px] leading-tight opacity-80">GET IT FROM</p>
+              <p className="text-sm font-bold leading-tight">Windows</p>
+            </div>
+          </Link>
+          <Link
+            href="/mobil?app=site&platform=android#android"
+            className={btnBase}
+          >
+            <Smartphone className="h-7 w-7" />
+            <div className="text-left">
+              <p className="text-[10px] leading-tight opacity-80">MOBİLDE</p>
+              <p className="text-sm font-bold leading-tight">Android Kurulum Rehberi</p>
+            </div>
           </Link>
         </div>
       )}
 
-      {/* Desktop'ta masaüstü ikonu */}
-      {!isMobile && client === "desktop" && (
-        <div className="pt-2 flex items-center justify-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-          <Monitor className="h-4 w-4" />
-          <span>Chrome veya Edge ile tarayıcınızdan yükleyebilirsiniz</span>
+      {/* Android */}
+      {client === "android" && (
+        <div className="flex flex-col gap-3">
+          <Link
+            href={androidUrl || androidFallback}
+            {...(androidUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            className={btnBase}
+          >
+            <GooglePlayIcon className="h-7 w-7" />
+            <div className="text-left">
+              <p className="text-[10px] leading-tight opacity-80">GET IT ON</p>
+              <p className="text-sm font-bold leading-tight">Google Play</p>
+            </div>
+          </Link>
+          <Link
+            href={androidUrl || androidFallback}
+            {...(androidUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            className={mobileBtn}
+          >
+            <Download className="h-4 w-4" />
+            {androidUrl ? "Hemen İndir" : "Kurulum Rehberi"}
+          </Link>
+        </div>
+      )}
+
+      {/* iOS */}
+      {client === "ios" && (
+        <div className="flex flex-col gap-3">
+          <Link
+            href={iosUrl || iosFallback}
+            {...(iosUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            className={btnBase}
+          >
+            <AppleIcon className="h-7 w-7" />
+            <div className="text-left">
+              <p className="text-[10px] leading-tight opacity-80">Download on the</p>
+              <p className="text-sm font-bold leading-tight">App Store</p>
+            </div>
+          </Link>
+          <Link
+            href={iosUrl || iosFallback}
+            {...(iosUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            className={mobileBtn}
+          >
+            <Download className="h-4 w-4" />
+            {iosUrl ? "Hemen İndir" : "Kurulum Rehberi"}
+          </Link>
+        </div>
+      )}
+
+      {/* Bilinmeyen / loading */}
+      {client === "unknown" && (
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <Link href={androidUrl || androidFallback} {...(androidUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})} className={btnBase}>
+            <GooglePlayIcon className="h-7 w-7" />
+            <div className="text-left">
+              <p className="text-[10px] leading-tight opacity-80">GET IT ON</p>
+              <p className="text-sm font-bold leading-tight">Google Play</p>
+            </div>
+          </Link>
+          <Link href={iosUrl || iosFallback} {...(iosUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})} className={btnBase}>
+            <AppleIcon className="h-7 w-7" />
+            <div className="text-left">
+              <p className="text-[10px] leading-tight opacity-80">Download on the</p>
+              <p className="text-sm font-bold leading-tight">App Store</p>
+            </div>
+          </Link>
         </div>
       )}
     </div>

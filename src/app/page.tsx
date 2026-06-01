@@ -2,13 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { AppDownloadButtons } from "@/components/AppDownloadButtons";
 import { PlatformDownloadButtons } from "@/components/PlatformDownloadButtons";
 import { PricingSection } from "@/components/PricingSection";
 import {
   CreditCard, Megaphone, Wrench, ArrowRight, Shield, Sparkles,
   Users, BarChart3, Bell, CheckCircle, Clock, Star, Building2,
-  Smartphone, HeadphonesIcon, ChevronRight, Zap, Globe, Lock,
+  HeadphonesIcon, ChevronRight, Zap, Globe, Lock,
   MessageSquare, FileText, Gauge, Infinity, Phone,
   TrendingUp, Award, Heart, ThumbsUp, Flame, Crown, Gift,
   Percent, Timer, ShieldCheck, BadgeCheck, Rocket,
@@ -385,24 +384,6 @@ export default function Home() {
                   <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{faq.a}</p>
                 </div>
               ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Uygulama İndir ── */}
-        <section className="py-20 px-6 border-t border-zinc-100 dark:border-zinc-800/50 bg-white/60 dark:bg-zinc-900/40">
-          <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-10">
-              <div className="inline-flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-4">
-                <Smartphone className="h-3.5 w-3.5" /> Mobil uygulama
-              </div>
-              <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl">Cebinizde taşıyın</h2>
-              <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto">
-                Android ve iPhone için uygulamamızı indirin veya tarayıcınızdan yükleyin.
-              </p>
-            </div>
-            <div className="flex justify-center">
-              <PlatformDownloadButtons showTitle={false} />
             </div>
           </div>
         </section>
