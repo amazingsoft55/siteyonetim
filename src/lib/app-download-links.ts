@@ -4,7 +4,7 @@ export type DownloadPlatform = "ios" | "android" | "windows" | "linux";
 
 const SITE: Record<DownloadPlatform, string | undefined> = {
   ios: process.env.NEXT_PUBLIC_SITE_DOWNLOAD_IOS,
-  android: process.env.NEXT_PUBLIC_SITE_DOWNLOAD_ANDROID,
+  android: process.env.NEXT_PUBLIC_SITE_DOWNLOAD_ANDROID || "/siteyonetim.apk",
   windows: process.env.NEXT_PUBLIC_SITE_DOWNLOAD_WINDOWS,
   linux: process.env.NEXT_PUBLIC_SITE_DOWNLOAD_LINUX,
 };
