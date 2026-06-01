@@ -8,7 +8,7 @@ import { deleteUserCascade } from "@/lib/user-cascade-delete";
 import { users } from "@/db/schema";
 import { createNotification } from "@/lib/notify";
 import { sendBrandedEmail } from "@/lib/send-email";
-import { buildBrandedEmailHtml } from "@/lib/email-template";
+import { buildWelcomeEmailHtml } from "@/lib/email-template";
 import { looksLikeEmail } from "@/lib/password-reset";
 
 function forbidden() {
@@ -125,37 +125,17 @@ export async function POST(request: Request) {
     // Kullanıcıya hoşgeldin emaili gönder
     if (looksLikeEmail(emailOrPhone)) {
       const base = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000").replace(/\/$/, "");
-      const hasGmailSmtp = !!process.env.GMAIL_APP_PASSWORD?.trim();
-      const hasGmailOAuth = !!(process.env.GMAIL_CLIENT_ID?.trim() && process.env.GMAIL_CLIENT_SECRET?.trim() && process.env.GMAIL_REFRESH_TOKEN?.trim());
-      const hasResend = !!process.env.RESEND_API_KEY?.trim();
-      console.log(`[admin/users] Email provider durumu: SMTP=${hasGmailSmtp}, OAuth=${hasGmailOAuth}, Resend=${hasResend}`);
 
       const emailResult = await sendBrandedEmail({
         to: emailOrPhone,
         subject: `Hoş Geldiniz — ${siteName}`,
-        html: buildBrandedEmailHtml({
-          title: "Hoş Geldiniz!",
-          intro: `Merhaba <strong>${name}</strong>, <strong>${siteName}</strong> sitesine başarıyla eklendiniz. Aşağıda hesap bilgilerinizi bulabilirsiniz.`,
-          bodyHtml: `
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;font-size:14px">
-              <tr>
-                <td style="padding:10px 14px;background:#f4f4f5;color:#888;font-weight:600;width:130px;border-bottom:1px solid #eee">Kullanıcı Adı</td>
-                <td style="padding:10px 14px;background:#f4f4f5;color:#1a1a2e;font-weight:700;border-bottom:1px solid #eee">${emailOrPhone}</td>
-              </tr>
-              ${role === "USER" && apartmentNo ? `<tr>
-                <td style="padding:10px 14px;background:#f4f4f5;color:#888;font-weight:600">Daire No</td>
-                <td style="padding:10px 14px;background:#f4f4f5;color:#1a1a2e;font-weight:700">${apartmentNo}</td>
-              </tr>` : ""}
-            </table>
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${role === "ADMIN" ? "#eff6ff" : "#f0fdf4"};border-left:3px solid ${role === "ADMIN" ? "#3b82f6" : "#22c55e"};margin:0 0 20px">
-              <tr><td style="padding:14px 16px">
-                <p style="margin:0;font-size:13px;color:${role === "ADMIN" ? "#1e40af" : "#166534"}"><strong>Güvenlik Notu:</strong> Şifreniz yöneticiniz tarafından oluşturulmuştur. İlk girişinizde size özel bir şifre belirlemeniz istenecektir.</p>
-              </td></tr>
-            </table>
-          `,
-          ctaHref: `${base}/login`,
-          ctaLabel: "Panele Giriş Yap",
-          footerNote: "Bu hesap site yönetimi tarafından oluşturulmuştur. Sorularınız için yöneticinizle iletişime geçin.",
+        html: buildWelcomeEmailHtml({
+          name,
+          siteName,
+          emailOrPhone,
+          apartmentNo: role === "USER" ? apartmentNo : null,
+          role: role as "ADMIN" | "USER",
+          loginUrl: `${base}/login`,
         }),
       });
       if (!emailResult.ok) {

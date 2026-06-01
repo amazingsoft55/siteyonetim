@@ -7,7 +7,7 @@ import { jsonSqlError } from "@/lib/db-query-error";
 import { users } from "@/db/schema";
 import { createNotification } from "@/lib/notify";
 import { sendBrandedEmail } from "@/lib/send-email";
-import { buildBrandedEmailHtml } from "@/lib/email-template";
+import { buildWelcomeEmailHtml } from "@/lib/email-template";
 import { looksLikeEmail } from "@/lib/password-reset";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
@@ -134,29 +134,13 @@ export async function POST(request: Request) {
       const result = await sendBrandedEmail({
         to: emailOrPhone,
         subject: `Hoş Geldiniz — Site Yönetimi`,
-        html: buildBrandedEmailHtml({
-          title: "Hoş Geldiniz!",
-          intro: `Merhaba <strong>${name}</strong>, Site Yönetimi platformuna başarıyla eklendiniz. Aşağıda hesap bilgilerinizi bulabilirsiniz.`,
-          bodyHtml: `
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;font-size:14px">
-              <tr>
-                <td style="padding:10px 14px;background:#f4f4f5;color:#888;font-weight:600;width:120px;border-bottom:1px solid #eee">E-posta</td>
-                <td style="padding:10px 14px;background:#f4f4f5;color:#1a1a2e;font-weight:700;border-bottom:1px solid #eee">${emailOrPhone}</td>
-              </tr>
-              ${apartmentNo ? `<tr>
-                <td style="padding:10px 14px;background:#f4f4f5;color:#888;font-weight:600">Daire</td>
-                <td style="padding:10px 14px;background:#f4f4f5;color:#1a1a2e;font-weight:700">${apartmentNo}</td>
-              </tr>` : ""}
-            </table>
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eff6ff;border-left:3px solid #3b82f6;margin:0 0 20px">
-              <tr><td style="padding:14px 16px">
-                <p style="margin:0;font-size:13px;color:#1e40af"><strong>Bilgi:</strong> Şifreniz yöneticiniz tarafından oluşturulmuştur. İlk girişinizde size özel bir şifre belirlemeniz istenecektir.</p>
-              </td></tr>
-            </table>
-          `,
-          ctaHref: `${base}/login`,
-          ctaLabel: "Panele Giriş Yap",
-          footerNote: "Bu hesap site yönetimi tarafından oluşturulmuştur. Sorularınız için yöneticinizle iletişime geçin.",
+        html: buildWelcomeEmailHtml({
+          name,
+          siteName: "Site Yönetimi",
+          emailOrPhone,
+          apartmentNo,
+          role: role as "ADMIN" | "USER",
+          loginUrl: `${base}/login`,
         }),
       });
       console.log(`[super-admin/users] Hoşgeldin emaili ${result.ok ? "BAŞARILI" : "BAŞARISIZ"}: ${emailOrPhone}`, result.ok ? "" : result.error);
