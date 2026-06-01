@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { detectClientPlatform } from "@/lib/detect-platform";
+import { getAppDownloadUrl, mobilGuideHref } from "@/lib/app-download-links";
 import { Smartphone, Monitor, Download } from "lucide-react";
 
 type Variant = "dark" | "light";
@@ -33,11 +35,17 @@ function WindowsIcon({ className }: { className?: string }) {
 function StoreButtons({ variant = "dark" }: { variant?: Variant }) {
   const isDark = variant === "dark";
 
+  const androidUrl = getAppDownloadUrl("site", "android");
+  const iosUrl = getAppDownloadUrl("site", "ios");
+  const androidFallback = mobilGuideHref("site", "android");
+  const iosFallback = mobilGuideHref("site", "ios");
+
   return (
     <div className="flex flex-col sm:flex-row items-center gap-3">
       {/* Google Play */}
-      <a
-        href="#"
+      <Link
+        href={androidUrl || androidFallback}
+        {...(androidUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         className={`inline-flex items-center gap-3 px-5 py-3 rounded-xl transition-all hover:scale-105 ${
           isDark
             ? "bg-black text-white hover:bg-zinc-800"
@@ -49,11 +57,12 @@ function StoreButtons({ variant = "dark" }: { variant?: Variant }) {
           <p className="text-[10px] leading-tight opacity-80">GET IT ON</p>
           <p className="text-sm font-bold leading-tight">Google Play</p>
         </div>
-      </a>
+      </Link>
 
       {/* App Store */}
-      <a
-        href="#"
+      <Link
+        href={iosUrl || iosFallback}
+        {...(iosUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         className={`inline-flex items-center gap-3 px-5 py-3 rounded-xl transition-all hover:scale-105 ${
           isDark
             ? "bg-black text-white hover:bg-zinc-800"
@@ -65,7 +74,7 @@ function StoreButtons({ variant = "dark" }: { variant?: Variant }) {
           <p className="text-[10px] leading-tight opacity-80">Download on the</p>
           <p className="text-sm font-bold leading-tight">App Store</p>
         </div>
-      </a>
+      </Link>
     </div>
   );
 }
@@ -104,13 +113,15 @@ export function PlatformDownloadButtons({
       {/* Mobilde otomatik kurulum butonu */}
       {isMobile && (
         <div className="pt-2">
-          <button
-            type="button"
+          <Link
+            href={client === "android" ? (getAppDownloadUrl("site", "android") || mobilGuideHref("site", "android")) : (getAppDownloadUrl("site", "ios") || mobilGuideHref("site", "ios"))}
+            {...(client === "android" && getAppDownloadUrl("site", "android") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            {...(client === "ios" && getAppDownloadUrl("site", "ios") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
             className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-500 transition-all"
           >
             <Download className="h-4 w-4" />
             {client === "android" ? "Android'de Aç" : "iPhone'da Aç"}
-          </button>
+          </Link>
         </div>
       )}
 
