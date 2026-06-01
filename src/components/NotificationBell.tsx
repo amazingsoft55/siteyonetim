@@ -42,6 +42,7 @@ export function NotificationBell() {
   const [open, setOpen] = React.useState(false);
   const [permission, setPermission] = React.useState<NotificationPermission>("default");
   const panelRef = React.useRef<HTMLDivElement>(null);
+  const btnRef = React.useRef<HTMLButtonElement>(null);
 
   const fetchNotifications = React.useCallback(async () => {
     try {
@@ -58,9 +59,7 @@ export function NotificationBell() {
           new Notification(latest.title, { body: latest.body, icon: "/logo.png" });
         }
       }
-    } catch {
-      /* sessiz */
-    }
+    } catch { /* sessiz */ }
   }, []);
 
   React.useEffect(() => {
@@ -70,19 +69,32 @@ export function NotificationBell() {
   }, [fetchNotifications]);
 
   React.useEffect(() => {
-    if ("Notification" in window) {
-      setPermission(Notification.permission);
-    }
+    if ("Notification" in window) setPermission(Notification.permission);
   }, []);
 
   React.useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node) && btnRef.current && !btnRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
-    if (open) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [open]);
+
+  // ESC ile kapat
+  React.useEffect(() => {
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    if (open) document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
   }, [open]);
 
   const requestPermission = async () => {
@@ -101,13 +113,9 @@ export function NotificationBell() {
         });
         setItems((prev) => prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n)));
         setUnreadCount((c) => Math.max(0, c - 1));
-      } catch {
-        /* sessiz */
-      }
+      } catch { /* sessiz */ }
     }
-    if (notif.href) {
-      window.location.href = notif.href;
-    }
+    if (notif.href) window.location.href = notif.href;
   };
 
   const handleMarkAllRead = async () => {
@@ -119,14 +127,13 @@ export function NotificationBell() {
       });
       setItems((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadCount(0);
-    } catch {
-      /* sessiz */
-    }
+    } catch { /* sessiz */ }
   };
 
   return (
     <div className="relative" ref={panelRef}>
       <button
+        ref={btnRef}
         type="button"
         onClick={() => {
           setOpen((o) => !o);
@@ -144,89 +151,108 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-[340px] sm:w-[380px] max-h-[75vh] overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl z-50 flex flex-col">
-          
-          {/* Header */}
-          <div className="px-5 pt-4 pb-3">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-50">Bildirimler</h3>
-                {unreadCount > 0 && (
-                  <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-full">
-                    {unreadCount} yeni
-                  </span>
-                )}
+        <>
+          {/* Mobilde tam ekran overlay */}
+          <div className="fixed inset-0 bg-black/40 z-40 sm:hidden" onClick={() => setOpen(false)} />
+
+          <div
+            className={`
+              fixed z-50 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl flex flex-col overflow-hidden
+              sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:rounded-2xl sm:w-[380px] sm:max-h-[75vh]
+              inset-x-0 bottom-0 top-16 rounded-t-2xl sm:static sm:inset-auto
+            `}
+          >
+            {/* Header */}
+            <div className="px-4 sm:px-5 pt-4 pb-3 shrink-0">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-50">Bildirimler</h3>
+                  {unreadCount > 0 && (
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-full">
+                      {unreadCount} yeni
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {permission !== "granted" && "Notification" in window && (
+                    <button
+                      type="button"
+                      onClick={requestPermission}
+                      className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                    >
+                      İzin Ver
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    className="sm:hidden p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
-              {permission !== "granted" && "Notification" in window && (
+              {unreadCount > 0 && (
                 <button
                   type="button"
-                  onClick={requestPermission}
-                  className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                  onClick={handleMarkAllRead}
+                  className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
-                  İzin Ver
+                  <CheckCheck className="h-3.5 w-3.5" />
+                  Tümünü okundu işaretle
                 </button>
               )}
             </div>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={handleMarkAllRead}
-                className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-              >
-                <CheckCheck className="h-3.5 w-3.5" />
-                Tümünü okundu işaretle
-              </button>
-            )}
-          </div>
 
-          <div className="h-px bg-zinc-100 dark:bg-zinc-800" />
+            <div className="h-px bg-zinc-100 dark:bg-zinc-800 shrink-0" />
 
-          {/* List */}
-          <div className="overflow-y-auto flex-1">
-            {items.length === 0 ? (
-              <div className="py-14 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto mb-3">
-                  <Bell className="h-6 w-6 text-zinc-300 dark:text-zinc-600" />
+            {/* List */}
+            <div className="overflow-y-auto flex-1 overscroll-contain">
+              {items.length === 0 ? (
+                <div className="py-14 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto mb-3">
+                    <Bell className="h-6 w-6 text-zinc-300 dark:text-zinc-600" />
+                  </div>
+                  <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Bildirim yok</p>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">Yeni bildirimler burada görünecek</p>
                 </div>
-                <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Bildirim yok</p>
-                <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">Yeni bildirimler burada görünecek</p>
-              </div>
-            ) : (
-              items.map((n) => {
-                const cfg = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.SYSTEM;
-                const Icon = cfg.icon;
-                return (
-                  <button
-                    key={n.id}
-                    type="button"
-                    onClick={() => handleToggle(n)}
-                    className={`w-full text-left px-5 py-3.5 flex gap-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all duration-150 border-b border-zinc-50 dark:border-zinc-800/30 last:border-0 ${
-                      !n.read ? "bg-indigo-50/30 dark:bg-indigo-500/5" : ""
-                    }`}
-                  >
-                    <div className={`mt-0.5 h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${cfg.bg}`}>
-                      <Icon className={`h-4.5 w-4.5 ${cfg.color}`} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className={`text-sm leading-snug ${!n.read ? "font-bold text-zinc-900 dark:text-zinc-50" : "font-medium text-zinc-600 dark:text-zinc-400"}`}>
-                          {n.title}
-                        </p>
-                        <span className="text-[10px] text-zinc-400 dark:text-zinc-600 shrink-0 mt-0.5">{timeAgo(n.createdAt)}</span>
+              ) : (
+                items.map((n) => {
+                  const cfg = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.SYSTEM;
+                  const Icon = cfg.icon;
+                  return (
+                    <button
+                      key={n.id}
+                      type="button"
+                      onClick={() => handleToggle(n)}
+                      className={`w-full text-left px-4 sm:px-5 py-3.5 flex gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all duration-150 border-b border-zinc-50 dark:border-zinc-800/30 last:border-0 ${
+                        !n.read ? "bg-indigo-50/30 dark:bg-indigo-500/5" : ""
+                      }`}
+                    >
+                      <div className={`mt-0.5 h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${cfg.bg}`}>
+                        <Icon className={`h-4.5 w-4.5 ${cfg.color}`} />
                       </div>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-500 line-clamp-2 mt-0.5 leading-relaxed">
-                        {n.body}
-                      </p>
-                    </div>
-                    {!n.read && (
-                      <div className="mt-2 h-2 w-2 rounded-full bg-indigo-500 shrink-0 ring-4 ring-indigo-50 dark:ring-indigo-500/10" />
-                    )}
-                  </button>
-                );
-              })
-            )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className={`text-sm leading-snug ${!n.read ? "font-bold text-zinc-900 dark:text-zinc-50" : "font-medium text-zinc-600 dark:text-zinc-400"}`}>
+                            {n.title}
+                          </p>
+                          <span className="text-[10px] text-zinc-400 dark:text-zinc-600 shrink-0 mt-0.5">{timeAgo(n.createdAt)}</span>
+                        </div>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-500 line-clamp-2 mt-0.5 leading-relaxed">
+                          {n.body}
+                        </p>
+                      </div>
+                      {!n.read && (
+                        <div className="mt-2 h-2 w-2 rounded-full bg-indigo-500 shrink-0 ring-4 ring-indigo-50 dark:ring-indigo-500/10" />
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

@@ -138,9 +138,8 @@ export default function AdminLayout({
           </div>
           <span className="text-sm font-bold text-zinc-950 dark:text-zinc-50 truncate">{SITE_BRAND_NAME}</span>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-0.5 shrink-0">
           <NotificationBell />
-          <ThemeToggle />
           <button
             onClick={async () => {
               try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
@@ -178,7 +177,7 @@ export default function AdminLayout({
                 <div className={`p-1.5 rounded-xl transition-colors ${active ? "bg-rose-50 dark:bg-rose-950/40" : ""}`}>
                   <item.icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
                 </div>
-                <span className={`text-[10px] ${active ? "font-bold" : "font-medium"}`}>{item.shortName}</span>
+                <span className={`text-[11px] ${active ? "font-bold" : "font-medium"}`}>{item.shortName}</span>
               </a>
             );
           })}
