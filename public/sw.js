@@ -1,5 +1,5 @@
 /** PWA: kurulum kriterleri + temel önbellek + bildirim desteği */
-const CACHE = "siteyonetim-v3";
+const CACHE = "siteyonetim-v4";
 const PRECACHE = ["/", "/login", "/logo.png", "/manifest.json"];
 
 self.addEventListener("install", (event) => {
@@ -53,20 +53,25 @@ self.addEventListener("push", (event) => {
       body: data.body,
       icon: data.icon,
       badge: "/logo.png",
-      data: { url: data.url },
+      data: { url: data.url || "/" },
       vibrate: [100, 50, 100],
+      tag: data.url || "default",
+      renotify: true,
     }),
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url ?? "/";
+  const url = event.notification.data?.url || "/";
+
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
         if (client.url.includes(self.location.origin) && "focus" in client) {
-          return client.focus();
+          client.focus();
+          client.navigate(url);
+          return;
         }
       }
       return self.clients.openWindow(url);

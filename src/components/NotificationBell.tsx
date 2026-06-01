@@ -190,10 +190,20 @@ export function NotificationBell() {
       setUnreadCount(data.unreadCount ?? 0);
 
       if ((data.unreadCount ?? 0) > 0 && "Notification" in window && Notification.permission === "granted") {
-        const latest = data.notifications?.find((n: NotificationItem) => !n.read);
-        if (latest && !sessionStorage.getItem(`notif-shown-${latest.id}`)) {
-          sessionStorage.setItem(`notif-shown-${latest.id}`, "1");
+        const SHOWN_KEY = "notif-browser-shown";
+        let shownIds: string[] = [];
+        try { shownIds = JSON.parse(localStorage.getItem(SHOWN_KEY) || "[]"); } catch { shownIds = []; }
+
+        const newUnread = (data.notifications ?? []).filter(
+          (n: NotificationItem) => !n.read && !shownIds.includes(n.id),
+        );
+
+        if (newUnread.length > 0) {
+          const latest = newUnread[0];
           new Notification(latest.title, { body: latest.body, icon: "/logo.png" });
+
+          const allShown = [...shownIds, ...newUnread.map((n: NotificationItem) => n.id)].slice(-50);
+          localStorage.setItem(SHOWN_KEY, JSON.stringify(allShown));
         }
       }
     } catch { /* sessiz */ }

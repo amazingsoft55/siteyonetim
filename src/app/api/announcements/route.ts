@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
@@ -143,12 +143,12 @@ export async function POST(request: Request) {
           href: `/dashboard/announcements/${id}`,
         });
 
-        // Push notification gönder
+        // Push notification gönder (tüm site sakinlerine)
         try {
           const subs = await d.db
             .select()
             .from(pushSubscriptions)
-            .where(eq(pushSubscriptions.userId, session.id));
+            .where(inArray(pushSubscriptions.userId, userIds));
 
           if (subs.length > 0) {
             await sendPushToSubscriptions(subs, {

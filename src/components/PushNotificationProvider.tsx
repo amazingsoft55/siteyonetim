@@ -17,29 +17,48 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
   React.useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
-    // Daha önce abone olduysa tekrar deneme
-    if (sessionStorage.getItem("push_subscribed")) return;
+    // localStorage ile persist ediyoruz — sayfa yenilense bile tekrar sormaz
+    if (localStorage.getItem("push_subscribed") === "1") return;
 
     let cancelled = false;
 
     async function init() {
       try {
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted" || cancelled) return;
+        // Notification izni yoksa bileşik açılışta sorma (sadece abonelik varsa atla)
+        if (Notification.permission === "denied") return;
+
+        // İzin yoksa kullanıcı etkileşiminden sonra sor (burada otomatik sormuyoruz)
+        if (Notification.permission === "default") {
+          // İlk ziyaret — izin iste
+          const permission = await Notification.requestPermission();
+          if (permission !== "granted" || cancelled) return;
+        }
 
         const reg = await navigator.serviceWorker.ready;
 
         // Zaten abone miyiz?
         const existingSub = await reg.pushManager.getSubscription();
         if (existingSub) {
-          sessionStorage.setItem("push_subscribed", "1");
+          // Abonelik var ama kayıtlı olmayabilir — sunucuya gönder
+          const subJson = existingSub.toJSON();
+          await fetch("/api/push/subscribe", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              endpoint: existingSub.endpoint,
+              p256dh: subJson.keys?.p256dh,
+              auth: subJson.keys?.auth,
+            }),
+          }).catch(() => {});
+          localStorage.setItem("push_subscribed", "1");
           return;
         }
 
         // VAPID public key al
         const keyRes = await fetch("/api/push/vapid-key", { credentials: "include" });
         if (!keyRes.ok) return;
-        const keyData = await keyRes.json() as { publicKey?: string };
+        const keyData = (await keyRes.json()) as { publicKey?: string };
         const publicKey = keyData.publicKey;
         if (!publicKey || cancelled) return;
 
@@ -61,13 +80,13 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
           }),
         });
 
-        sessionStorage.setItem("push_subscribed", "1");
+        localStorage.setItem("push_subscribed", "1");
       } catch {
         // sessiz
       }
     }
 
-    const timer = setTimeout(init, 3000);
+    const timer = setTimeout(init, 2000);
     return () => { cancelled = true; clearTimeout(timer); };
   }, []);
 
