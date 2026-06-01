@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 import { withRemoteServer } from "./capacitor.base";
 
-/** Site yönetimi — sakin / site yöneticisi (girişten başlar). */
+/** Site yönetimi — sakin / site yöneticisi (ana sayfadan başlar). */
 const config: CapacitorConfig = withRemoteServer(
   {
     appId: "com.siteyonetim.app",
@@ -10,7 +10,7 @@ const config: CapacitorConfig = withRemoteServer(
     android: { path: "android" },
     ios: { path: "ios" },
   },
-  "/login",
+  "/",
 );
 
 export default config;

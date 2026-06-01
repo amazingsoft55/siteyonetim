@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [apiOriginDraft, setApiOriginDraft] = React.useState("");
   const [showApiOrigin, setShowApiOrigin] = React.useState(false);
   const [apiSaveNote, setApiSaveNote] = React.useState("");
+  const [authChecked, setAuthChecked] = React.useState(false);
 
   React.useEffect(() => {
     setApiOriginDraft(getStoredApiBase());
@@ -23,13 +24,13 @@ export default function LoginPage() {
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem("user");
-      if (!raw) return;
+      if (!raw) { setAuthChecked(true); return; }
       const u = JSON.parse(raw) as { role?: string };
       if (u.role === "SUPER_ADMIN") router.push("/super-admin");
       else if (u.role === "ADMIN") router.push("/admin");
       else router.push("/dashboard");
     } catch {
-      /* ignore */
+      setAuthChecked(true);
     }
   }, [router]);
 
@@ -116,6 +117,14 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (!authChecked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-transparent">
+        <div className="animate-pulse text-zinc-400 text-sm">Yükleniyor...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-transparent px-4 transition-colors duration-300">

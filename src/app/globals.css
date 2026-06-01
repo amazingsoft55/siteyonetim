@@ -15,6 +15,10 @@
   --app-bg-overlay: radial-gradient(ellipse 140% 120% at 10% -40%, rgba(79, 70, 229, 0.13), transparent 55%),
     radial-gradient(ellipse 100% 80% at 100% 0%, rgba(124, 58, 237, 0.09), transparent 50%),
     linear-gradient(180deg, #eef2ff 0%, #f8fafc 36%, #f1f5f9 100%);
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
 }
 
 .dark {
@@ -32,9 +36,229 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
 }
 
-/* Glassmorphism helpers */
+/* ═══════════════ PWA NATIVE FEEL ═══════════════ */
+
+/* Standalone modda (uygulama gibi açıldığında) safe area padding */
+html.pwa-standalone {
+  padding-top: var(--safe-area-top);
+  padding-left: var(--safe-area-left);
+  padding-right: var(--safe-area-right);
+}
+
+/* iOS iPhone X ve sonrası için çentik desteği */
+.pwa-safe-top { padding-top: var(--safe-area-top); }
+.pwa-safe-bottom { padding-bottom: var(--safe-area-bottom); }
+.pwa-safe-left { padding-left: var(--safe-area-left); }
+.pwa-safe-right { padding-right: var(--safe-area-right); }
+
+/* Standalone modda viewport'un tamamını kapla */
+html.pwa-standalone,
+html.pwa-standalone body {
+  height: 100%;
+  height: -webkit-fill-available;
+}
+
+html.pwa-standalone body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* Scroll behavior — native gibi yumuşak */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Pull-to-refresh engelleme (uygulama içi) */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* Seçim rengi — tema rengi ile uyumlu */
+::selection {
+  background-color: rgba(79, 70, 229, 0.2);
+  color: var(--foreground);
+}
+
+/* Focus visible — keyboard navigasyon için */
+:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ═══════════════ SPLASH SCREEN ═══════════════ */
+.pwa-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.pwa-splash.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.pwa-splash-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: splash-pulse 1.5s ease-in-out infinite;
+}
+
+.pwa-splash-text {
+  margin-top: 20px;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  animation: splash-fade 1s ease-out 0.3s both;
+}
+
+.pwa-splash-loader {
+  margin-top: 24px;
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: splash-spin 0.8s linear infinite;
+}
+
+@keyframes splash-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes splash-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes splash-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════ INSTALL BANNER ═══════════════ */
+.pwa-install-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  padding: 16px;
+  padding-bottom: calc(16px + var(--safe-area-bottom));
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark .pwa-install-banner {
+  background: #18181b;
+  border-top-color: #27272a;
+}
+
+.pwa-install-banner.visible {
+  transform: translateY(0);
+}
+
+.pwa-install-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.pwa-install-banner-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.pwa-install-banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.pwa-install-banner-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.pwa-install-banner-desc {
+  font-size: 12px;
+  color: #71717a;
+  margin-top: 2px;
+}
+
+.pwa-install-banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pwa-install-btn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pwa-install-btn-primary {
+  background: #4f46e5;
+  color: white;
+}
+
+.pwa-install-btn-primary:active {
+  transform: scale(0.95);
+  background: #4338ca;
+}
+
+.pwa-install-btn-secondary {
+  background: transparent;
+  color: #71717a;
+}
+
+/* ═══════════════ PAGE TRANSITIONS ═══════════════ */
+@keyframes pwa-slide-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.pwa-page-enter {
+  animation: pwa-slide-in 0.25s ease-out;
+}
+
+/* ═══════════════ STANDALONE HEADER FIX ═══════════════ */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .pwa-header {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* ═══════════════ GLASSMORPHISM HELPERS ═══════════════ */
 .glass-panel {
   background-color: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
@@ -46,4 +270,3 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
-

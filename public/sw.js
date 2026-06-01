@@ -1,5 +1,5 @@
-/** PWA: kurulum kriterleri + temel önbellek + bildirim desteği */
-const CACHE = "siteyonetim-v4";
+/** PWA: kurulum kriterleri + temel önbellek + bildirim desteği + offline */
+const CACHE = "siteyonetim-v5";
 const PRECACHE = ["/", "/login", "/logo.png", "/manifest.json"];
 
 self.addEventListener("install", (event) => {
@@ -18,20 +18,43 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
+// GET istekleri için: network-first, fallback cache
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+
+  // Navigasyon istekleri — network-first, offline fallback
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            void caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+          }
+          return res;
+        })
+        .catch(() =>
+          caches.match(event.request).then((cached) => cached ?? caches.match("/login")),
+        ),
+    );
+    return;
+  }
+
+  // Diğer GET istekleri — stale-while-revalidate
   event.respondWith(
-    fetch(event.request)
-      .then((res) => {
-        if (res.ok && event.request.url.startsWith(self.location.origin)) {
-          const copy = res.clone();
-          void caches.open(CACHE).then((cache) => cache.put(event.request, copy));
-        }
-        return res;
-      })
-      .catch(() =>
-        caches.match(event.request).then((cached) => cached ?? caches.match("/")),
-      ),
+    caches.match(event.request).then((cached) => {
+      const fetchPromise = fetch(event.request)
+        .then((res) => {
+          if (res.ok && event.request.url.startsWith(self.location.origin)) {
+            const copy = res.clone();
+            void caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+          }
+          return res;
+        })
+        .catch(() => cached);
+
+      return cached ?? fetchPromise;
+    }),
   );
 });
 
