@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Bell, Megaphone, CreditCard, UserPlus, Wrench, Check, CheckCheck } from "lucide-react";
+import { Bell, Megaphone, CreditCard, UserPlus, Wrench, CheckCheck, X } from "lucide-react";
 
 type NotificationItem = {
   id: string;
@@ -23,9 +23,7 @@ const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: 
 
 function timeAgo(dateStr: string | null): string {
   if (!dateStr) return "";
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diff = Math.max(0, now - then);
+  const diff = Math.max(0, Date.now() - new Date(dateStr).getTime());
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "Az önce";
   if (mins < 60) return `${mins} dk`;
@@ -89,13 +87,18 @@ export function NotificationBell() {
     };
   }, [open]);
 
-  // ESC ile kapat
+  // Mobilde body scroll kilitle
   React.useEffect(() => {
-    function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+    if (open) {
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.inset = "0";
     }
-    if (open) document.addEventListener("keydown", handleEsc);
-    return () => document.removeEventListener("keydown", handleEsc);
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.inset = "";
+    };
   }, [open]);
 
   const requestPermission = async () => {
@@ -131,6 +134,53 @@ export function NotificationBell() {
     } catch { /* sessiz */ }
   };
 
+  function renderList() {
+    if (items.length === 0) {
+      return (
+        <div className="py-16 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto mb-3">
+            <Bell className="h-7 w-7 text-zinc-300 dark:text-zinc-600" />
+          </div>
+          <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Bildirim yok</p>
+          <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">Yeni bildirimler burada görünecek</p>
+        </div>
+      );
+    }
+
+    return items.map((n) => {
+      const cfg = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.SYSTEM;
+      const Icon = cfg.icon;
+      return (
+        <button
+          key={n.id}
+          type="button"
+          onClick={() => handleToggle(n)}
+          className={`w-full text-left px-5 py-3.5 flex gap-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all duration-150 border-b border-zinc-100 dark:border-zinc-800/50 last:border-0 ${
+            !n.read ? "bg-indigo-50/40 dark:bg-indigo-500/5" : ""
+          }`}
+        >
+          <div className={`mt-0.5 h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${cfg.bg}`}>
+            <Icon className={`h-4.5 w-4.5 ${cfg.color}`} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <p className={`text-sm leading-snug pr-2 ${!n.read ? "font-bold text-zinc-900 dark:text-zinc-50" : "font-medium text-zinc-600 dark:text-zinc-400"}`}>
+                {n.title}
+              </p>
+              <span className="text-[10px] text-zinc-400 dark:text-zinc-600 shrink-0 mt-0.5 whitespace-nowrap">{timeAgo(n.createdAt)}</span>
+            </div>
+            <p className="text-xs text-zinc-500 dark:text-zinc-500 line-clamp-2 mt-0.5 leading-relaxed">
+              {n.body}
+            </p>
+          </div>
+          {!n.read && (
+            <div className="mt-2 h-2 w-2 rounded-full bg-indigo-500 shrink-0 ring-4 ring-indigo-50 dark:ring-indigo-500/10" />
+          )}
+        </button>
+      );
+    });
+  }
+
   return (
     <div className="relative" ref={panelRef}>
       <button
@@ -153,20 +203,52 @@ export function NotificationBell() {
 
       {open && (
         <>
-          {/* Mobilde tam ekran overlay */}
-          <div className="fixed inset-0 bg-black/40 z-40 sm:hidden" onClick={() => setOpen(false)} />
-
-          <div
-            className={`
-              fixed z-50 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl flex flex-col overflow-hidden
-              sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:rounded-2xl sm:w-[380px] sm:max-h-[75vh]
-              inset-x-0 bottom-0 top-16 rounded-t-2xl
-            `}
-          >
+          {/* === MOBİL: Tam ekran bottom sheet === */}
+          <div className="fixed inset-0 z-[9998] bg-black/40 sm:hidden" onClick={() => setOpen(false)} />
+          <div className="fixed inset-x-0 bottom-0 top-14 z-[9999] sm:hidden flex flex-col bg-white dark:bg-zinc-900 rounded-t-2xl shadow-2xl animate-in slide-in-from-bottom duration-200">
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+            </div>
             {/* Header */}
-            <div className="px-4 sm:px-5 pt-4 pb-3 shrink-0">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
+            <div className="px-5 pt-2 pb-3 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800">
+              <div className="flex items-center gap-2.5">
+                <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-50">Bildirimler</h3>
+                {unreadCount > 0 && (
+                  <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-full">
+                    {unreadCount} yeni
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {permission !== "granted" && "Notification" in window && (
+                  <button type="button" onClick={requestPermission} className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+                    İzin Ver
+                  </button>
+                )}
+                {unreadCount > 0 && (
+                  <button type="button" onClick={handleMarkAllRead} className="flex items-center gap-1 text-[11px] font-semibold text-zinc-500">
+                    <CheckCheck className="h-3.5 w-3.5" /> Okundu
+                  </button>
+                )}
+                <button type="button" onClick={() => setOpen(false)} className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                  <X className="h-4 w-4 text-zinc-400" />
+                </button>
+              </div>
+            </div>
+            {/* List */}
+            <div className="flex-1 overflow-y-auto overscroll-contain">
+              {renderList()}
+            </div>
+          </div>
+
+          {/* === TABLET / DESKTOP: Dropdown === */}
+          <div className="hidden sm:block fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="hidden sm:flex absolute right-0 top-full mt-2 w-[380px] max-h-[70vh] flex-col rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="px-5 pt-4 pb-3 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2.5">
                   <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-50">Bildirimler</h3>
                   {unreadCount > 0 && (
                     <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-full">
@@ -174,83 +256,22 @@ export function NotificationBell() {
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
-                  {permission !== "granted" && "Notification" in window && (
-                    <button
-                      type="button"
-                      onClick={requestPermission}
-                      className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
-                    >
-                      İzin Ver
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setOpen(false)}
-                    className="sm:hidden p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"
-                  >
-                    ✕
+                {permission !== "granted" && "Notification" in window && (
+                  <button type="button" onClick={requestPermission} className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                    İzin Ver
                   </button>
-                </div>
+                )}
               </div>
               {unreadCount > 0 && (
-                <button
-                  type="button"
-                  onClick={handleMarkAllRead}
-                  className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                >
+                <button type="button" onClick={handleMarkAllRead} className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                   <CheckCheck className="h-3.5 w-3.5" />
                   Tümünü okundu işaretle
                 </button>
               )}
             </div>
-
-            <div className="h-px bg-zinc-100 dark:bg-zinc-800 shrink-0" />
-
             {/* List */}
             <div className="overflow-y-auto flex-1 min-h-0 overscroll-contain">
-              {items.length === 0 ? (
-                <div className="py-14 text-center">
-                  <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto mb-3">
-                    <Bell className="h-6 w-6 text-zinc-300 dark:text-zinc-600" />
-                  </div>
-                  <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Bildirim yok</p>
-                  <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">Yeni bildirimler burada görünecek</p>
-                </div>
-              ) : (
-                items.map((n) => {
-                  const cfg = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.SYSTEM;
-                  const Icon = cfg.icon;
-                  return (
-                    <button
-                      key={n.id}
-                      type="button"
-                      onClick={() => handleToggle(n)}
-                      className={`w-full text-left px-4 sm:px-5 py-3.5 flex gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all duration-150 border-b border-zinc-50 dark:border-zinc-800/30 last:border-0 ${
-                        !n.read ? "bg-indigo-50/30 dark:bg-indigo-500/5" : ""
-                      }`}
-                    >
-                      <div className={`mt-0.5 h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${cfg.bg}`}>
-                        <Icon className={`h-4.5 w-4.5 ${cfg.color}`} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className={`text-sm leading-snug ${!n.read ? "font-bold text-zinc-900 dark:text-zinc-50" : "font-medium text-zinc-600 dark:text-zinc-400"}`}>
-                            {n.title}
-                          </p>
-                          <span className="text-[10px] text-zinc-400 dark:text-zinc-600 shrink-0 mt-0.5">{timeAgo(n.createdAt)}</span>
-                        </div>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-500 line-clamp-2 mt-0.5 leading-relaxed">
-                          {n.body}
-                        </p>
-                      </div>
-                      {!n.read && (
-                        <div className="mt-2 h-2 w-2 rounded-full bg-indigo-500 shrink-0 ring-4 ring-indigo-50 dark:ring-indigo-500/10" />
-                      )}
-                    </button>
-                  );
-                })
-              )}
+              {renderList()}
             </div>
           </div>
         </>
