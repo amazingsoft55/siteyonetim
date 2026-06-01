@@ -14,9 +14,12 @@ export async function GET() {
         .select()
         .from(plans)
         .where(eq(plans.active, true));
-    } catch {
+    } catch (e) {
+      console.error("[api/plans] plans tablosu sorgulanamadı:", e instanceof Error ? e.message : String(e));
       planRows = [];
     }
+
+    console.log(`[api/plans] ${planRows.length} aktif plan bulundu`);
 
     const allFeatureIds = new Set<string>();
     for (const p of planRows) {
@@ -61,7 +64,7 @@ export async function GET() {
     return NextResponse.json(parsed);
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
-    console.error("[api/plans GET]", detail);
+    console.error("[api/plans GET] kritik hata:", detail);
     return NextResponse.json([], { status: 200 });
   }
 }

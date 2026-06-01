@@ -1,6 +1,16 @@
 import { SITE_BRAND_NAME } from "@/lib/brand";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
+function emailLogoDataUri(accent: string): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+    <rect width="64" height="64" rx="16" fill="#fff"/>
+    <path d="M18 46V26l14-9 14 9v20" stroke="${accent}" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M26 46v-10h12v10" stroke="${accent}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="32" cy="28" r="2.5" fill="${accent}"/>
+  </svg>`;
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+}
+
 export type BrandedEmailOptions = {
   title: string;
   intro: string;
@@ -22,7 +32,7 @@ export type WelcomeEmailOptions = {
 
 export function buildWelcomeEmailHtml(opts: WelcomeEmailOptions): string {
   const accent = "#4f46e5";
-  const emoji = "🏠";
+  const logoUri = emailLogoDataUri(accent);
 
   return `<!DOCTYPE html>
 <html lang="tr">
@@ -50,7 +60,7 @@ export function buildWelcomeEmailHtml(opts: WelcomeEmailOptions): string {
           <span style="position:absolute;top:28px;left:82%;width:6px;height:6px;background:#fb923c;border-radius:50%;animation:confetti1 2.6s ease-out infinite .9s"></span>
 
           <div style="width:84px;height:84px;margin:0 auto 16px;background:rgba(255,255,255,.15);border-radius:50%;animation:pulse 3s ease-in-out infinite;display:flex;align-items:center;justify-content:center">
-            <span style="font-size:38px;animation:float 3s ease-in-out infinite">${emoji}</span>
+            <img src="${logoUri}" alt="${SITE_BRAND_NAME}" width="52" height="52" style="display:block;border-radius:12px;animation:float 3s ease-in-out infinite" />
           </div>
           <p style="margin:0;color:rgba(255,255,255,.75);font-size:12px;text-transform:uppercase;letter-spacing:3px;font-weight:700;animation:fadeIn .8s ease-out">HOŞ GELDİNİZ</p>
           <h1 style="margin:6px 0 0;color:#fff;font-size:24px;font-weight:800;animation:fadeInUp .8s ease-out .15s both">Site Yönetimi'ne Katıldınız!</h1>
@@ -150,6 +160,7 @@ export function buildWelcomeEmailHtml(opts: WelcomeEmailOptions): string {
 export function buildBrandedEmailHtml(opts: BrandedEmailOptions): string {
   const base = getPublicSiteUrl().replace(/\/$/, "");
   const accent = opts.accentColor || "#4f46e5";
+  const logoUri = emailLogoDataUri(accent);
 
   const cta =
     opts.ctaHref && opts.ctaLabel
@@ -172,11 +183,7 @@ export function buildBrandedEmailHtml(opts: BrandedEmailOptions): string {
         <tr><td style="background:linear-gradient(135deg,${accent},#7c3aed);padding:36px 28px 32px;text-align:center">
           <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto">
             <tr><td style="background:#fff;border-radius:14px;padding:6px">
-              <table role="presentation" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td style="width:40px;height:40px;background:${accent};border-radius:10px;text-align:center;vertical-align:middle;font-size:20px;color:#fff;font-weight:bold">&loz;</td>
-                </tr>
-              </table>
+              <img src="${logoUri}" alt="${SITE_BRAND_NAME}" width="48" height="48" style="display:block;border-radius:10px" />
             </td></tr>
           </table>
           <p style="margin:16px 0 0;color:#fff;font-size:19px;font-weight:700;letter-spacing:-0.3px">${SITE_BRAND_NAME}</p>
