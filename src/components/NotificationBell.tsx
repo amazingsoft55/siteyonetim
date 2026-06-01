@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Bell } from "lucide-react";
+import { Bell, Megaphone, CreditCard, UserPlus, Wrench, Check, CheckCheck } from "lucide-react";
 
 type NotificationItem = {
   id: string;
@@ -13,12 +13,12 @@ type NotificationItem = {
   createdAt: string | null;
 };
 
-const TYPE_STYLES: Record<string, string> = {
-  WELCOME: "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400",
-  PAYMENT: "bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400",
-  ANNOUNCEMENT: "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400",
-  REQUEST: "bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400",
-  SYSTEM: "bg-zinc-100 dark:bg-zinc-500/20 text-zinc-600 dark:text-zinc-400",
+const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
+  WELCOME: { icon: UserPlus, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-500/15" },
+  PAYMENT: { icon: CreditCard, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-500/15" },
+  ANNOUNCEMENT: { icon: Megaphone, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-500/15" },
+  REQUEST: { icon: Wrench, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-500/15" },
+  SYSTEM: { icon: Bell, color: "text-zinc-600 dark:text-zinc-400", bg: "bg-zinc-100 dark:bg-zinc-500/15" },
 };
 
 function timeAgo(dateStr: string | null): string {
@@ -28,11 +28,11 @@ function timeAgo(dateStr: string | null): string {
   const diff = Math.max(0, now - then);
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "Az önce";
-  if (mins < 60) return `${mins} dk önce`;
+  if (mins < 60) return `${mins} dk`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} saat önce`;
+  if (hrs < 24) return `${hrs} sa`;
   const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days} gün önce`;
+  if (days < 7) return `${days} gün`;
   return new Date(dateStr).toLocaleDateString("tr-TR", { day: "numeric", month: "short" });
 }
 
@@ -137,71 +137,93 @@ export function NotificationBell() {
       >
         <Bell className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center h-4.5 min-w-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full ring-2 ring-white dark:ring-zinc-900">
+          <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center h-4.5 min-w-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full ring-2 ring-white dark:ring-zinc-900 animate-pulse">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-h-[70vh] overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl z-50 flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
-            <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Bildirimler</h3>
-            <div className="flex items-center gap-2">
+        <div className="absolute right-0 top-full mt-2 w-[340px] sm:w-[380px] max-h-[75vh] overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl z-50 flex flex-col">
+          
+          {/* Header */}
+          <div className="px-5 pt-4 pb-3">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-50">Bildirimler</h3>
+                {unreadCount > 0 && (
+                  <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-full">
+                    {unreadCount} yeni
+                  </span>
+                )}
+              </div>
               {permission !== "granted" && "Notification" in window && (
                 <button
                   type="button"
                   onClick={requestPermission}
                   className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
-                  Bildirimlere izin ver
-                </button>
-              )}
-              {unreadCount > 0 && (
-                <button
-                  type="button"
-                  onClick={handleMarkAllRead}
-                  className="text-[11px] font-semibold text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-                >
-                  Tümünü okundu işaretle
+                  İzin Ver
                 </button>
               )}
             </div>
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={handleMarkAllRead}
+                className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                <CheckCheck className="h-3.5 w-3.5" />
+                Tümünü okundu işaretle
+              </button>
+            )}
           </div>
 
-          <div className="overflow-y-auto flex-1 divide-y divide-zinc-100 dark:divide-zinc-800/50">
+          <div className="h-px bg-zinc-100 dark:bg-zinc-800" />
+
+          {/* List */}
+          <div className="overflow-y-auto flex-1">
             {items.length === 0 ? (
-              <div className="py-12 text-center">
-                <Bell className="h-8 w-8 text-zinc-300 dark:text-zinc-600 mx-auto mb-2" />
-                <p className="text-sm text-zinc-400 dark:text-zinc-500">Henüz bildirim yok</p>
+              <div className="py-14 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto mb-3">
+                  <Bell className="h-6 w-6 text-zinc-300 dark:text-zinc-600" />
+                </div>
+                <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Bildirim yok</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">Yeni bildirimler burada görünecek</p>
               </div>
             ) : (
-              items.map((n) => (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => handleToggle(n)}
-                  className={`w-full text-left px-4 py-3 flex gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors ${
-                    !n.read ? "bg-indigo-50/40 dark:bg-indigo-500/5" : ""
-                  }`}
-                >
-                  <div className={`mt-0.5 h-8 w-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold ${TYPE_STYLES[n.type] ?? TYPE_STYLES.SYSTEM}`}>
-                    {n.type === "WELCOME" ? "H" : n.type === "PAYMENT" ? "A" : n.type === "ANNOUNCEMENT" ? "D" : n.type === "REQUEST" ? "T" : "S"}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className={`text-sm font-semibold truncate ${!n.read ? "text-zinc-900 dark:text-zinc-50" : "text-zinc-600 dark:text-zinc-400"}`}>
-                      {n.title}
-                    </p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-500 line-clamp-2 mt-0.5">
-                      {n.body}
-                    </p>
-                    <p className="text-[10px] text-zinc-400 dark:text-zinc-600 mt-1">{timeAgo(n.createdAt)}</p>
-                  </div>
-                  {!n.read && (
-                    <div className="mt-2 h-2 w-2 rounded-full bg-indigo-500 shrink-0" />
-                  )}
-                </button>
-              ))
+              items.map((n) => {
+                const cfg = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.SYSTEM;
+                const Icon = cfg.icon;
+                return (
+                  <button
+                    key={n.id}
+                    type="button"
+                    onClick={() => handleToggle(n)}
+                    className={`w-full text-left px-5 py-3.5 flex gap-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all duration-150 border-b border-zinc-50 dark:border-zinc-800/30 last:border-0 ${
+                      !n.read ? "bg-indigo-50/30 dark:bg-indigo-500/5" : ""
+                    }`}
+                  >
+                    <div className={`mt-0.5 h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${cfg.bg}`}>
+                      <Icon className={`h-4.5 w-4.5 ${cfg.color}`} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className={`text-sm leading-snug ${!n.read ? "font-bold text-zinc-900 dark:text-zinc-50" : "font-medium text-zinc-600 dark:text-zinc-400"}`}>
+                          {n.title}
+                        </p>
+                        <span className="text-[10px] text-zinc-400 dark:text-zinc-600 shrink-0 mt-0.5">{timeAgo(n.createdAt)}</span>
+                      </div>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-500 line-clamp-2 mt-0.5 leading-relaxed">
+                        {n.body}
+                      </p>
+                    </div>
+                    {!n.read && (
+                      <div className="mt-2 h-2 w-2 rounded-full bg-indigo-500 shrink-0 ring-4 ring-indigo-50 dark:ring-indigo-500/10" />
+                    )}
+                  </button>
+                );
+              })
             )}
           </div>
         </div>

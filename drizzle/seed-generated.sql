@@ -3,7 +3,7 @@
 INSERT OR IGNORE INTO sites (id, name, address) VALUES ('23b164f5cae9473093acf3b310e3552e', 'Site Yönetimi Demo', NULL);
 
 -- Süper yönetici
-INSERT OR IGNORE INTO users (id, name, email_or_phone, password_hash, role, site_id, must_change_password, created_at) VALUES ('68c9830dd80a4b0c9c7857da9583f13c', 'Mustafa Keskın', 'mustafakeskin2655@gmail.com', '$2b$10$nvuS59k1AsTas1ay890AVusbhR2C90bXRQbDjT1d2GZTAmaHZUDLa', 'SUPER_ADMIN', '23b164f5cae9473093acf3b310e3552e', 0, datetime('now'));
+INSERT OR IGNORE INTO users (id, name, email_or_phone, password_hash, role, site_id, must_change_password, created_at) VALUES ('68c9830dd80a4b0c9c7857da9583f13c', 'Mustafa Keskın', 'mustafakeskin2655@gmail.com', '$2b$10$s3wMzoCn2/3I8Szcm//qtuOnEHqSEYzrVXC3Tz7.2wl0VwTC9wGnO', 'SUPER_ADMIN', '23b164f5cae9473093acf3b310e3552e', 0, datetime('now'));
 
 -- Platform özellikleri
 INSERT OR IGNORE INTO features (id, name, description, category, sort_order, active) VALUES ('91bf3226bd1945e785d5b631baa87b78', 'Aidat Takibi', 'Aidat borçlarınızı ve ödemelerinizi takip edin', 'Aidat Yönetimi', 0, 1);

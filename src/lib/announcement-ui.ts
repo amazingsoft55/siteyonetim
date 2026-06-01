@@ -3,6 +3,7 @@ export function announcementToClient(row: {
   title: string;
   content: string;
   category: string | null;
+  imageUrl?: string | null;
   createdAt: string | null;
 }) {
   const createdMs = row.createdAt ? new Date(row.createdAt).getTime() : NaN;
@@ -14,6 +15,7 @@ export function announcementToClient(row: {
     date: row.createdAt ? new Date(row.createdAt).toLocaleDateString("tr-TR") : "",
     content: row.content,
     category: row.category?.trim() || "Genel",
+    imageUrl: row.imageUrl || null,
     isNew: fresh,
   };
 }

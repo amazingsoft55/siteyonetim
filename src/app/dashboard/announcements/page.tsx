@@ -9,6 +9,7 @@ interface Announcement {
   date: string;
   content: string;
   category?: string;
+  imageUrl?: string | null;
   isNew?: boolean;
 }
 
@@ -89,37 +90,46 @@ export default function ResidentAnnouncementsPage() {
           filtered.map((a) => (
             <div 
               key={a.id} 
-              className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-3xl p-6 shadow-sm hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-all duration-200"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-3xl overflow-hidden shadow-sm hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-all duration-200"
             >
-              <div className="flex items-start gap-4">
-                <div className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 p-3.5 rounded-2xl shrink-0 border border-indigo-100 dark:border-indigo-900/30">
-                  <Megaphone className="h-6 w-6" />
-                </div>
-                <div className="space-y-2 w-full">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50">{a.title}</h3>
-                      {a.isNew && (
-                        <span className="px-2 py-0.5 text-[10px] font-bold bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-full">
-                          YENİ
-                        </span>
-                      )}
-                    </div>
-                    <span className="flex items-center gap-1 text-xs text-zinc-400">
-                      <Calendar className="h-3.5 w-3.5" />
-                      {a.date}
-                    </span>
+              {a.imageUrl && (
+                <img 
+                  src={a.imageUrl} 
+                  alt={a.title}
+                  className="w-full h-48 object-cover"
+                />
+              )}
+              <div className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 p-3.5 rounded-2xl shrink-0 border border-indigo-100 dark:border-indigo-900/30">
+                    <Megaphone className="h-6 w-6" />
                   </div>
-                  
-                  {a.category && (
-                    <span className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-full ${getCategoryColor(a.category)}`}>
-                      {a.category}
-                    </span>
-                  )}
-                  
-                  <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed pt-1">
-                    {a.content}
-                  </p>
+                  <div className="space-y-2 w-full">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50">{a.title}</h3>
+                        {a.isNew && (
+                          <span className="px-2 py-0.5 text-[10px] font-bold bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-full">
+                            YENİ
+                          </span>
+                        )}
+                      </div>
+                      <span className="flex items-center gap-1 text-xs text-zinc-400">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {a.date}
+                      </span>
+                    </div>
+                    
+                    {a.category && (
+                      <span className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-full ${getCategoryColor(a.category)}`}>
+                        {a.category}
+                      </span>
+                    )}
+                    
+                    <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed pt-1">
+                      {a.content}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

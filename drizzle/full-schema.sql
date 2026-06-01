@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS `announcements` (
   `title` text NOT NULL,
   `content` text NOT NULL,
   `category` text,
+  `image_url` text,
   `created_at` text DEFAULT (CURRENT_TIMESTAMP),
   FOREIGN KEY (`site_id`) REFERENCES `sites`(`id`)
 );

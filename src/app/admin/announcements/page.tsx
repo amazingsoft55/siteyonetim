@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { PlusCircle, Megaphone, Trash2, Calendar, X } from "lucide-react";
+import { PlusCircle, Megaphone, Trash2, Calendar, X, ImageIcon } from "lucide-react";
 import { useAlert, useConfirm } from "@/components/ModalProvider";
 
 interface Announcement {
@@ -10,6 +10,7 @@ interface Announcement {
   date: string;
   content: string;
   category?: string;
+  imageUrl?: string | null;
   isNew?: boolean;
 }
 
@@ -21,8 +22,11 @@ export default function AnnouncementsPage() {
   const [title, setTitle] = React.useState("");
   const [category, setCategory] = React.useState("Genel");
   const [content, setContent] = React.useState("");
+  const [imageUrl, setImageUrl] = React.useState<string | null>(null);
+  const [uploading, setUploading] = React.useState(false);
   const [loadErr, setLoadErr] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
+  const fileRef = React.useRef<HTMLInputElement>(null);
 
   async function reload() {
     setLoadErr("");
@@ -40,6 +44,34 @@ export default function AnnouncementsPage() {
     void reload();
   }, []);
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      await showAlert({ message: "Görsel en fazla 2MB olabilir.", variant: "error" });
+      return;
+    }
+    setUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImageUrl(reader.result as string);
+        setUploading(false);
+      };
+      reader.onerror = () => {
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setImageUrl(null);
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !content || submitting) return;
@@ -50,7 +82,7 @@ export default function AnnouncementsPage() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content, category }),
+        body: JSON.stringify({ title, content, category, imageUrl }),
       });
       if (!res.ok) {
         await showAlert({ message: "Duyuru kaydedilemedi.", variant: "error" });
@@ -60,6 +92,8 @@ export default function AnnouncementsPage() {
       setTitle("");
       setContent("");
       setCategory("Genel");
+      setImageUrl(null);
+      if (fileRef.current) fileRef.current.value = "";
       setShowForm(false);
       await reload();
       await showAlert({ message: "Duyuru yayınlandı.", variant: "success" });
@@ -162,6 +196,49 @@ export default function AnnouncementsPage() {
               />
             </div>
 
+            {/* Görsel Yükleme */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1.5">Duyuru Görseli (isteğe bağlı)</label>
+              {imageUrl ? (
+                <div className="relative inline-block">
+                  <img 
+                    src={imageUrl} 
+                    alt="Duyuru görseli" 
+                    className="w-full max-h-48 object-cover rounded-2xl border border-zinc-200 dark:border-zinc-800"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <div 
+                  onClick={() => fileRef.current?.click()}
+                  className="border-2 border-dashed border-zinc-200 dark:border-zinc-700 rounded-2xl p-8 text-center cursor-pointer hover:border-rose-300 dark:hover:border-rose-700 transition-colors"
+                >
+                  {uploading ? (
+                    <p className="text-sm text-zinc-500">Yükleniyor...</p>
+                  ) : (
+                    <>
+                      <ImageIcon className="h-8 w-8 mx-auto mb-2 text-zinc-300 dark:text-zinc-600" />
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">Görsel yüklemek için tıklayın</p>
+                      <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">JPG, PNG - Max 2MB</p>
+                    </>
+                  )}
+                </div>
+              )}
+              <input 
+                ref={fileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </div>
+
             <div className="flex gap-3 justify-end pt-2">
               <button 
                 type="button" 
@@ -194,39 +271,48 @@ export default function AnnouncementsPage() {
           announcements.map((ann) => (
             <div 
               key={ann.id} 
-              className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start gap-4 shadow-sm hover:border-rose-200 dark:hover:border-rose-950/40 transition-all duration-200"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-3xl overflow-hidden shadow-sm hover:border-rose-200 dark:hover:border-rose-950/40 transition-all duration-200"
             >
-              <div className="flex gap-4">
-                <div className="bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 p-3.5 rounded-2xl shrink-0 border border-rose-100 dark:border-rose-900/30">
-                  <Megaphone className="h-6 w-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50">{ann.title}</h4>
-                    {ann.isNew && (
-                      <span className="px-2 py-0.5 text-[9px] font-extrabold bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-full">YENİ</span>
-                    )}
+              {ann.imageUrl && (
+                <img 
+                  src={ann.imageUrl} 
+                  alt={ann.title}
+                  className="w-full h-48 object-cover"
+                />
+              )}
+              <div className="p-6 flex flex-col sm:flex-row justify-between items-start gap-4">
+                <div className="flex gap-4">
+                  <div className="bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 p-3.5 rounded-2xl shrink-0 border border-rose-100 dark:border-rose-900/30">
+                    <Megaphone className="h-6 w-6" />
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className={`px-2 py-0.2 rounded text-[10px] font-bold ${getCategoryColor(ann.category)}`}>
-                      {ann.category || "Genel"}
-                    </span>
-                    <span className="flex items-center gap-1 text-xs text-zinc-400">
-                      <Calendar className="h-3.5 w-3.5" />
-                      {ann.date}
-                    </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50">{ann.title}</h4>
+                      {ann.isNew && (
+                        <span className="px-2 py-0.5 text-[9px] font-extrabold bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-full">YENİ</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`px-2 py-0.2 rounded text-[10px] font-bold ${getCategoryColor(ann.category)}`}>
+                        {ann.category || "Genel"}
+                      </span>
+                      <span className="flex items-center gap-1 text-xs text-zinc-400">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {ann.date}
+                      </span>
+                    </div>
+                    <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-3 leading-relaxed">{ann.content}</p>
                   </div>
-                  <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-3 leading-relaxed">{ann.content}</p>
                 </div>
+                
+                <button 
+                  onClick={() => handleDelete(ann.id)}
+                  className="p-2 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl border border-transparent hover:border-red-100 dark:hover:border-red-900/30 cursor-pointer self-start"
+                  title="Sil"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
-              
-              <button 
-                onClick={() => handleDelete(ann.id)}
-                className="p-2 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl border border-transparent hover:border-red-100 dark:hover:border-red-900/30 cursor-pointer self-start"
-                title="Sil"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
             </div>
           ))
         )}

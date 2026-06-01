@@ -56,6 +56,7 @@ export const announcements = sqliteTable("announcements", {
   title: text("title").notNull(),
   content: text("content").notNull(),
   category: text("category"),
+  imageUrl: text("image_url"),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 

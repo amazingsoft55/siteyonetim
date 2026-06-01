@@ -1,4 +1,4 @@
-import { SITE_BRAND_NAME, SITE_LOGO_PATH } from "@/lib/brand";
+import { SITE_BRAND_NAME } from "@/lib/brand";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
 export type BrandedEmailOptions = {
@@ -11,16 +11,25 @@ export type BrandedEmailOptions = {
   accentColor?: string;
 };
 
+function emailLogoSvg(accent: string): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><rect width="48" height="48" rx="12" fill="#fff"/><path d="M14 34V18l10-6 10 6v16" stroke="${accent}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 34v-8h8v8" stroke="${accent}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="20" r="2" fill="${accent}"/></svg>`;
+}
+
+function emailLogoDataUri(accent: string): string {
+  const svg = emailLogoSvg(accent);
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+}
+
 export function buildBrandedEmailHtml(opts: BrandedEmailOptions): string {
   const base = getPublicSiteUrl().replace(/\/$/, "");
-  const logoUrl = `${base}${SITE_LOGO_PATH}`;
   const accent = opts.accentColor || "#4f46e5";
+  const logoDataUri = emailLogoDataUri(accent);
 
   const cta =
     opts.ctaHref && opts.ctaLabel
       ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:24px auto 0">
           <tr><td style="background:${accent};border-radius:10px">
-            <a href="${opts.ctaHref}" style="display:inline-block;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:13px 28px">Yenilikleri Keşfet</a>
+            <a href="${opts.ctaHref}" style="display:inline-block;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:13px 28px">${opts.ctaLabel}</a>
           </td></tr>
         </table>
         <p style="margin:12px 0 0;font-size:11px;color:#a1a1aa;word-break:break-all;text-align:center">${opts.ctaHref}</p>`
@@ -35,7 +44,7 @@ export function buildBrandedEmailHtml(opts: BrandedEmailOptions): string {
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.06)">
 
         <tr><td style="background:linear-gradient(135deg,${accent},#7c3aed);padding:28px 24px 24px;text-align:center">
-          <img src="${logoUrl}" alt="${SITE_BRAND_NAME}" width="56" height="56" style="display:block;margin:0 auto 10px;border-radius:14px;background:#fff;padding:3px" />
+          <img src="${logoDataUri}" alt="${SITE_BRAND_NAME}" width="48" height="48" style="display:block;margin:0 auto 10px" />
           <p style="margin:0;color:#fff;font-size:17px;font-weight:700">${SITE_BRAND_NAME}</p>
         </td></tr>
 

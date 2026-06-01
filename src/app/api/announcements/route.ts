@@ -61,6 +61,7 @@ type PostBody = {
   title?: unknown;
   content?: unknown;
   category?: unknown;
+  imageUrl?: unknown;
 };
 
 export async function POST(request: Request) {
@@ -85,6 +86,7 @@ export async function POST(request: Request) {
   const content = typeof raw.content === "string" ? raw.content.trim() : "";
   const category =
     typeof raw.category === "string" && raw.category.trim().length > 0 ? raw.category.trim() : "Genel";
+  const imageUrl = typeof raw.imageUrl === "string" && raw.imageUrl.trim().length > 0 ? raw.imageUrl.trim() : null;
 
   if (!title || !content) {
     return NextResponse.json({ error: "Başlık ve içerik zorunludur." }, { status: 400 });
@@ -100,6 +102,7 @@ export async function POST(request: Request) {
       title,
       content,
       category,
+      imageUrl,
     });
 
     const row = await d.db.select().from(announcements).where(eq(announcements.id, id)).limit(1);
@@ -127,7 +130,7 @@ export async function POST(request: Request) {
         );
         console.log(`[announcements] ${emailsToSend.length} kullanıcıya email gönderilecek`);
         for (const u of emailsToSend) {
-          const result = await sendAnnouncementEmail(u.emailOrPhone, u.name, title, content, category);
+          const result = await sendAnnouncementEmail(u.emailOrPhone, u.name, title, content, category, imageUrl);
           if (!result.ok) {
             console.error(`[announcements] Email gönderilemedi: ${u.emailOrPhone} — ${result.error}`);
           } else {
