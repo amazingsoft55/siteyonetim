@@ -135,16 +135,25 @@ export async function POST(request: Request) {
         subject: `Hoş Geldiniz — ${siteName}`,
         html: buildBrandedEmailHtml({
           title: "Hoş Geldiniz!",
-          intro: `Merhaba ${name}, ${siteName} sitesine başarıyla eklendiniz.`,
+          intro: `Merhaba <strong>${name}</strong>, <strong>${siteName}</strong> sitesine başarıyla eklendiniz. Aşağıda hesap bilgilerinizi bulabilirsiniz.`,
           bodyHtml: `
-            <p style="margin:0 0 8px;font-size:14px;color:#3f3f46">Giriş bilgileriniz:</p>
-            <p style="margin:0 0 4px;font-size:14px;color:#3f3f46"><strong>Kullanıcı adı:</strong> ${emailOrPhone}</p>
-            <p style="margin:0 0 16px;font-size:14px;color:#3f3f46"><strong>Şifre:</strong> (yönetici tarafından belirlendi)</p>
-            ${role === "USER" && apartmentNo ? `<p style="margin:0 0 16px;font-size:14px;color:#3f3f46"><strong>Daire:</strong> ${apartmentNo}</p>` : ""}
+            <table style="width:100%;margin:0 0 20px;font-size:14px;border-collapse:separate;border-spacing:0">
+              <tr>
+                <td style="padding:10px 14px;background:#f4f4f5;border-radius:10px 0 0 10px;color:#71717a;font-weight:600;width:130px;border-bottom:1px solid #e4e4e7">Kullanıcı Adı</td>
+                <td style="padding:10px 14px;background:#f4f4f5;border-radius:0 10px 10px 0;color:#18181b;font-weight:700;border-bottom:1px solid #e4e4e7">${emailOrPhone}</td>
+              </tr>
+              ${role === "USER" && apartmentNo ? `<tr>
+                <td style="padding:10px 14px;background:#f4f4f5;border-radius:0 0 0 10px;color:#71717a;font-weight:600">Daire No</td>
+                <td style="padding:10px 14px;background:#f4f4f5;border-radius:0 0 10px 0;color:#18181b;font-weight:700">${apartmentNo}</td>
+              </tr>` : ""}
+            </table>
+            <div style="background:${role === "ADMIN" ? "#eff6ff" : "#f0fdf4"};border-left:4px solid ${role === "ADMIN" ? "#3b82f6" : "#22c55e"};padding:14px 18px;border-radius:0 10px 10px 0;margin:0 0 20px">
+              <p style="margin:0;font-size:13px;color:${role === "ADMIN" ? "#1e40af" : "#166534"}"><strong>Güvenlik Notu:</strong> Şifreniz yöneticiniz tarafından oluşturulmuştur. İlk girişinizde size özel bir şifre belirlemeniz istenecektir. Hesabınızı güvende tutmak için güçlü bir şifre seçmenizi öneririz.</p>
+            </div>
           `,
           ctaHref: `${base}/login`,
           ctaLabel: "Panele Giriş Yap",
-          footerNote: "Bu hesap site yönetimi tarafından oluşturulmuştur. İlk girişte şifrenizi değiştirmeniz istenebilir.",
+          footerNote: "Bu hesap site yönetimi tarafından oluşturulmuştur. Sorularınız için yöneticinizle iletişime geçin.",
         }),
       });
       if (!emailResult.ok) {

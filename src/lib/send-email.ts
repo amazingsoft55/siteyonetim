@@ -110,27 +110,42 @@ export async function sendPasswordResetEmail(
   const base = getPublicSiteUrl().replace(/\/$/, "");
   const path = resetPathWithToken.startsWith("/") ? resetPathWithToken : `/${resetPathWithToken}`;
   const url = `${base}${path}`;
-  const greeting = recipientName?.trim() ? `Merhaba ${recipientName.trim()},` : "Merhaba,";
+  const greeting = recipientName?.trim() ? `Merhaba <strong>${recipientName.trim()}</strong>,` : "Merhaba,";
 
   const html = buildBrandedEmailHtml({
-    title: "Şifre sıfırlama",
-    intro: `${greeting} hesabınız için şifre sıfırlama isteği alındı. Aşağıdaki düğmeyi kullanın (yaklaşık 1 saat geçerlidir).`,
+    title: "Şifre Sıfırlama",
+    intro: `${greeting} hesabınız için şifre sıfırlama isteği alındı. Aşağıdaki düğmeye tıklayarak yeni şifrenizi belirleyebilirsiniz.`,
+    bodyHtml: `
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px 18px;margin:0 0 20px">
+        <p style="margin:0;font-size:13px;color:#991b1b"><strong>Güvenlik Uyarısı:</strong> Bu bağlantı yaklaşık <strong>1 saat</strong> geçerlidir. Eğer bu isteği siz yapmadıysanız, lütfen bu e-postayı görmezden gelin ve şifrenizi değiştirmeyin.</p>
+      </div>
+    `,
     ctaHref: url,
-    ctaLabel: "Yeni şifre belirle",
+    ctaLabel: "Yeni Şifre Belirle",
+    footerNote: "Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz. Hesabınız güvendedir.",
+    accentColor: "#dc2626",
   });
 
-  return sendBrandedEmail({ to, subject: "Şifre sıfırlama — Site Yönetimi", html });
+  return sendBrandedEmail({ to, subject: "Şifre Sıfırlama — Site Yönetimi", html });
 }
 
 /** Süper yönetici hesap değişikliği doğrulama kodu */
 export async function sendAccountVerificationEmail(to: string, code: string): Promise<SendResult> {
   const html = buildBrandedEmailHtml({
-    title: "Doğrulama kodu",
-    intro: "Hesabınızda e-posta veya şifre değişikliği için doğrulama kodunuz:",
-    bodyHtml: `<p style="margin:0;font-size:28px;font-weight:800;letter-spacing:6px;text-align:center;color:#4f46e5">${code}</p><p style="margin:12px 0 0;font-size:13px;color:#71717a;text-align:center">Kod yaklaşık 15 dakika geçerlidir.</p>`,
+    title: "Doğrulama Kodu",
+    intro: "Hesabınızda e-posta veya şifre değişikliği için doğrulama kodunuz aşağıdadır:",
+    bodyHtml: `
+      <div style="background:#f0fdf4;border:2px dashed #22c55e;border-radius:12px;padding:24px;text-align:center;margin:0 0 20px">
+        <p style="margin:0 0 8px;font-size:12px;color:#16a34a;font-weight:600;text-transform:uppercase;letter-spacing:1px">Doğrulama Kodu</p>
+        <p style="margin:0;font-size:32px;font-weight:800;letter-spacing:8px;color:#15803d;font-family:monospace">${code}</p>
+      </div>
+      <p style="margin:0;font-size:13px;color:#71717a;text-align:center">Kod yaklaşık <strong>15 dakika</strong> geçerlidir.</p>
+    `,
+    footerNote: "Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz.",
+    accentColor: "#22c55e",
   });
 
-  return sendBrandedEmail({ to, subject: "Doğrulama kodu — Site Yönetimi", html });
+  return sendBrandedEmail({ to, subject: "Doğrulama Kodu — Site Yönetimi", html });
 }
 
 /** Duyuru bildirim e-postası — sakinlere ve yöneticilere gönderilir */
@@ -142,18 +157,24 @@ export async function sendAnnouncementEmail(
   category: string,
 ): Promise<SendResult> {
   const base = getPublicSiteUrl().replace(/\/$/, "");
-  const truncated = announcementContent.length > 200 ? announcementContent.slice(0, 200) + "..." : announcementContent;
+  const truncated = announcementContent.length > 300 ? announcementContent.slice(0, 300) + "..." : announcementContent;
 
   const html = buildBrandedEmailHtml({
-    title: `Yeni Duyuru: ${announcementTitle}`,
-    intro: `Merhaba ${recipientName || "Değerli Sakin"},`,
+    title: `Yeni Duyuru`,
+    intro: `Merhaba <strong>${recipientName || "Değerli Sakin"}</strong>, yeni bir duyuru yayınlandı.`,
     bodyHtml: `
-      <p style="margin:0 0 8px;font-size:13px;color:#71717a">Kategori: <strong>${category}</strong></p>
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#3f3f46">${truncated}</p>
+      <div style="background:#fafafa;border:1px solid #e4e4e7;border-radius:12px;padding:20px;margin:0 0 20px">
+        <div style="display:flex;align-items:center;margin:0 0 12px">
+          <span style="display:inline-block;background:#ede9fe;color:#7c3aed;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px">${category}</span>
+        </div>
+        <h2 style="margin:0 0 10px;font-size:17px;font-weight:700;color:#18181b;line-height:1.4">${announcementTitle}</h2>
+        <p style="margin:0;font-size:14px;line-height:1.7;color:#52525b;white-space:pre-wrap">${truncated}</p>
+      </div>
     `,
     ctaHref: `${base}/dashboard/announcements`,
     ctaLabel: "Duyuruyu Görüntüle",
     footerNote: "Bu e-posta site yönetimi tarafından gönderilen bir duyuru bildirimdir.",
+    accentColor: "#7c3aed",
   });
 
   return sendBrandedEmail({ to, subject: `Yeni Duyuru: ${announcementTitle} — Site Yönetimi`, html });

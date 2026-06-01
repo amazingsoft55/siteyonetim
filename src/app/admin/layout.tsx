@@ -140,6 +140,17 @@ export default function AdminLayout({
           <div className="flex items-center gap-2">
             <NotificationBell />
             <ThemeToggle />
+            <button
+              onClick={async () => {
+                try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
+                localStorage.removeItem("user");
+                router.push("/login");
+              }}
+              className="p-2 rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+              title="Çıkış Yap"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
           </div>
         </div>
         <div className="h-full">{children}</div>
@@ -161,6 +172,17 @@ export default function AdminLayout({
             </a>
           );
         })}
+        <button
+          onClick={async () => {
+            try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
+            localStorage.removeItem("user");
+            router.push("/login");
+          }}
+          className="flex flex-col items-center gap-1 py-3 px-1 flex-1 text-red-400 dark:text-red-500 transition-colors"
+        >
+          <LogOut className="h-5.5 w-5.5" />
+          <span className="text-[9px] font-semibold">Çıkış</span>
+        </button>
       </nav>
     </div>
   );

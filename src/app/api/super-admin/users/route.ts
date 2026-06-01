@@ -136,16 +136,25 @@ export async function POST(request: Request) {
         subject: `Hoş Geldiniz — Site Yönetimi`,
         html: buildBrandedEmailHtml({
           title: "Hoş Geldiniz!",
-          intro: `Merhaba ${name}, Site Yönetimi platformuna başarıyla eklendiniz.`,
+          intro: `Merhaba <strong>${name}</strong>, Site Yönetimi platformuna başarıyla eklendiniz. Aşağıda hesap bilgilerinizi bulabilirsiniz.`,
           bodyHtml: `
-            <p style="margin:0 0 8px;font-size:14px;color:#3f3f46">Giriş bilgileriniz:</p>
-            <p style="margin:0 0 4px;font-size:14px;color:#3f3f46"><strong>E-posta:</strong> ${emailOrPhone}</p>
-            <p style="margin:0 0 4px;font-size:14px;color:#3f3f46"><strong>Şifre:</strong> ${password}</p>
-            ${apartmentNo ? `<p style="margin:0 0 4px;font-size:14px;color:#3f3f46"><strong>Daire:</strong> ${apartmentNo}</p>` : ""}
-            <p style="margin:8px 0 0;font-size:12px;color:#a1a1aa">Güvenliğiniz için ilk girişte şifrenizi değiştirmenizi öneririz.</p>
+            <table style="width:100%;margin:0 0 20px;font-size:14px;border-collapse:separate;border-spacing:0">
+              <tr>
+                <td style="padding:10px 14px;background:#f4f4f5;border-radius:10px 0 0 10px;color:#71717a;font-weight:600;width:120px;border-bottom:1px solid #e4e4e7">E-posta</td>
+                <td style="padding:10px 14px;background:#f4f4f5;border-radius:0 10px 10px 0;color:#18181b;font-weight:700;border-bottom:1px solid #e4e4e7">${emailOrPhone}</td>
+              </tr>
+              ${apartmentNo ? `<tr>
+                <td style="padding:10px 14px;background:#f4f4f5;border-radius:0 0 0 10px;color:#71717a;font-weight:600">Daire</td>
+                <td style="padding:10px 14px;background:#f4f4f5;border-radius:0 0 10px 0;color:#18181b;font-weight:700">${apartmentNo}</td>
+              </tr>` : ""}
+            </table>
+            <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:14px 18px;border-radius:0 10px 10px 0;margin:0 0 20px">
+              <p style="margin:0;font-size:13px;color:#1e40af"><strong>Bilgi:</strong> Şifreniz yöneticiniz tarafından oluşturulmuştur. İlk girişinizde size özel bir şifre belirlemeniz istenecektir.</p>
+            </div>
           `,
           ctaHref: `${base}/login`,
           ctaLabel: "Panele Giriş Yap",
+          footerNote: "Bu hesap site yönetimi tarafından oluşturulmuştur. Sorularınız için yöneticinizle iletişime geçin.",
         }),
       });
       console.log(`[super-admin/users] Hoşgeldin emaili ${result.ok ? "BAŞARILI" : "BAŞARISIZ"}: ${emailOrPhone}`, result.ok ? "" : result.error);
