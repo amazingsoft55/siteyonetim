@@ -160,7 +160,7 @@ export function NotificationBell() {
             className={`
               fixed z-50 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl flex flex-col overflow-hidden
               sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:rounded-2xl sm:w-[380px] sm:max-h-[75vh]
-              inset-x-0 bottom-0 top-16 rounded-t-2xl sm:static sm:inset-auto
+              inset-x-0 bottom-0 top-16 rounded-t-2xl
             `}
           >
             {/* Header */}
@@ -208,7 +208,7 @@ export function NotificationBell() {
             <div className="h-px bg-zinc-100 dark:bg-zinc-800 shrink-0" />
 
             {/* List */}
-            <div className="overflow-y-auto flex-1 overscroll-contain">
+            <div className="overflow-y-auto flex-1 min-h-0 overscroll-contain">
               {items.length === 0 ? (
                 <div className="py-14 text-center">
                   <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto mb-3">
