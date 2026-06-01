@@ -21,8 +21,8 @@ export type WelcomeEmailOptions = {
 };
 
 export function buildWelcomeEmailHtml(opts: WelcomeEmailOptions): string {
-  const accent = opts.role === "ADMIN" ? "#3b82f6" : "#22c55e";
-  const emoji = opts.role === "ADMIN" ? "👔" : "🏠";
+  const accent = "#4f46e5";
+  const emoji = "🏠";
 
   return `<!DOCTYPE html>
 <html lang="tr">

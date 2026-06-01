@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   CreditCard, CheckCircle2, AlertCircle, Megaphone, Wrench,
   Shield, Plus, ArrowRight, Clock, TrendingUp, Bell,
@@ -265,12 +266,12 @@ export default function DashboardPage() {
           <h3 className="text-xl font-extrabold text-zinc-950 dark:text-zinc-50 flex items-center gap-2">
             <Megaphone className="h-5 w-5 text-indigo-600 dark:text-indigo-400" /> Yönetimden Duyurular
           </h3>
-          <a
+          <Link
             href="/dashboard/announcements"
             className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
           >
             Tümünü Gör <ArrowRight className="h-3 w-3" />
-          </a>
+          </Link>
         </div>
 
         <div className="space-y-3">
@@ -281,7 +282,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             announcements.map((ann) => (
-              <a
+              <Link
                 href="/dashboard/announcements"
                 key={ann.id}
                 className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all duration-200 cursor-pointer group flex justify-between items-start gap-4 block"
@@ -307,7 +308,7 @@ export default function DashboardPage() {
                 <span className="text-xs text-zinc-400 whitespace-nowrap flex items-center gap-1 shrink-0">
                   <Clock className="h-3 w-3" /> {ann.date}
                 </span>
-              </a>
+              </Link>
             ))
           )}
         </div>
