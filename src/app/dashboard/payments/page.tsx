@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { CreditCard, Download, Printer, CheckCircle2, ChevronRight, X, Sparkles } from "lucide-react";
-import { useAlert, useConfirm } from "@/components/ModalProvider";
+import { useAlert } from "@/components/ModalProvider";
+import { downloadReceiptPdf, printReceiptPdf } from "@/lib/receipt-pdf";
 
 interface Payment {
   id: string;
@@ -58,11 +59,30 @@ export default function ResidentPaymentsPage() {
   const debt = payments.filter((p) => p.status === "Bekliyor").reduce((a, p) => a + p.amount, 0);
 
   const handlePrint = async (payment: Payment) => {
-    await showAlert({ message: `${payment.id} numaralı dekont yazıcıya gönderiliyor...` });
+    printReceiptPdf({
+      paymentId: payment.id,
+      residentName,
+      apartmentNo: apartmentMeta,
+      period: payment.period,
+      type: payment.type,
+      amount: payment.amount,
+      date: payment.date,
+      status: payment.status,
+    });
   };
 
   const handleDownload = async (payment: Payment) => {
-    await showAlert({ message: `${payment.id} numaralı dekont PDF olarak indiriliyor...` });
+    downloadReceiptPdf({
+      paymentId: payment.id,
+      residentName,
+      apartmentNo: apartmentMeta,
+      period: payment.period,
+      type: payment.type,
+      amount: payment.amount,
+      date: payment.date,
+      status: payment.status,
+    });
+    await showAlert({ title: "Indirildi", message: "Dekont PDF olarak indirildi.", variant: "success" });
   };
 
   return (
