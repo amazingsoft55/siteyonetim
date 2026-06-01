@@ -34,7 +34,29 @@ export function PricingSection() {
       .catch(() => {});
   }, []);
 
-  if (plans.length === 0) return null;
+  if (plans.length === 0) {
+    return (
+      <section id="fiyatlandirma" className="py-28 px-6 bg-white dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800/50">
+        <div className="max-w-6xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-4">
+            <CreditCard className="h-3.5 w-3.5" /> Fiyatlandırma
+          </div>
+          <h2 className="text-3xl font-extrabold tracking-tight sm:text-5xl mb-4">
+            Paketler yakında
+          </h2>
+          <p className="text-zinc-500 dark:text-zinc-400 text-lg max-w-xl mx-auto">
+            Fiyatlandırma paketlerimiz şu anda hazırlanıyor. Bize ulaşarak bilgi alabilirsiniz.
+          </p>
+          <a
+            href="/iletisim"
+            className="inline-flex items-center gap-2 px-6 py-3 mt-6 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-full transition-colors"
+          >
+            İletişime Geçin
+          </a>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="fiyatlandirma" className="py-28 px-6 bg-white dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800/50">

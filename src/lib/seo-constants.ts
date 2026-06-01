@@ -82,11 +82,6 @@ export function buildWebsiteJsonLd(): Record<string, unknown> {
     url: siteUrl,
     inLanguage: "tr-TR",
     publisher: { "@type": "Organization", name, url: siteUrl },
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${siteUrl}/arama?q={search_term_string}`,
-      "query-input": "required name=search_term_string",
-    },
   };
 }
 

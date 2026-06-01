@@ -76,7 +76,7 @@ export function FeatureGate({ feature, children, fallback }: FeatureGateProps) {
             Paketinizi yükselterek bu özelliğe erişebilirsiniz.
           </p>
           <Link
-            href="/destek"
+            href="/iletisim"
             className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
           >
             Paket yükselt <ArrowRight className="h-3.5 w-3.5" />

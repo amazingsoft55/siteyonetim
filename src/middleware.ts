@@ -4,12 +4,13 @@ import { jwtVerify } from "jose";
 
 function getSecretKey() {
   const jwtSecretEnv = process.env.JWT_SECRET;
-  if (!jwtSecretEnv && process.env.NODE_ENV === "production") {
-    console.error("[CRITICAL] JWT_SECRET environment variable is missing! Set it in Cloudflare Dashboard → Workers → Settings → Variables.");
+  if (!jwtSecretEnv) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("[CRITICAL] JWT_SECRET environment variable is missing! Set it in Cloudflare Dashboard → Workers → Settings → Variables.");
+    }
+    return new TextEncoder().encode("dev-only-fallback-insecure-key-never-use-in-prod");
   }
-  return new TextEncoder().encode(
-    jwtSecretEnv || "dev-only-fallback-insecure-key-never-use-in-prod"
-  );
+  return new TextEncoder().encode(jwtSecretEnv);
 }
 
 function isPublicApiPath(path: string): boolean {
@@ -20,7 +21,6 @@ function isPublicApiPath(path: string): boolean {
     "/api/auth/forgot-password",
     "/api/auth/reset-password",
     "/api/setup/status",
-    "/api/seed",
     "/api/telemetry/pageview",
     "/api/public/contact"
   ];

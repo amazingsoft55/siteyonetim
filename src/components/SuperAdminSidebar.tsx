@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -33,6 +34,7 @@ const NAV_ITEMS = [
 
 export function SuperAdminSidebar({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
@@ -92,13 +94,18 @@ export function SuperAdminSidebar({ children }: { children: React.ReactNode }) {
             <ThemeToggle />
             {!collapsed && <span className="text-xs font-medium text-zinc-500">Tema</span>}
           </div>
-          <Link
-            href="/"
+          <button
+            type="button"
+            onClick={async () => {
+              try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
+              localStorage.removeItem("user");
+              router.push("/login");
+            }}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors ${collapsed ? "justify-center" : ""}`}
           >
             <LogOut className="h-5 w-5 shrink-0" />
             {!collapsed && <span className="text-sm font-semibold">Çıkış Yap</span>}
-          </Link>
+          </button>
         </div>
 
         {/* Collapse button */}

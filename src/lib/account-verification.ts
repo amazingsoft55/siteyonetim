@@ -1,8 +1,6 @@
-/** E-posta adresi mi (doğrulama kodu gönderimi için). */
-export function looksLikeEmail(value: string): boolean {
-  const v = value.trim();
-  return v.includes("@") && v.includes(".") && !v.startsWith("@");
-}
+import { looksLikeEmail } from "./password-reset";
+
+export { looksLikeEmail };
 
 export function normalizeLogin(value: string): string {
   return value.replace(/\s+/g, "").trim();

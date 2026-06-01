@@ -125,26 +125,8 @@ export async function POST(request: Request) {
       if (!session.siteId) {
         return NextResponse.json({ error: "Site bilgisi eksik." }, { status: 400 });
       }
-      await d.db.insert(payments).values({
-        id,
-        userId: session.id,
-        siteId: session.siteId,
-        amount,
-        title,
-        status: "PAID",
-        paidAt: nowIso,
-      });
-      const row = await d.db.select().from(payments).where(eq(payments.id, id)).limit(1);
-
-      createNotification(d.db, {
-        userId: session.id,
-        title: "Aidat Ödemesi Alındı",
-        body: `${period} dönemine ait ${amount.toLocaleString("tr-TR")} TL ödemeniz kaydedildi.`,
-        type: "PAYMENT",
-        href: "/dashboard/payments",
-      });
-
-      return NextResponse.json({ success: true, payment: row[0] ? toClientPayment(row[0]) : null });
+      // Kullanıcılar doğrudan ödeme oluşturamaz — sadece görüntüleyebilir
+      return NextResponse.json({ error: "Kullanıcılar doğrudan ödeme oluşturamaz. Lütfen yöneticinize başvurun." }, { status: 403 });
     }
 
     if (session.role === "ADMIN" || session.role === "SUPER_ADMIN") {

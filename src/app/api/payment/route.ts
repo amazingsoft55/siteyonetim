@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
-import { payments } from "@/db/schema";
+import { payments, users } from "@/db/schema";
 import { createIyzicoPayment, isIyzicoConfigured, type IyzicoPaymentRequest } from "@/lib/iyzico";
 
 export async function POST(req: Request) {
@@ -40,13 +41,27 @@ export async function POST(req: Request) {
       const cardDigits = cardNumber.replace(/\s/g, "").slice(0, 6);
       const cardLastDigits = cardNumber.replace(/\s/g, "").slice(-4);
 
+      // Kullanıcı bilgilerini veritabanından çek
+      const userList = await d.db.select({
+        name: users.name,
+        emailOrPhone: users.emailOrPhone,
+      }).from(users).where(eq(users.id, session.id)).limit(1);
+      const dbUser = userList[0];
+
+      const userName = dbUser?.name || session.name || "Kullanıcı";
+      const nameParts = userName.split(" ");
+      const firstName = nameParts[0] || "Kullanıcı";
+      const lastName = nameParts.slice(1).join(" ") || "Soyad";
+      const userEmail = dbUser?.emailOrPhone || "kullanici@siteyonetim.app";
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail);
+
       const paymentRequest: IyzicoPaymentRequest = {
         price: amount,
         paidPrice: amount,
         currency: "TRY",
         basketId: `basket_${Date.now()}`,
         paymentCard: {
-          cardHolderName: cardHolderName || "TEST",
+          cardHolderName: cardHolderName || firstName,
           cardNumber: cardNumber.replace(/\s/g, ""),
           expireMonth,
           expireYear,
@@ -55,36 +70,36 @@ export async function POST(req: Request) {
         },
         buyer: {
           id: session.id,
-          name: session.name || "Kullanıcı",
-          surname: "",
-          gsmNumber: "+905000000000",
-          email: "test@test.com",
-          identityNumber: "11111111111",
+          name: firstName,
+          surname: lastName,
+          gsmNumber: isEmail ? "" : userEmail.replace(/[^0-9+]/g, ""),
+          email: isEmail ? userEmail : `${session.id}@siteyonetim.app`,
+          identityNumber: "00000000000",
           lastLoginDate: new Date().toISOString(),
           registrationDate: new Date().toISOString(),
-          registrationAddress: "İstanbul",
-          ip: "127.0.0.1",
+          registrationAddress: "Türkiye",
+          ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "0.0.0.0",
           city: "İstanbul",
           country: "Turkey",
           zipCode: "34000",
         },
         shippingAddress: {
-          contactName: session.name || "Kullanıcı",
+          contactName: userName,
           city: "İstanbul",
           country: "Turkey",
-          address: "İstanbul",
+          address: "Türkiye",
           zipCode: "34000",
         },
         billingAddress: {
-          contactName: session.name || "Kullanıcı",
+          contactName: userName,
           city: "İstanbul",
           country: "Turkey",
-          address: "İstanbul",
+          address: "Türkiye",
           zipCode: "34000",
         },
         basketItems: [
           {
-            id: "aidat_001",
+            id: `aidat_${Date.now()}`,
             name: period || "Aidat Ödemesi",
             category1: "Aidat",
             category2: "Site Yönetimi",

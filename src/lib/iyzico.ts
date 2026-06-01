@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-const IYZICO_API_URL = "https://sandbox-api.iyzipay.com";
+const IYZICO_API_URL = process.env.IYZICO_BASE_URL?.trim() || "https://sandbox-api.iyzipay.com";
 const IYZICO_API_KEY = process.env.IYZICO_API_KEY || "";
 const IYZICO_SECRET_KEY = process.env.IYZICO_SECRET_KEY || "";
 

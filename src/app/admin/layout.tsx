@@ -115,8 +115,8 @@ export default function AdminLayout({
             <NotificationBell />
             <button
               type="button"
-              onClick={() => {
-                document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+              onClick={async () => {
+                try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
                 localStorage.removeItem("user");
                 router.push("/login");
               }}

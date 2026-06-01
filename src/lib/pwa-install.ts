@@ -66,8 +66,3 @@ export function isAndroidChrome(ua: string): boolean {
   return /Android/i.test(ua) && /Chrome/i.test(ua) && !/EdgA|OPR|SamsungBrowser|MiuiBrowser/i.test(ua);
 }
 
-/** Layout’ta inline script ile erken kayıt — burada yalnızca yedek. */
-export function registerServiceWorkerEarly(): void {
-  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
-  void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
-}
