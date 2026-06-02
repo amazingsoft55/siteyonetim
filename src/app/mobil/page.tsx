@@ -1,6 +1,5 @@
 "use client";
 
-import type { Metadata } from "next";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownToLine,
@@ -22,13 +21,6 @@ import { getPublicSiteUrl } from "@/lib/site-url";
 
 const base = getPublicSiteUrl();
 const siteAndroidUrl = getAppDownloadUrl("site", "android");
-
-export const metadata: Metadata = {
-  title: "Site Yönetimi Mobil — Tek Dokunuşla Yükle",
-  description:
-    "Site Yönetimi mobil uygulamasını tek tıkla indir. Android, iOS ve PC için modern, hızlı ve güvenli.",
-  alternates: { canonical: `${base}/mobil` },
-};
 
 type Platform = "android" | "ios" | "desktop";
 
