@@ -11,29 +11,19 @@ export async function GET() {
 
   const to = "mustafakeskin2655@gmail.com";
 
-  console.log("[test-email] Test email gönderiliyor:", to);
-  console.log("[test-email] SMTP:", !!process.env.GMAIL_APP_PASSWORD?.trim());
-  console.log("[test-email] OAuth:", !!(process.env.GMAIL_CLIENT_ID?.trim() && process.env.GMAIL_CLIENT_SECRET?.trim()));
-
   const result = await sendBrandedEmail({
     to,
     subject: "Test Email — Site Yönetimi",
     html: buildBrandedEmailHtml({
       title: "Test Başarılı!",
-      intro: "Bu bir test emailidir. Eğer bu emaili alıyorsanız, email sistemi düzgün çalışıyor.",
-      ctaHref: "https://siteyonetim.mustafakeskin2290.workers.dev",
+      intro: "Bu bir test e-postasıdır. Eğer bu iletiyi görüyorsanız, Resend e-posta sistemi başarıyla çalışıyor.",
+      ctaHref: "https://siteyonetim.keskindev.com",
       ctaLabel: "Siteye Git",
     }),
   });
 
-  console.log("[test-email] Sonuç:", JSON.stringify(result));
-
   return NextResponse.json({
     result,
-    config: {
-      smtp: !!process.env.GMAIL_APP_PASSWORD?.trim(),
-      oauth: !!(process.env.GMAIL_CLIENT_ID?.trim() && process.env.GMAIL_CLIENT_SECRET?.trim()),
-      resend: !!process.env.RESEND_API_KEY?.trim(),
-    },
+    resendConfigured: !!process.env.RESEND_API_KEY?.trim(),
   });
 }
