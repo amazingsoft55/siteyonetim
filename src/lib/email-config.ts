@@ -1,29 +1,16 @@
-import { isGmailConfigured } from "@/lib/gmail-send";
-
 export type EmailProviderStatus = {
   configured: boolean;
-  provider: "gmail" | "gmail_smtp" | "resend" | "none";
+  provider: "resend" | "none";
   missing: string[];
 };
 
-/** Resend veya Gmail yapılandırılmış mı? */
+/** Resend e-posta servisi yapılandırılmış mı? */
 export function getEmailProviderStatus(): EmailProviderStatus {
   if (process.env.RESEND_API_KEY?.trim()) {
     return { configured: true, provider: "resend", missing: [] };
   }
 
-  if (process.env.GMAIL_APP_PASSWORD?.trim()) {
-    return { configured: true, provider: "gmail_smtp", missing: [] };
-  }
-
-  if (isGmailConfigured()) {
-    return { configured: true, provider: "gmail", missing: [] };
-  }
-
-  const missing: string[] = [];
-  if (!process.env.RESEND_API_KEY?.trim()) missing.push("RESEND_API_KEY");
-
-  return { configured: false, provider: "none", missing };
+  return { configured: false, provider: "none", missing: ["RESEND_API_KEY"] };
 }
 
 export function isEmailConfigured(): boolean {

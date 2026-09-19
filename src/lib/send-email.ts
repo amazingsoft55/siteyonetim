@@ -1,13 +1,11 @@
 import { buildBrandedEmailHtml } from "@/lib/email-template";
 import { getPublicSiteUrl } from "@/lib/site-url";
-import { isGmailConfigured, sendViaGmail } from "@/lib/gmail-send";
 
 type SendResult = { ok: true } | { ok: false; error: string };
 
 function emailFromAddress(): string {
   return (
     process.env.EMAIL_FROM?.trim() ||
-    process.env.GMAIL_FROM?.trim() ||
     "Site Yönetimi <bildirim@siteyonetim.keskindev.com>"
   );
 }
@@ -52,58 +50,12 @@ async function sendViaResend(input: {
   return { ok: true };
 }
 
-async function sendViaSmtp(input: {
-  to: string;
-  subject: string;
-  html: string;
-}): Promise<SendResult> {
-  const user = process.env.GMAIL_USER?.trim() || "ccode4779@gmail.com";
-  const pass = process.env.GMAIL_APP_PASSWORD?.trim();
-
-  if (!pass) {
-    return { ok: false, error: "GMAIL_APP_PASSWORD tanımlı değil." };
-  }
-
-  try {
-    const nodemailer = await import("nodemailer");
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user,
-        pass,
-      },
-    });
-
-    await transporter.sendMail({
-      from: emailFromAddress(),
-      to: input.to,
-      subject: input.subject,
-      html: input.html,
-    });
-
-    return { ok: true };
-  } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : String(error) };
-  }
-}
-
 export async function sendBrandedEmail(input: {
   to: string;
   subject: string;
   html: string;
 }): Promise<SendResult> {
-  // 1. Öncelik: Resend (Ana kurumsal mail sağlayıcısı)
-  if (process.env.RESEND_API_KEY?.trim()) {
-    return sendViaResend(input);
-  }
-  // 2. Yedek: Gmail SMTP
-  if (process.env.GMAIL_APP_PASSWORD?.trim()) {
-    return sendViaSmtp(input);
-  }
-  // 3. Yedek: Gmail OAuth
-  if (isGmailConfigured()) {
-    return sendViaGmail(input);
-  }
+  // Yalnızca Resend kullanılır
   return sendViaResend(input);
 }
 
