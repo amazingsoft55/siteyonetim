@@ -11,7 +11,7 @@ function forbidden() {
   return NextResponse.json({ error: "Yetkisiz" }, { status: 403 });
 }
 
-export async function POST(_request: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const session = await getSession();
   if (!session || session.role !== "ADMIN" || !session.siteId) return forbidden();
 
@@ -34,7 +34,7 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
       return NextResponse.json({ error: emailNotConfiguredMessage() }, { status: 503 });
     }
 
-    const send = await issuePasswordResetEmail(d.db, u);
+    const send = await issuePasswordResetEmail(d.db, u, request);
     if (!send.ok) {
       return NextResponse.json({ error: send.error }, { status: 502 });
     }

@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const send = await issuePasswordResetEmail(d.db, u);
+    const send = await issuePasswordResetEmail(d.db, u, request);
     if (!send.ok) {
       return NextResponse.json(
         {

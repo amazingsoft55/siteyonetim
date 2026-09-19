@@ -106,8 +106,9 @@ export async function sendPasswordResetEmail(
   to: string,
   resetPathWithToken: string,
   recipientName?: string,
+  request?: Request,
 ): Promise<SendResult> {
-  const base = getPublicSiteUrl().replace(/\/$/, "");
+  const base = getPublicSiteUrl(request).replace(/\/$/, "");
   const path = resetPathWithToken.startsWith("/") ? resetPathWithToken : `/${resetPathWithToken}`;
   const url = `${base}${path}`;
   const greeting = recipientName?.trim() ? `Merhaba <strong>${recipientName.trim()}</strong>,` : "Merhaba,";

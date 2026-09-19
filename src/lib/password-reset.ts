@@ -11,6 +11,7 @@ export function looksLikeEmail(value: string): boolean {
 export async function issuePasswordResetEmail(
   db: PlatformDatabase,
   user: { id: string; name: string; emailOrPhone: string },
+  request?: Request,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!looksLikeEmail(user.emailOrPhone)) {
     return { ok: false, error: "Bu hesapta kayıtlı geçerli bir e-posta yok." };
@@ -35,5 +36,6 @@ export async function issuePasswordResetEmail(
     user.emailOrPhone.trim(),
     `/sifre-sifirla?t=${encodeURIComponent(token)}`,
     user.name,
+    request,
   );
 }
