@@ -17,14 +17,17 @@ function isPublicApiPath(path: string): boolean {
   const publicPaths = [
     "/api/auth/login",
     "/api/auth/logout",
+    "/api/auth/me",
     "/api/auth/complete-password",
     "/api/auth/forgot-password",
     "/api/auth/reset-password",
     "/api/setup/status",
     "/api/telemetry/pageview",
-    "/api/public/contact"
+    "/api/public/contact",
+    "/api/plans",
+    "/api/features",
   ];
-  return publicPaths.includes(path);
+  return publicPaths.includes(path) || path.startsWith("/api/public/");
 }
 
 function redirectByRole(role: string, req: NextRequest) {

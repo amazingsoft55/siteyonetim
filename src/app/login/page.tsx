@@ -22,16 +22,68 @@ export default function LoginPage() {
   }, []);
 
   React.useEffect(() => {
-    try {
-      const raw = localStorage.getItem("user");
-      if (!raw) { setAuthChecked(true); return; }
-      const u = JSON.parse(raw) as { role?: string };
-      if (u.role === "SUPER_ADMIN") router.push("/super-admin");
-      else if (u.role === "ADMIN") router.push("/admin");
-      else router.push("/dashboard");
-    } catch {
-      setAuthChecked(true);
+    let active = true;
+
+    // Güvenlik zaman aşımı: Sunucu veya ağ yavaş olsa bile formu en geç 1 saniye içinde göster
+    const timer = setTimeout(() => {
+      if (active) setAuthChecked(true);
+    }, 1000);
+
+    async function verifySession() {
+      try {
+        const response = await fetch(browserApiUrl("/api/auth/me"), {
+          credentials: "include",
+        });
+        if (!active) return;
+
+        if (response.ok) {
+          const data = (await response.json()) as {
+            authenticated?: boolean;
+            user?: {
+              id: string;
+              role: string;
+              name: string;
+              siteId?: string | null;
+              apartmentNo?: string | null;
+              mustChangePassword?: boolean;
+            };
+          };
+
+          if (data?.authenticated && data.user?.role) {
+            localStorage.setItem("user", JSON.stringify(data.user));
+            if (data.user.mustChangePassword) {
+              router.push("/sifre-belirle");
+              return;
+            }
+            if (data.user.role === "SUPER_ADMIN") {
+              router.push("/super-admin");
+            } else if (data.user.role === "ADMIN") {
+              router.push("/admin");
+            } else {
+              router.push("/dashboard");
+            }
+            return;
+          }
+        }
+        // Girişli değilse veya oturum düşmüşse eski yerel veriyi temizle
+        localStorage.removeItem("user");
+        setAuthChecked(true);
+      } catch {
+        if (active) {
+          localStorage.removeItem("user");
+          setAuthChecked(true);
+        }
+      } finally {
+        clearTimeout(timer);
+      }
     }
+
+    verifySession();
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -120,8 +172,18 @@ export default function LoginPage() {
 
   if (!authChecked) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-transparent">
-        <div className="animate-pulse text-zinc-400 text-sm">Yükleniyor...</div>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-transparent gap-4 px-4">
+        <div className="animate-pulse text-zinc-400 text-sm font-medium">Yükleniyor...</div>
+        <button
+          type="button"
+          onClick={() => {
+            localStorage.removeItem("user");
+            setAuthChecked(true);
+          }}
+          className="text-xs text-indigo-500 hover:underline cursor-pointer"
+        >
+          Giriş formunu hemen aç
+        </button>
       </div>
     );
   }
@@ -254,11 +316,7 @@ export default function LoginPage() {
         </div>
 
         <p className="pt-6 border-t border-zinc-100 dark:border-zinc-800 text-center text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-          Platforma giriş, size atanmış kullanıcı hesabıyla yapılır. Mobil uygulama:{" "}
-          <Link href="/mobil" className="font-bold text-indigo-600 dark:text-indigo-400 underline">
-            indirme sayfası
-          </Link>
-          . Ürün veya satış için{" "}
+          Platforma giriş, size atanmış kullanıcı hesabıyla yapılır. Ürün veya satış için{" "}
           <Link href="/destek" className="font-bold text-indigo-600 dark:text-indigo-400 underline">
             destek
           </Link>{" "}

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { PlatformDownloadButtons } from "@/components/PlatformDownloadButtons";
 import { PricingSection } from "@/components/PricingSection";
 import {
   CreditCard, Megaphone, Wrench, ArrowRight, Shield, Sparkles,
@@ -422,9 +421,6 @@ export default function Home() {
               >
                 Bize Ulaşın
               </Link>
-            </div>
-            <div className="mt-10 justify-center hidden sm:flex">
-              <PlatformDownloadButtons showTitle={false} variant="light" />
             </div>
           </div>
         </section>

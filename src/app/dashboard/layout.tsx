@@ -2,13 +2,8 @@
 
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { PresenceHeartbeat } from "@/components/PresenceHeartbeat";
 import { SiteLogo } from "@/components/SiteLogo";
 import { SITE_BRAND_NAME } from "@/lib/brand";
-import { NotificationBell } from "@/components/NotificationBell";
-import { FeatureGateProvider } from "@/components/FeatureGate";
-import { PushNotificationProvider } from "@/components/PushNotificationProvider";
 import { Home, CreditCard, Megaphone, Wrench, LogOut } from "lucide-react";
 
 export default function DashboardLayout({
@@ -48,7 +43,6 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-dvh bg-zinc-50 dark:bg-[#0b0f19] flex-col sm:flex-row overflow-hidden">
-      <PresenceHeartbeat />
 
       {/* ══════ DESKTOP SIDEBAR ══════ */}
       <aside className="hidden sm:flex flex-col w-64 border-r border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 h-full p-4 shrink-0">
@@ -89,21 +83,17 @@ export default function DashboardLayout({
         </nav>
 
         <div className="mt-auto border-t border-zinc-100 dark:border-zinc-800/80 pt-4 flex justify-between items-center px-2">
-          <ThemeToggle />
-          <div className="flex items-center gap-1">
-            <NotificationBell />
-            <button
-              onClick={async () => {
-                try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
-                localStorage.removeItem("user");
-                router.push("/login");
-              }}
-              className="flex items-center gap-1.5 text-sm text-red-500 dark:text-red-400 hover:text-red-600 font-semibold"
-            >
-              <LogOut className="h-4 w-4" />
-              Çıkış Yap
-            </button>
-          </div>
+          <button
+            onClick={async () => {
+              try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
+              localStorage.removeItem("user");
+              router.push("/login");
+            }}
+            className="flex items-center gap-1.5 text-sm text-red-500 dark:text-red-400 hover:text-red-600 font-semibold"
+          >
+            <LogOut className="h-4 w-4" />
+            Çıkış Yap
+          </button>
         </div>
       </aside>
 
@@ -114,7 +104,6 @@ export default function DashboardLayout({
           <span className="text-sm font-bold text-zinc-950 dark:text-zinc-50 truncate">Sakin Paneli</span>
         </div>
         <div className="flex items-center gap-0.5 shrink-0">
-          <NotificationBell />
           <button
             onClick={async () => {
               try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
@@ -131,11 +120,7 @@ export default function DashboardLayout({
 
       {/* ══════ MAIN CONTENT ══════ */}
       <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain sm:pb-0 pb-20">
-        <PushNotificationProvider>
-          <FeatureGateProvider>
-            {children}
-          </FeatureGateProvider>
-        </PushNotificationProvider>
+        {children}
       </main>
 
       {/* ══════ MOBILE BOTTOM NAV ══════ */}

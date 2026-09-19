@@ -3,9 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { NotificationBell } from "@/components/NotificationBell";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { PresenceHeartbeat } from "@/components/PresenceHeartbeat";
 import { SiteLogo } from "@/components/SiteLogo";
 import { SITE_BRAND_NAME } from "@/lib/brand";
 import type { LucideIcon } from "lucide-react";
@@ -108,7 +105,6 @@ export function AdminSidebar({ children }: { children: React.ReactNode }) {
   const bottomActions = (onNavigate?: () => void) => (
     <div className="border-t border-zinc-100 dark:border-zinc-800/80 p-3 space-y-1 shrink-0">
       <div className={`flex items-center gap-2 ${collapsed && !onNavigate ? "justify-center" : ""}`}>
-        <ThemeToggle />
         {(!collapsed || !!onNavigate) && <span className="text-xs font-medium text-zinc-500">Tema</span>}
       </div>
       <button
@@ -129,7 +125,6 @@ export function AdminSidebar({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen bg-zinc-50 dark:bg-[#0b0f19] overflow-hidden">
-      <PresenceHeartbeat />
 
       {/* Desktop Sidebar */}
       <aside
@@ -201,7 +196,6 @@ export function AdminSidebar({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <NotificationBell />
           </div>
         </header>
 
