@@ -249,3 +249,22 @@ CREATE TABLE IF NOT EXISTS `push_subscriptions` (
 
 CREATE INDEX IF NOT EXISTS `idx_push_subscriptions_user` ON `push_subscriptions` (`user_id`);
 CREATE INDEX IF NOT EXISTS `idx_push_subscriptions_endpoint` ON `push_subscriptions` (`endpoint`);
+
+-- Kasa & Gelir/Gider Hareketleri
+CREATE TABLE IF NOT EXISTS `transactions` (
+  `id` text PRIMARY KEY NOT NULL,
+  `site_id` text NOT NULL,
+  `type` text NOT NULL,
+  `category` text NOT NULL,
+  `title` text NOT NULL,
+  `description` text,
+  `amount` real NOT NULL,
+  `date` text NOT NULL,
+  `payment_method` text NOT NULL DEFAULT 'BANK',
+  `receipt_no` text,
+  `created_at` text DEFAULT (CURRENT_TIMESTAMP),
+  FOREIGN KEY (`site_id`) REFERENCES `sites`(`id`)
+);
+
+CREATE INDEX IF NOT EXISTS `idx_transactions_site_date` ON `transactions` (`site_id`, `date`);
+

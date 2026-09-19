@@ -216,3 +216,19 @@ export const pushSubscriptions = sqliteTable("push_subscriptions", {
   userAgent: text("user_agent"),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
+
+/** Site Kasa & Gelir/Gider Hareketleri */
+export const transactions = sqliteTable("transactions", {
+  id: text("id").primaryKey(),
+  siteId: text("site_id").notNull().references(() => sites.id),
+  type: text("type", { enum: ["INCOME", "EXPENSE"] }).notNull(),
+  category: text("category").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  amount: real("amount").notNull(),
+  date: text("date").notNull(),
+  paymentMethod: text("payment_method").notNull().default("BANK"),
+  receiptNo: text("receipt_no"),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
