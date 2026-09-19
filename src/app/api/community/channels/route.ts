@@ -143,7 +143,7 @@ export async function POST(req: Request) {
     const id = "ch_" + nanoid(10);
     await d.db.insert(communityChannels).values({
       id,
-      siteId,
+      siteId: siteId as string,
       name: name.trim(),
       slug,
       description: description ? String(description).trim() : null,

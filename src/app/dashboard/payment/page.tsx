@@ -56,16 +56,22 @@ export default function BankTransferInfoPage() {
         ]);
 
         if (settingsRes.ok) {
-          const s = await settingsRes.json();
-          setSiteSettings(s);
+          const s = (await settingsRes.json().catch(() => null)) as {
+            iban?: string | null;
+            bankName?: string | null;
+            managerName?: string | null;
+            phone?: string | null;
+            aidat?: string | null;
+          } | null;
+          if (s) setSiteSettings(s);
         }
 
         if (paymentsRes.ok) {
-          const plist = await paymentsRes.json();
+          const plist = (await paymentsRes.json().catch(() => [])) as Array<{ status: string; amount: number }>;
           if (Array.isArray(plist)) {
             const unpaid = plist
-              .filter((p: { status: string }) => p.status === "Bekliyor")
-              .reduce((a: number, p: { amount: number }) => a + Number(p.amount), 0);
+              .filter((p) => p.status === "Bekliyor")
+              .reduce((a: number, p) => a + Number(p.amount), 0);
             setUnpaidBalance(unpaid);
           }
         }

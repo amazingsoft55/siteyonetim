@@ -196,24 +196,30 @@ export async function POST(req: Request) {
     // Eğer anket oluşturuluyorsa
     if (poll && typeof poll.question === "string" && Array.isArray(poll.options) && poll.options.length >= 2) {
       createdPollId = "poll_" + nanoid(10);
+      const pollQuestionStr: string = poll.question.trim();
+      const pollOptionsJson: string = JSON.stringify(
+        poll.options.map((o: unknown) => String(o).trim()).filter(Boolean)
+      );
       await d.db.insert(communityPolls).values({
         id: createdPollId,
-        siteId,
-        channelId,
-        createdBy: session.id,
-        question: poll.question.trim(),
-        options: JSON.stringify(poll.options.map((o: unknown) => String(o).trim()).filter(Boolean)),
+        siteId: siteId as string,
+        channelId: channelId as string,
+        createdBy: session.id as string,
+        question: pollQuestionStr,
+        options: pollOptionsJson,
         expiresAt: poll.expiresAt ? String(poll.expiresAt) : null,
       });
     }
 
     const messageId = "msg_" + nanoid(12);
+    const contentStr: string = content ? String(content).trim() : (poll?.question ? String(poll.question).trim() : "Paylaşım");
+
     await d.db.insert(communityMessages).values({
       id: messageId,
-      siteId,
-      channelId,
-      userId: session.id,
-      content: content ? String(content).trim() : (poll ? poll.question : "Paylaşım"),
+      siteId: siteId as string,
+      channelId: channelId as string,
+      userId: session.id as string,
+      content: contentStr,
       imageUrl: imageUrl ? String(imageUrl).trim() : null,
       pollId: createdPollId,
     });
