@@ -5,6 +5,8 @@ import Link from "next/link";
 import { readJsonError } from "@/lib/json-error";
 import { KeyRound, Mail, ShieldCheck } from "lucide-react";
 
+import { useRouter } from "next/navigation";
+
 type AccountInfo = {
   id: string;
   name: string;
@@ -16,6 +18,7 @@ type AccountInfo = {
 };
 
 export default function AdminAccountPage() {
+  const router = useRouter();
   const [info, setInfo] = React.useState<AccountInfo | null>(null);
   const [name, setName] = React.useState("");
   const [login, setLogin] = React.useState("");
@@ -28,6 +31,48 @@ export default function AdminAccountPage() {
   const [codeSentTo, setCodeSentTo] = React.useState("");
   const [err, setErr] = React.useState("");
   const [msg, setMsg] = React.useState("");
+
+  // Hesap Silme State
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [deletePassword, setDeletePassword] = React.useState("");
+  const [deleteSiteAlso, setDeleteSiteAlso] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
+  const [deleteErr, setDeleteErr] = React.useState("");
+
+  async function handleDeleteAccount() {
+    if (!deletePassword) {
+      setDeleteErr("Lütfen şifrenizi girin.");
+      return;
+    }
+    setDeleting(true);
+    setDeleteErr("");
+
+    try {
+      const res = await fetch("/api/account/delete", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          password: deletePassword,
+          deleteSiteAlso,
+        }),
+      });
+
+      const data = (await res.json().catch(() => null)) as { error?: string; ok?: boolean } | null;
+
+      if (!res.ok) {
+        setDeleteErr(data?.error || "Hesap silinemedi. Lütfen şifrenizi kontrol edin.");
+        setDeleting(false);
+        return;
+      }
+
+      // Başarılı silme -> Ana sayfaya veya Giriş sayfasına yönlendir
+      window.location.href = "/login?deleted=1";
+    } catch {
+      setDeleteErr("Sunucuya bağlanırken bir hata oluştu.");
+      setDeleting(false);
+    }
+  }
 
   const load = React.useCallback(async () => {
     setErr("");
@@ -247,12 +292,105 @@ export default function AdminAccountPage() {
           <button
             type="submit"
             disabled={saving || loading}
-            className="w-full py-3 rounded-2xl bg-rose-600 text-white font-bold text-sm disabled:opacity-60"
+            className="w-full py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm disabled:opacity-60 transition"
           >
-            {saving ? "Kaydediliyor…" : "Kaydet"}
+            {saving ? "Kaydediliyor…" : "Bilgileri Kaydet"}
           </button>
         </form>
       </section>
+
+      {/* Tehlikeli Bölge: Hesabı Kalıcı Olarak Sil */}
+      <section className="rounded-3xl bg-red-50/60 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 p-6 shadow-sm">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-base font-bold text-red-900 dark:text-red-200 flex items-center gap-2">
+              ⚠️ Tehlikeli Bölge
+            </h2>
+            <p className="text-xs text-red-700 dark:text-red-300 mt-1 leading-relaxed">
+              Hesabınızı sildiğinizde profiliniz, bildirimleriniz ve size ait tüm veriler <strong>kalıcı olarak geri getirilemez şekilde silinir (KVKK uyumlu)</strong>.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowDeleteModal(true)}
+            className="shrink-0 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-sm"
+          >
+            Hesabı Sil
+          </button>
+        </div>
+      </section>
+
+      {/* Hesap Silme Onay Modalı */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 shadow-2xl border border-red-200 dark:border-red-900 space-y-5 animate-in zoom-in-95">
+            <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
+              <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-950/50 flex items-center justify-center text-red-600 font-bold text-xl">
+                ⚠️
+              </div>
+              <div>
+                <h3 className="text-lg font-extrabold text-zinc-900 dark:text-zinc-50">Hesabı Kalıcı Olarak Sil</h3>
+                <p className="text-xs text-zinc-500">Bu işlem geri alınamaz.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              Hesabınızı ve tüm verilerinizi kalıcı olarak silmek istediğinizden emin misiniz? Onaylamak için lütfen <strong>mevcut şifrenizi</strong> girin:
+            </p>
+
+            {deleteErr && (
+              <div className="p-3 rounded-xl bg-red-50 text-red-700 border border-red-200 text-xs dark:bg-red-950/30 dark:text-red-400">
+                {deleteErr}
+              </div>
+            )}
+
+            <div>
+              <label className="text-xs font-bold text-zinc-500 uppercase">Mevcut Şifreniz</label>
+              <input
+                type="password"
+                className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 bg-zinc-50 dark:bg-zinc-950 text-sm"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Mevcut şifrenizi yazın"
+                autoFocus
+              />
+            </div>
+
+            <label className="flex items-start gap-2.5 cursor-pointer text-xs text-zinc-700 dark:text-zinc-300">
+              <input
+                type="checkbox"
+                className="mt-0.5 rounded border-zinc-300 text-red-600 focus:ring-red-500"
+                checked={deleteSiteAlso}
+                onChange={(e) => setDeleteSiteAlso(e.target.checked)}
+              />
+              <span>Yöneticisi olduğum siteyi ve siteye ait tüm duyuru/aidat verilerini de kalıcı olarak sil.</span>
+            </label>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeletePassword("");
+                  setDeleteErr("");
+                }}
+                disabled={deleting}
+                className="flex-1 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs hover:bg-zinc-50 transition"
+              >
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleting || !deletePassword}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs disabled:opacity-50 transition"
+              >
+                {deleting ? "Siliniyor…" : "Evet, Kalıcı Olarak Sil"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <p className="text-xs text-zinc-500 text-center">
         Şifrenizi unuttuysanız çıkış yapıp giriş sayfasından{" "}
