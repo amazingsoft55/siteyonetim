@@ -29,7 +29,7 @@ export default function DashboardLayout({
 
   React.useEffect(() => {
     const user = localStorage.getItem("user");
-    if (!user) router.push("/login");
+    if (!user) router.push("/");
   }, [router]);
 
   const isActive = (path: string) => pathname === path;
@@ -87,7 +87,7 @@ export default function DashboardLayout({
             onClick={async () => {
               try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
               localStorage.removeItem("user");
-              router.push("/login");
+              router.push("/");
             }}
             className="flex items-center gap-1.5 text-sm text-red-500 dark:text-red-400 hover:text-red-600 font-semibold"
           >
@@ -108,7 +108,7 @@ export default function DashboardLayout({
             onClick={async () => {
               try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
               localStorage.removeItem("user");
-              router.push("/login");
+              router.push("/");
             }}
             className="p-2 rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
             title="Çıkış Yap"

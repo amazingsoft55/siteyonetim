@@ -95,7 +95,7 @@ export async function middleware(request: NextRequest) {
   // ---- 2. Page Transitions & SSR Guards ----
   if (path.startsWith("/sifre-belirle")) {
     if (!token) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(new URL("/", request.url));
     }
     try {
       const { payload } = await jwtVerify(token, getSecretKey());
@@ -103,7 +103,7 @@ export async function middleware(request: NextRequest) {
         return redirectByRole(payload.role as string, request);
       }
     } catch {
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();
   }
@@ -117,7 +117,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!token) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   try {
@@ -129,7 +129,7 @@ export async function middleware(request: NextRequest) {
     }
 
     if (isSuperAdminRoute && role !== "SUPER_ADMIN") {
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(new URL("/", request.url));
     }
 
     if (isAdminRoute && role !== "ADMIN" && role !== "SUPER_ADMIN") {
@@ -137,10 +137,10 @@ export async function middleware(request: NextRequest) {
     }
 
     if (isUserRoute && role !== "USER" && role !== "ADMIN" && role !== "SUPER_ADMIN") {
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(new URL("/", request.url));
     }
   } catch {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();

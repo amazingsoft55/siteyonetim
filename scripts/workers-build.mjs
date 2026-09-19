@@ -1,9 +1,6 @@
 /**
- * Cloudflare Workers Builds varsayılanı `npm run build` + `npx wrangler deploy` kullanır.
- * Wrangler deploy, OpenNext paketini (.open-next) bekler; yalnızca `next build` yetmez.
- *
- * WORKERS_CI=1 iken tam OpenNext derlemesi; opennext içinden gelen `npm run build` çağrısında
- * yalnızca Next (SITEYONETIM_NEXT_ONLY=1 ile sonsuz döngü önlenir).
+ * Cloudflare Workers Builds derleme betiği.
+ * `opennextjs-cloudflare build` çağrısı Next.js derlemesini ve worker paketini tek seferde üretir.
  */
 import { spawnSync } from "node:child_process";
 
@@ -13,15 +10,16 @@ function run(command, args, extraEnv = {}) {
     shell: true,
     env: { ...process.env, ...extraEnv },
   });
-  process.exit(result.status === null ? 1 : result.status);
+  if (result.status !== 0) {
+    process.exit(result.status === null ? 1 : result.status);
+  }
 }
 
-const workersCi = process.env.WORKERS_CI === "1";
-const nextOnly = process.env.SITEYONETIM_NEXT_ONLY === "1";
+const isNextOnly = process.env.SITEYONETIM_NEXT_ONLY === "1";
 
-if (workersCi && !nextOnly) {
-  console.log("[siteyonetim] WORKERS_CI: opennextjs-cloudflare build");
+if (isNextOnly) {
+  run("npx", ["next", "build"]);
+} else {
+  console.log("[siteyonetim] Cloudflare OpenNext tek seferlik hızlı derleme başlatılıyor...");
   run("npx", ["opennextjs-cloudflare", "build"], { SITEYONETIM_NEXT_ONLY: "1" });
 }
-
-run("npx", ["next", "build"]);
