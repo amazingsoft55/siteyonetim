@@ -268,3 +268,68 @@ CREATE TABLE IF NOT EXISTS `transactions` (
 
 CREATE INDEX IF NOT EXISTS `idx_transactions_site_date` ON `transactions` (`site_id`, `date`);
 
+-- Topluluk & Grup Sohbet Kanalları
+CREATE TABLE IF NOT EXISTS `community_channels` (
+  `id` text PRIMARY KEY NOT NULL,
+  `site_id` text NOT NULL,
+  `name` text NOT NULL,
+  `slug` text NOT NULL,
+  `description` text,
+  `icon` text NOT NULL DEFAULT 'MessageSquare',
+  `is_announcement_only` integer NOT NULL DEFAULT 0,
+  `sort_order` integer NOT NULL DEFAULT 0,
+  `created_at` text DEFAULT (CURRENT_TIMESTAMP),
+  FOREIGN KEY (`site_id`) REFERENCES `sites`(`id`)
+);
+
+CREATE INDEX IF NOT EXISTS `idx_community_channels_site` ON `community_channels` (`site_id`);
+
+-- Site İçi Anketler
+CREATE TABLE IF NOT EXISTS `community_polls` (
+  `id` text PRIMARY KEY NOT NULL,
+  `site_id` text NOT NULL,
+  `channel_id` text NOT NULL,
+  `created_by` text NOT NULL,
+  `question` text NOT NULL,
+  `options` text NOT NULL DEFAULT '[]',
+  `expires_at` text,
+  `created_at` text DEFAULT (CURRENT_TIMESTAMP),
+  FOREIGN KEY (`site_id`) REFERENCES `sites`(`id`),
+  FOREIGN KEY (`channel_id`) REFERENCES `community_channels`(`id`),
+  FOREIGN KEY (`created_by`) REFERENCES `users`(`id`)
+);
+
+CREATE INDEX IF NOT EXISTS `idx_community_polls_channel` ON `community_polls` (`channel_id`);
+
+-- Anket Oyları
+CREATE TABLE IF NOT EXISTS `community_poll_votes` (
+  `id` text PRIMARY KEY NOT NULL,
+  `poll_id` text NOT NULL,
+  `user_id` text NOT NULL,
+  `option_index` integer NOT NULL,
+  `created_at` text DEFAULT (CURRENT_TIMESTAMP),
+  FOREIGN KEY (`poll_id`) REFERENCES `community_polls`(`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_community_poll_vote_unique` ON `community_poll_votes` (`poll_id`, `user_id`);
+
+-- Komşuluk Mesajları
+CREATE TABLE IF NOT EXISTS `community_messages` (
+  `id` text PRIMARY KEY NOT NULL,
+  `site_id` text NOT NULL,
+  `channel_id` text NOT NULL,
+  `user_id` text NOT NULL,
+  `content` text NOT NULL,
+  `image_url` text,
+  `is_pinned` integer NOT NULL DEFAULT 0,
+  `poll_id` text,
+  `created_at` text DEFAULT (CURRENT_TIMESTAMP),
+  FOREIGN KEY (`site_id`) REFERENCES `sites`(`id`),
+  FOREIGN KEY (`channel_id`) REFERENCES `community_channels`(`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),
+  FOREIGN KEY (`poll_id`) REFERENCES `community_polls`(`id`)
+);
+
+CREATE INDEX IF NOT EXISTS `idx_community_messages_channel_date` ON `community_messages` (`channel_id`, `created_at`);
+

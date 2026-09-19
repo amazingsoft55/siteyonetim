@@ -3,26 +3,29 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import {
-  CreditCard,
+  MessagesSquare,
+  Vote,
+  ShieldCheck,
   Megaphone,
   Wrench,
-  ShieldCheck,
   BarChart3,
-  Smartphone,
-  Receipt,
-  UserCheck,
   CheckCircle2,
   ArrowRight,
   Sparkles,
   Building2,
   Lock,
+  Receipt,
+  HeartHandshake,
+  EyeOff,
+  Coins,
+  UserCheck,
 } from "lucide-react";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
 export const metadata: Metadata = {
-  title: "Özellikler ve Modüller | Site Yönetimi",
+  title: "Özellikler | Güvenli Komşuluk Ağı & Apartman Yönetimi",
   description:
-    "Aidat takibi, dijital duyurular, arıza talepleri, kasa raporları ve sakin onay mekanizması gibi tüm modülleri inceleyin.",
+    "WhatsApp karmaşasına son veren güvenli komşuluk ağı, bina içi oylama, şeffaf kasa ve fotoğraflı arıza takip modülleri.",
   alternates: { canonical: `${getPublicSiteUrl()}/ozellikler` },
 };
 
@@ -35,13 +38,13 @@ export default function FeaturesPage() {
       <section className="pt-16 pb-14 bg-white border-b border-slate-200/80 text-center">
         <div className="max-w-4xl mx-auto px-6">
           <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3.5 py-1.5 rounded-full">
-            MODÜL &amp; ÖZELLİK DETAYLARI
+            MODÜLLER &amp; ÖZELLİKLER
           </span>
           <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight mt-4 mb-4">
-            Site ve apartmanınızı yönetmek için ihtiyacınız olan her şey
+            WhatsApp Kaosuna Son: Modern Komşuluk &amp; Yönetim
           </h1>
           <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Kat Mülkiyeti Kanunu standartlarına uygun olarak tasarlanmış, sakinleri ve yöneticileri aynı dijital çatı altında buluşturan profesyonel araçlar.
+            Telefon numarası ifşası olmadan güvenli komşuluk iletişimi, bina içi hızlı anketler ve sıfır komisyonlu şeffaf aidat takibi.
           </p>
         </div>
       </section>
@@ -49,186 +52,175 @@ export default function FeaturesPage() {
       {/* Main Content Modules */}
       <main className="max-w-6xl mx-auto px-6 py-16 space-y-20">
 
-        {/* Modül 1: Aidat & Finans */}
-        <section id="aidat" className="grid lg:grid-cols-2 gap-12 items-center">
+        {/* Modül 1: Komşuluk Ağı & Grup Sohbeti */}
+        <section id="topluluk" className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-bold mb-4">
-              <CreditCard className="h-4 w-4" />
-              AİDAT &amp; FİNANSAL YÖNETİM
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold mb-4">
+              <MessagesSquare className="h-4 w-4" />
+              GÜVENLİ KOMŞULUK AĞI &amp; GRUPLAR
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">
-              Geciken aidatlara ve manuel hesap karmaşasına son
+              Telefon numaranız gizli, komşuluk iletişimi canlı
             </h2>
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-6">
-              Her ay başında tüm blok ve dairelere tek tuşla aidat tahakkuk ettirin. Yapılan tahsilatları kaydedin ve sakinlere anında resmi e-posta makbuzu ulaştırın.
+              WhatsApp gruplarında kişisel telefon numaraları ifşa olurken; sistemimizde herkes yalnızca daire numarası ve ismiyle görünür.
+              Konusuna göre ayrılmış kanallar ile düzen sağlanır.
             </p>
             <ul className="space-y-3 text-sm text-slate-700">
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span>Tek tıkla aylık toplu aidat ve ek gider borçlandırması</span>
+                <span><strong>%100 KVKK Korumalı:</strong> Komşular birbirinin numarasını göremez.</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span>Kişiye özel ödeme makbuzu üretimi ve e-posta bildirimi</span>
+                <span><strong>Tematik Kanallar:</strong> Yardımlaşma, İkinci El Eşya, Evcil Hayvanlar vb.</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span>Ödenmeyen aidatlar için gecikme takibi ve liste dökümü</span>
+                <span><strong>Yönetici Moderasyonu:</strong> Uygunsuz mesajları anında kaldırma imkanı.</span>
               </li>
             </ul>
           </div>
           <div className="bg-white rounded-3xl p-6 shadow-md border border-slate-200">
-            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200/80 space-y-4">
-              <div className="flex justify-between items-center pb-3 border-b border-slate-200">
-                <span className="text-xs font-bold text-slate-700">Tahsilat Özeti (Eylül)</span>
-                <span className="text-xs font-bold text-emerald-600">%94 Tahsil Edildi</span>
+            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200/80 space-y-3">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200">
+                <span className="text-xs font-bold text-slate-700">#Yardımlaşma &amp; Ödünç</span>
+                <span className="text-[10px] text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded font-bold">Numaralar Gizli</span>
               </div>
               <div className="space-y-2 text-xs">
-                <div className="flex justify-between py-1.5 border-b border-slate-100">
-                  <span className="font-semibold text-slate-800">Daire 1 - Ahmet Y.</span>
-                  <span className="text-emerald-600 font-bold">1.500 ₺ (Ödendi)</span>
+                <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+                  <span className="font-bold text-slate-800">Daire 4 - Selin K.:</span> &ldquo;Merdiven lazım oldu, 1 saatliğine ödünç alabilir miyim?&rdquo;
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100">
-                  <span className="font-semibold text-slate-800">Daire 2 - Fatma K.</span>
-                  <span className="text-emerald-600 font-bold">1.500 ₺ (Ödendi)</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100">
-                  <span className="font-semibold text-slate-800">Daire 3 - Burak D.</span>
-                  <span className="text-rose-600 font-bold">1.500 ₺ (Bekliyor)</span>
+                <div className="p-2.5 bg-indigo-600 text-white rounded-xl">
+                  <span className="font-bold">Daire 9 - Ahmet Y.:</span> &ldquo;Tabii Selin Hanım, kapıdayım verebilirim.&rdquo;
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Modül 2: Duyuru Sistemi */}
-        <section id="duyuru" className="grid lg:grid-cols-2 gap-12 items-center">
+        {/* Modül 2: Anket & Oylama */}
+        <section id="anket" className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="order-2 lg:order-1 bg-white rounded-3xl p-6 shadow-md border border-slate-200">
             <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200/80 space-y-3">
-              <div className="p-3 bg-white rounded-xl border border-slate-200">
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700">GENEL KURUL</span>
-                <p className="text-xs font-bold text-slate-900 mt-1">Olağan Kat Malikleri Toplantısı</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">Toplantı salonunda saat 20:00&apos;de yapılacaktır.</p>
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200">
+                <span className="text-xs font-bold text-indigo-700 flex items-center gap-1.5">
+                  <Vote className="h-4 w-4" /> Bina İçi Canlı Oylama
+                </span>
+                <span className="text-xs text-slate-400">18 Oy</span>
               </div>
-              <div className="p-3 bg-white rounded-xl border border-slate-200">
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700">SU KESİNTİSİ</span>
-                <p className="text-xs font-bold text-slate-900 mt-1">Şebeke Boru Yenileme Çalışması</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">14:00 - 17:00 saatleri arasında su kesintisi olacaktır.</p>
+              <p className="text-xs font-bold text-slate-900">Bahçe aydınlatması saat kaça kadar açık kalsın?</p>
+              <div className="space-y-1.5 text-xs">
+                <div className="p-2 bg-indigo-50 border border-indigo-200 rounded-lg font-bold flex justify-between">
+                  <span>Gece 01:00&apos;e kadar</span>
+                  <span>%75 (14 oy)</span>
+                </div>
+                <div className="p-2 bg-white border border-slate-200 rounded-lg flex justify-between text-slate-600">
+                  <span>Sabaha kadar açık kalsın</span>
+                  <span>%25 (4 oy)</span>
+                </div>
               </div>
+            </div>
+          </div>
+          <div className="order-1 lg:order-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-violet-50 text-violet-700 text-xs font-bold mb-4">
+              <Vote className="h-4 w-4" />
+              DEMOKRATİK KARAR ALMA
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">
+              Toplantı beklemeden bina kararlarını anında oylayın
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-6">
+              Bina sakinlerinin görüşünü almak için haftalarca toplantı organize etmeye gerek yok.
+              Yönetici veya komşular tek tıkla anket başlatır, sakinler oylarını telefonlarından verir.
+            </p>
+            <ul className="space-y-3 text-sm text-slate-700">
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                <span>Anlık yüzdeler ve katılım oranları</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                <span>Her daire için 1 adil oy hakkı</span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        {/* Modül 3: Şeffaf Kasa & 0% Komisyonlu IBAN */}
+        <section id="finans" className="grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-bold mb-4">
+              <Receipt className="h-4 w-4" />
+              ŞEFFAF KASA &amp; SIFIR KOMİSYON
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">
+              Aracı POS komisyonu yok, doğrudan banka güvenliği
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-6">
+              Aracı kart kuruluşlarına %3-4 aidat komisyonu ödemeyin. Sitenizin resmi banka IBAN&apos;ı
+              tek tuşla kopyalanır, sakinler FAST/EFT ile öder ve kasa hareketleri şeffaf şekilde listelenir.
+            </p>
+            <ul className="space-y-3 text-sm text-slate-700">
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                <span>Tek tıkla IBAN ve açıklama kopyalama rehberi</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                <span>Gelir-Gider kasa defteri ve sakin dökümü</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                <span>Gecikmiş borç listesi ve bildirimler</span>
+              </li>
+            </ul>
+          </div>
+          <div className="bg-white rounded-3xl p-6 shadow-md border border-slate-200">
+            <div className="bg-slate-900 text-white rounded-2xl p-5 space-y-3">
+              <span className="text-[11px] font-bold text-slate-400 uppercase">SİTE RESMİ HESABI</span>
+              <p className="font-mono text-xs sm:text-sm font-bold text-indigo-300 break-all">
+                TR33 0006 1005 1982 0000 1234 56
+              </p>
+              <div className="pt-2 border-t border-slate-800 flex justify-between text-xs">
+                <span className="text-slate-400">Komisyon:</span>
+                <span className="text-emerald-400 font-bold">%0 (Doğrudan Banka)</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Modül 4: Fotoğraflı Arıza & İstek Takibi */}
+        <section id="talep" className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="order-2 lg:order-1 bg-white rounded-3xl p-6 shadow-md border border-slate-200">
+            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200/80 space-y-3">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200">
+                <span className="text-xs font-bold text-slate-700">Arıza Takip Kartı</span>
+                <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">İşlemde</span>
+              </div>
+              <p className="text-xs font-bold text-slate-900">3. Kat Aydınlatma Sensörü Çalışmıyor</p>
+              <p className="text-[11px] text-slate-500">Daire 7 • Elektrikçiye iş emri verildi.</p>
             </div>
           </div>
           <div className="order-1 lg:order-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-50 text-amber-700 text-xs font-bold mb-4">
-              <Megaphone className="h-4 w-4" />
-              DİJİTAL DUYURU MERKEZİ
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">
-              Tüm sakinlere saniyeler içinde ulaşan şeffaf iletişim
-            </h2>
-            <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-6">
-              Apartman panosuna kağıt asarak vakit kaybetmeyin. Toplantı kararları, bakım duyuruları ve acil durum bildirimleri doğrudan sakinlerin telefonuna ulaşsın.
-            </p>
-            <ul className="space-y-3 text-sm text-slate-700">
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span>Kategorize duyurular (Toplantı, Bakım, Genel, Acil)</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span>Duyurulara görsel ve dosya ekleme desteği</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span>E-posta ve tarayıcı anlık bildirim entegrasyonu</span>
-              </li>
-            </ul>
-          </div>
-        </section>
-
-        {/* Modül 3: Arıza & Talep Takibi */}
-        <section id="ariza" className="grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold mb-4">
               <Wrench className="h-4 w-4" />
-              ARIZA &amp; TALEP ÇÖZÜM SİSTEMİ
+              ARIZA &amp; İSTEK YÖNETİMİ
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">
-              Sorunlar kaybolmaz, adım adım çözüme kavuşur
+              Sakinlerden gelen talepleri düzenli şekilde yönetin
             </h2>
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-6">
-              Sakinler karşılaştıkları teknik arızaları veya istekleri fotoğraflı olarak iletir. Yönetici sürecin her adımında durumu güncelleyerek şeffaflık sağlar.
+              Asansör arızası, çatı akması veya bahçe bakımı gibi sorunları telefonla anlatmak yerine fotoğraflı talep olarak sisteme işleyin.
             </p>
             <ul className="space-y-3 text-sm text-slate-700">
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span>Fotoğraf ve detay açıklamalı arıza bildirimleri</span>
+                <span>Fotoğraflı bildirim ve durum güncellemeleri</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span>Durum takibi: Açık, İnceleniyor, Çözüldü</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span>Talep çözüldüğünde sakine otomatik e-posta bilgilendirmesi</span>
-              </li>
-            </ul>
-          </div>
-          <div className="bg-white rounded-3xl p-6 shadow-md border border-slate-200">
-            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200/80 space-y-3 text-xs">
-              <div className="p-3 bg-white rounded-xl border border-slate-200">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold text-slate-900">Asansör Kapı Sensörü Arızası</span>
-                  <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[10px]">İnceleniyor</span>
-                </div>
-                <p className="text-slate-500">Servis çağrıldı, parça değişimi yapılacak.</p>
-              </div>
-              <div className="p-3 bg-white rounded-xl border border-slate-200">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold text-slate-900">Bahçe Aydınlatma Onarımı</span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold text-[10px]">Çözüldü</span>
-                </div>
-                <p className="text-slate-500">Ampuller LED modellerle yenilendi.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Modül 4: Yönetici Onaylı Güvenlik */}
-        <section className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="order-2 lg:order-1 bg-white rounded-3xl p-6 shadow-md border border-slate-200">
-            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200/80 text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
-                <UserCheck className="h-6 w-6" />
-              </div>
-              <h4 className="text-sm font-bold text-slate-900">Güvenli Yönetici Onay Mekanizması</h4>
-              <p className="text-xs text-slate-500 max-w-xs mx-auto">
-                Her yeni kayıt yönetici tarafından incelenir. Yöneticinin onaylamadığı hiçbir hesap site verilerine erişemez.
-              </p>
-            </div>
-          </div>
-          <div className="order-1 lg:order-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold mb-4">
-              <ShieldCheck className="h-4 w-4" />
-              GÜVENLİK &amp; DOĞRULAMA
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">
-              Site verileriniz sadece bina sakinlerine açıktır
-            </h2>
-            <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-6">
-              Web üzerinden hesap açan her sakin önce &quot;Onay Bekliyor&quot; aşamasına alınır. Yönetici onay verdiğinde sakine şık bir karşılama e-postası gider ve giriş hakkı tanınır.
-            </p>
-            <ul className="space-y-3 text-sm text-slate-700">
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span>Yönetici paneli onay bekleyenler listesi ve 1 tıkla onay</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span>Otomatik tetiklenen kurumsal onay e-postası</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span>KVKK uyumlu güvenli parola saklama ve oturum yönetimi</span>
+                <span>Çözüldü / Reddedildi gerekçeleri ve fotoğrafları</span>
               </li>
             </ul>
           </div>
@@ -237,21 +229,20 @@ export default function FeaturesPage() {
       </main>
 
       {/* CTA Section */}
-      <section className="py-16 bg-white border-t border-slate-200 text-center">
-        <div className="max-w-4xl mx-auto px-6">
-          <h2 className="text-3xl font-extrabold text-slate-900 mb-4">
-            Apartmanınız için modern bir başlangıç yapın
+      <section className="py-16 bg-white border-t border-slate-200/80 text-center">
+        <div className="max-w-4xl mx-auto px-6 space-y-6">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
+            Sitenizde güvenli komşuluk ve düzeni hemen başlatın
           </h2>
-          <p className="text-slate-600 text-base max-w-xl mx-auto mb-8">
-            Hemen ücretsiz hesap oluşturun ve yönetim panelinizi dakikalar içinde kullanmaya başlayın.
-          </p>
-          <Link
-            href="/kayit"
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all text-base"
-          >
-            <span>Ücretsiz Kayıt Ol</span>
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <div className="pt-2">
+            <Link
+              href="/kayit"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm shadow-md transition-all"
+            >
+              <span>Ücretsiz Denemeyi Başlat</span>
+              <ArrowRight className="h-4 w-4 ml-1" />
+            </Link>
+          </div>
         </div>
       </section>
 

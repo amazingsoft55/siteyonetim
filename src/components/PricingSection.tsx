@@ -196,18 +196,18 @@ export function PricingSection() {
           })}
         </div>
 
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-zinc-500 dark:text-zinc-400">
-          <span className="flex items-center gap-2">
-            <Timer className="h-4 w-4 text-indigo-500" />
-            14 gün para iade garantisi
-          </span>
-          <span className="flex items-center gap-2">
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-zinc-600 dark:text-zinc-400">
+          <span className="flex items-center gap-2 font-medium">
             <ShieldCheck className="h-4 w-4 text-emerald-500" />
-            Kredi kartı gerekmez
+            %0 POS Komisyonu (Doğrudan Banka)
           </span>
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-2 font-medium">
+            <Timer className="h-4 w-4 text-indigo-500" />
+            14 gün ücretsiz deneme
+          </span>
+          <span className="flex items-center gap-2 font-medium">
             <Heart className="h-4 w-4 text-rose-500" />
-            Taahhüt yok, istediğin zaman iptal et
+            KVKK Uyumlu Güvenli Komşuluk Ağı Dahil
           </span>
         </div>
       </div>

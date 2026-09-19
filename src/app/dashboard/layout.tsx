@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { SiteLogo } from "@/components/SiteLogo";
 import { SITE_BRAND_NAME } from "@/lib/brand";
-import { Home, CreditCard, Megaphone, Wrench, LogOut } from "lucide-react";
+import { Home, CreditCard, Megaphone, Wrench, LogOut, MessagesSquare } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -36,8 +36,9 @@ export default function DashboardLayout({
 
   const menuItems = [
     { name: "Ana Sayfa", shortName: "Anasayfa", href: "/dashboard", icon: Home },
-    { name: "Aidat & Ödemeler", shortName: "Aidat", href: "/dashboard/payments", icon: CreditCard },
-    { name: "Duyurular", shortName: "Duyuru", href: "/dashboard/announcements", icon: Megaphone },
+    { name: "Komşu Sohbeti & Grup", shortName: "Topluluk", href: "/dashboard/topluluk", icon: MessagesSquare },
+    { name: "Resmi Duyurular", shortName: "Duyuru", href: "/dashboard/announcements", icon: Megaphone },
+    { name: "Aidat & IBAN", shortName: "Aidat", href: "/dashboard/payments", icon: CreditCard },
     { name: "Taleplerim", shortName: "Talep", href: "/dashboard/requests", icon: Wrench },
   ];
 

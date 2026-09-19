@@ -232,3 +232,51 @@ export const transactions = sqliteTable("transactions", {
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
+/** Site İçi Topluluk Kanalları / Grupları (Komşuluk Ağı) */
+export const communityChannels = sqliteTable("community_channels", {
+  id: text("id").primaryKey(),
+  siteId: text("site_id").notNull().references(() => sites.id),
+  name: text("name").notNull(),
+  slug: text("slug").notNull(),
+  description: text("description"),
+  icon: text("icon").notNull().default("MessageSquare"),
+  isAnnouncementOnly: integer("is_announcement_only", { mode: "boolean" }).notNull().default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+/** Site İçi Anketler & Oylamalar */
+export const communityPolls = sqliteTable("community_polls", {
+  id: text("id").primaryKey(),
+  siteId: text("site_id").notNull().references(() => sites.id),
+  channelId: text("channel_id").notNull().references(() => communityChannels.id),
+  createdBy: text("created_by").notNull().references(() => users.id),
+  question: text("question").notNull(),
+  /** JSON array of string options e.g. ["Evet", "Hayır"] */
+  options: text("options").notNull().default("[]"),
+  expiresAt: text("expires_at"),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+/** Anket Oyları */
+export const communityPollVotes = sqliteTable("community_poll_votes", {
+  id: text("id").primaryKey(),
+  pollId: text("poll_id").notNull().references(() => communityPolls.id),
+  userId: text("user_id").notNull().references(() => users.id),
+  optionIndex: integer("option_index").notNull(),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+/** Site İçi Komşuluk Mesajları & Paylaşımlar */
+export const communityMessages = sqliteTable("community_messages", {
+  id: text("id").primaryKey(),
+  siteId: text("site_id").notNull().references(() => sites.id),
+  channelId: text("channel_id").notNull().references(() => communityChannels.id),
+  userId: text("user_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  imageUrl: text("image_url"),
+  isPinned: integer("is_pinned", { mode: "boolean" }).notNull().default(false),
+  pollId: text("poll_id").references(() => communityPolls.id),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+});
+

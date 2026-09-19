@@ -3,8 +3,21 @@
 import * as React from "react";
 import Link from "next/link";
 import {
-  CreditCard, CheckCircle2, AlertCircle, Megaphone, Wrench,
-  Shield, Plus, ArrowRight, Clock, TrendingUp, Bell,
+  CreditCard,
+  CheckCircle2,
+  AlertCircle,
+  Megaphone,
+  Wrench,
+  Shield,
+  Plus,
+  ArrowRight,
+  Clock,
+  MessagesSquare,
+  Vote,
+  Sparkles,
+  ChevronRight,
+  Send,
+  Building2,
 } from "lucide-react";
 
 interface Announcement {
@@ -34,28 +47,28 @@ interface RequestItem {
   status: "Bekliyor" | "İşlemde" | "Çözüldü";
 }
 
-function SkeletonCard() {
-  return (
-    <div className="p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 animate-pulse">
-      <div className="h-4 w-32 bg-zinc-200 dark:bg-zinc-700 rounded mb-4" />
-      <div className="h-10 w-24 bg-zinc-200 dark:bg-zinc-700 rounded mb-6" />
-      <div className="h-10 w-full bg-zinc-100 dark:bg-zinc-800 rounded-2xl" />
-    </div>
-  );
+interface CommunityChannel {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  icon: string;
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  Bekliyor: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/40",
-  İşlemde: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200/60 dark:border-blue-800/40",
-  Çözüldü: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40",
+  Bekliyor: "bg-amber-100 text-amber-800 border-amber-200",
+  İşlemde: "bg-blue-100 text-blue-800 border-blue-200",
+  Çözüldü: "bg-emerald-100 text-emerald-800 border-emerald-200",
 };
 
 export default function DashboardPage() {
   const [loading, setLoading] = React.useState(true);
   const [balance, setBalance] = React.useState(0);
   const [residentName, setResidentName] = React.useState("");
+  const [apartmentNo, setApartmentNo] = React.useState("");
   const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
   const [activeRequests, setActiveRequests] = React.useState<RequestItem[]>([]);
+  const [channels, setChannels] = React.useState<CommunityChannel[]>([]);
   const [paidCount, setPaidCount] = React.useState(0);
   const [totalCount, setTotalCount] = React.useState(0);
 
@@ -63,46 +76,61 @@ export default function DashboardPage() {
     try {
       const raw = localStorage.getItem("user");
       if (raw) {
-        const u = JSON.parse(raw) as { name?: string };
-        if (typeof u?.name === "string" && u.name.trim()) setResidentName(u.name.trim());
+        const u = JSON.parse(raw);
+        if (u?.name) setResidentName(u.name);
+        if (u?.apartmentNo) setApartmentNo(u.apartmentNo);
       }
-    } catch { /* ignore */ }
+    } catch {}
 
     let cancelled = false;
     (async () => {
       const opts = { credentials: "include" as const };
       try {
-        const [annRes, reqRes, payRes] = await Promise.all([
+        const [annRes, reqRes, payRes, chanRes] = await Promise.all([
           fetch("/api/announcements", opts),
           fetch("/api/requests", opts),
           fetch("/api/payments", opts),
+          fetch("/api/community/channels", opts),
         ]);
 
         if (!cancelled && annRes.ok) {
-          const j: unknown = await annRes.json();
-          setAnnouncements(Array.isArray(j) ? (j as Announcement[]).slice(0, 3) : []);
+          const j = await annRes.json();
+          setAnnouncements(Array.isArray(j) ? j.slice(0, 2) : []);
         }
 
         if (!cancelled && reqRes.ok) {
-          const j: unknown = await reqRes.json();
+          const j = await reqRes.json();
           const allReq = Array.isArray(j) ? (j as RequestItem[]) : [];
           setActiveRequests(allReq.filter((r) => r.status !== "Çözüldü"));
         }
 
         if (!cancelled && payRes.ok) {
-          const j: unknown = await payRes.json();
-          const plist = Array.isArray(j) ? (j as PaymentRow[]) : [];
-          const unpaid = plist.filter((p) => p.status === "Bekliyor").reduce((a, p) => a + Number(p.amount), 0);
-          const paid = plist.filter((p) => p.status !== "Bekliyor").length;
-          setBalance(Number.isFinite(unpaid) ? Math.round(unpaid * 100) / 100 : 0);
-          setPaidCount(paid);
-          setTotalCount(plist.length);
+          const plist = await payRes.json();
+          if (Array.isArray(plist)) {
+            const unpaid = plist
+              .filter((p) => p.status === "Bekliyor")
+              .reduce((a, p) => a + Number(p.amount), 0);
+            const paid = plist.filter((p) => p.status !== "Bekliyor").length;
+            setBalance(Number.isFinite(unpaid) ? Math.round(unpaid * 100) / 100 : 0);
+            setPaidCount(paid);
+            setTotalCount(plist.length);
+          }
         }
-      } catch { /* ağ kopması */ }
-      finally { if (!cancelled) setLoading(false); }
+
+        if (!cancelled && chanRes.ok) {
+          const c = await chanRes.json();
+          if (Array.isArray(c)) setChannels(c.slice(0, 4));
+        }
+      } catch {
+        /* ignore */
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const hour = new Date().getHours();
@@ -111,139 +139,170 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto pb-16">
-        <div className="h-8 w-64 bg-zinc-200 dark:bg-zinc-800 rounded-2xl animate-pulse" />
+        <div className="h-8 w-64 bg-slate-200 rounded-2xl animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <SkeletonCard />
-          <SkeletonCard />
+          <div className="h-48 bg-slate-100 rounded-3xl animate-pulse" />
+          <div className="h-48 bg-slate-100 rounded-3xl animate-pulse" />
         </div>
-        <div className="h-48 bg-zinc-100 dark:bg-zinc-900 rounded-3xl animate-pulse" />
       </div>
     );
   }
 
   return (
     <div className="p-4 sm:p-8 space-y-8 max-w-5xl mx-auto pb-16">
-
-      {/* Karşılama başlığı */}
+      {/* ══════ HERO WELCOME ══════ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-zinc-50">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
             {greeting}{residentName ? `, ${residentName}` : ""} 👋
           </h2>
-          <p className="text-zinc-500 dark:text-zinc-400 mt-1 text-sm">
-            Panelinize hoş geldiniz. Güncel durumunuz aşağıda.
+          <p className="text-slate-500 mt-1 text-xs sm:text-sm">
+            {apartmentNo ? `Daire ${apartmentNo} • ` : ""}Apartman dijital yaşam portalınıza hoş geldiniz.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/40">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Canlı veri
+            Canlı Komşuluk Ağı
           </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs font-semibold">
-            <Shield className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" /> Güvenli oturum
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">
+            <Shield className="h-3.5 w-3.5 text-indigo-600" /> KVKK Korumalı
           </div>
         </div>
       </div>
 
-      {/* Hızlı istatistikler */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: "Borç", value: `₺${balance.toLocaleString("tr-TR")}`, icon: CreditCard, color: balance > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400" },
-          { label: "Ödenen", value: `${paidCount}/${totalCount}`, icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400" },
-          { label: "Aktif Talep", value: activeRequests.length, icon: Wrench, color: "text-amber-600 dark:text-amber-400" },
-          { label: "Duyuru", value: announcements.length, icon: Bell, color: "text-indigo-600 dark:text-indigo-400" },
-        ].map((stat) => (
-          <div key={stat.label} className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 shadow-sm flex flex-col gap-3">
-            <stat.icon className={`h-5 w-5 ${stat.color}`} />
-            <div>
-              <p className="text-xl font-black text-zinc-900 dark:text-zinc-50">{stat.value}</p>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mt-0.5">{stat.label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* ══════ KILLER FEATURE: KOMŞULUK AĞI & SOHBET VİTRİNİ ══════ */}
+      <div className="rounded-3xl bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-xl relative overflow-hidden">
+        <div className="absolute right-0 bottom-0 translate-y-6 translate-x-6 opacity-10" aria-hidden>
+          <MessagesSquare className="h-64 w-64" />
+        </div>
 
-      {/* Ana kartlar */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="relative z-10 max-w-2xl space-y-4">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/30 border border-indigo-400/30 text-indigo-200 text-xs font-bold">
+            <Sparkles className="h-3.5 w-3.5 text-indigo-300" />
+            Numaranız Gizli • Güvenli Komşuluk Sohbeti
+          </div>
 
-        {/* Aidat / Borç kartı */}
-        <div className="p-8 rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 text-white shadow-xl shadow-indigo-600/15 flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute right-0 bottom-0 translate-y-10 translate-x-10 opacity-10" aria-hidden>
-            <CreditCard className="h-52 w-52" />
-          </div>
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-semibold text-indigo-100/90 text-sm uppercase tracking-wider">Aidat & Ortak Gider</h3>
-              <CreditCard className="h-5 w-5 text-indigo-200" />
-            </div>
-            <div className="mb-8">
-              <span className="text-5xl font-black tabular-nums">₺{balance.toLocaleString("tr-TR")}</span>
-              {totalCount > 0 && (
-                <div className="mt-3 flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-white/80 rounded-full transition-all duration-700"
-                      style={{ width: `${Math.round((paidCount / totalCount) * 100)}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-indigo-200 font-semibold whitespace-nowrap">
-                    {Math.round((paidCount / totalCount) * 100)}% ödendi
-                  </span>
-                </div>
-              )}
-              <p className="text-xs text-indigo-200/80 mt-3">Ödenmemiş aidat ve giderler toplamı</p>
-            </div>
-          </div>
-          {balance > 0 ? (
-            <a
-              href="/dashboard/payment"
-              className="inline-flex items-center justify-center gap-2 w-full py-4 px-4 bg-white text-indigo-700 rounded-2xl font-bold hover:bg-indigo-50 transition-all hover:scale-[1.02] shadow-md shadow-black/10 text-center"
+          <h3 className="text-xl sm:text-2xl font-black text-white leading-tight">
+            Komşularınızla İletişime Geçin, Yardımlaşın ve Bina Kararlarına Katılın
+          </h3>
+
+          <p className="text-xs sm:text-sm text-indigo-200/90 leading-relaxed">
+            WhatsApp karmaşasına ve telefon numarası ifşasına gerek kalmadan; duyuruları takip edin,
+            merdiven/matkap ödünç isteyin, ikinci el eşya paylaşın ve bina anketlerinde oy kullanın.
+          </p>
+
+          <div className="pt-2 flex flex-wrap items-center gap-3">
+            <Link
+              href="/dashboard/topluluk"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition-all"
             >
-              <TrendingUp className="h-4 w-4" /> Hemen Öde
-            </a>
-          ) : (
-            <div className="flex items-center justify-center w-full py-4 px-4 bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 rounded-2xl font-bold gap-2">
-              <CheckCircle2 className="h-5 w-5 text-emerald-300" /> Tüm Borçlar Temiz
-            </div>
-          )}
+              <MessagesSquare className="h-4 w-4" /> Komşu Sohbetine Katıl
+            </Link>
+
+            <Link
+              href="/dashboard/topluluk"
+              className="inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/15 transition-all"
+            >
+              <Vote className="h-4 w-4 text-amber-300" /> Aktif Oylamaları Gör
+            </Link>
+          </div>
         </div>
 
-        {/* Aktif talepler kartı */}
-        <div className="p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 shadow-sm flex flex-col justify-between">
+        {/* Hızlı Kanal Butonları */}
+        {channels.length > 0 && (
+          <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-2.5 relative z-10">
+            {channels.map((ch) => (
+              <Link
+                key={ch.id}
+                href="/dashboard/topluluk"
+                className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex items-center gap-2.5 text-xs font-semibold text-slate-200 hover:text-white"
+              >
+                <span className="truncate">{ch.name}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ══════ İKİNCİ SIRADA: AİDAT VE TALEPLER ══════ */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Aidat Kartı */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
           <div>
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
-                <Wrench className="h-5 w-5 text-amber-500" /> Aktif Taleplerim
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Aidat & Ortak Gider
+              </span>
+              <span className="p-2 rounded-xl bg-slate-100 text-slate-600">
+                <CreditCard className="h-4 w-4" />
+              </span>
+            </div>
+
+            <div className="mb-6">
+              <span className="text-4xl font-black text-slate-900 tabular-nums">
+                ₺{balance.toLocaleString("tr-TR")}
+              </span>
+              <p className="text-xs text-slate-500 mt-2">
+                {balance > 0
+                  ? "Ödenmemiş aidat bakiyeniz bulunmaktadır."
+                  : "Ödenmemiş aidat borcunuz bulunmuyor."}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Link
+              href="/dashboard/payment"
+              className="flex items-center justify-center gap-2 w-full py-3.5 px-4 bg-indigo-600 text-white rounded-2xl font-bold text-xs hover:bg-indigo-700 shadow-xs transition-colors"
+            >
+              <Building2 className="h-4 w-4" /> Banka IBAN Bilgisi & Havale Rehberi
+            </Link>
+
+            <Link
+              href="/dashboard/payments"
+              className="flex items-center justify-center gap-1.5 w-full py-2.5 text-slate-600 hover:text-indigo-600 font-semibold text-xs"
+            >
+              Geçmiş Ödemeleri Görüntüle <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Aktif Talepler Kartı */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                <Wrench className="h-4.5 w-4.5 text-amber-500" /> Arıza & Taleplerim
               </h3>
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
                 {activeRequests.length} açık
               </span>
             </div>
 
             {activeRequests.length === 0 ? (
-              <div className="p-6 text-center text-sm text-zinc-500 bg-zinc-50 dark:bg-zinc-950/40 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
-                <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-emerald-400" />
-                Devam eden talebiniz yok.
+              <div className="p-6 text-center text-xs text-slate-500 bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+                <CheckCircle2 className="h-6 w-6 mx-auto mb-2 text-emerald-500" />
+                Devam eden arıza veya talebiniz bulunmuyor.
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {activeRequests.slice(0, 2).map((req) => (
                   <div
                     key={req.id}
-                    className={`flex items-start gap-3 p-4 rounded-2xl border ${STATUS_STYLES[req.status] ?? STATUS_STYLES["Bekliyor"]}`}
+                    className={`flex items-start gap-2.5 p-3 rounded-2xl border text-xs ${
+                      STATUS_STYLES[req.status] ?? STATUS_STYLES["Bekliyor"]
+                    }`}
                   >
-                    <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-extrabold truncate">{req.title}</p>
-                        <span className="text-[9px] px-1.5 py-0.5 bg-white/50 dark:bg-black/20 rounded font-bold">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold truncate">{req.title}</span>
+                        <span className="text-[10px] px-1.5 py-0.2 bg-white/80 rounded font-semibold">
                           {req.status}
                         </span>
                       </div>
-                      <p className="text-xs opacity-75 mt-1 line-clamp-1">{req.description}</p>
-                      <p className="text-[10px] opacity-60 mt-1 flex items-center gap-1">
-                        <Clock className="h-3 w-3" /> {req.date}
-                      </p>
+                      <p className="text-[11px] opacity-80 line-clamp-1 mt-0.5">{req.description}</p>
                     </div>
                   </div>
                 ))}
@@ -251,24 +310,24 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <a
+          <Link
             href="/dashboard/requests"
-            className="mt-6 w-full py-3.5 px-4 text-center bg-zinc-100 dark:bg-zinc-800/80 text-zinc-800 dark:text-zinc-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 hover:text-indigo-700 dark:hover:text-indigo-400 rounded-2xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
+            className="mt-4 w-full py-3.5 px-4 text-center bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl font-bold text-xs transition-colors flex items-center justify-center gap-2"
           >
-            <Plus className="h-4 w-4" /> Yeni Talep Gönder
-          </a>
+            <Plus className="h-4 w-4" /> Yeni Arıza Bildirimi Yap
+          </Link>
         </div>
       </div>
 
-      {/* Duyurular */}
+      {/* ══════ RESMİ DUYURULAR ══════ */}
       <div>
-        <div className="flex justify-between items-center mb-5">
-          <h3 className="text-xl font-extrabold text-zinc-950 dark:text-zinc-50 flex items-center gap-2">
-            <Megaphone className="h-5 w-5 text-indigo-600 dark:text-indigo-400" /> Yönetimden Duyurular
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Megaphone className="h-5 w-5 text-indigo-600" /> Yönetimden Duyurular
           </h3>
           <Link
             href="/dashboard/announcements"
-            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+            className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
           >
             Tümünü Gör <ArrowRight className="h-3 w-3" />
           </Link>
@@ -276,36 +335,31 @@ export default function DashboardPage() {
 
         <div className="space-y-3">
           {announcements.length === 0 ? (
-            <div className="p-10 text-center text-sm text-zinc-500 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl">
-              <Megaphone className="h-8 w-8 mx-auto mb-2 text-zinc-300 dark:text-zinc-600" />
-              Yayınlanmış duyuru bulunmuyor.
+            <div className="p-8 text-center text-xs text-slate-500 bg-white border border-slate-200 rounded-3xl">
+              <Megaphone className="h-6 w-6 mx-auto mb-2 text-slate-300" />
+              Yayınlanmış resmi duyuru bulunmuyor.
             </div>
           ) : (
             announcements.map((ann) => (
               <Link
                 href="/dashboard/announcements"
                 key={ann.id}
-                className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all duration-200 cursor-pointer group flex justify-between items-start gap-4 block"
+                className="p-5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-400 hover:shadow-xs transition-all flex justify-between items-start gap-4 block"
               >
                 <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
+                    <h4 className="font-bold text-xs sm:text-sm text-slate-900 truncate">
                       {ann.title}
                     </h4>
                     {ann.isNew && (
-                      <span className="px-2 py-0.5 text-[9px] font-extrabold bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-full shrink-0">
+                      <span className="px-2 py-0.5 text-[9px] font-extrabold bg-rose-100 text-rose-700 rounded-full">
                         YENİ
                       </span>
                     )}
-                    {ann.category && (
-                      <span className="px-2 py-0.5 text-[9px] font-bold bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-full border border-indigo-100 dark:border-indigo-900/40 shrink-0">
-                        {ann.category}
-                      </span>
-                    )}
                   </div>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed line-clamp-1">{ann.content}</p>
+                  <p className="text-xs text-slate-500 line-clamp-1">{ann.content}</p>
                 </div>
-                <span className="text-xs text-zinc-400 whitespace-nowrap flex items-center gap-1 shrink-0">
+                <span className="text-[11px] text-slate-400 whitespace-nowrap flex items-center gap-1 shrink-0">
                   <Clock className="h-3 w-3" /> {ann.date}
                 </span>
               </Link>

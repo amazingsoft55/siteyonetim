@@ -21,6 +21,7 @@ import {
   X,
   Wallet,
   Building2,
+  MessagesSquare,
 } from "lucide-react";
 
 const NAV_ITEMS: {
@@ -31,6 +32,7 @@ const NAV_ITEMS: {
 }[] = [
   { name: "Özet Durum", href: "/admin", icon: LayoutDashboard },
   { name: "Sakinler & Onay", href: "/admin/residents", icon: Users },
+  { name: "Topluluk & Sohbet", href: "/admin/topluluk", icon: MessagesSquare },
   { name: "Finans & Kasa", href: "/admin/finans", icon: Wallet },
   { name: "Duyuru Yönetimi", href: "/admin/announcements", icon: Megaphone },
   { name: "Arıza & Talepler", href: "/admin/requests", icon: Wrench },

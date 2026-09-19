@@ -2,344 +2,265 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { CreditCard, ShieldCheck, ChevronLeft, CheckCircle2, AlertCircle, Lock } from "lucide-react";
+import {
+  Building2,
+  Copy,
+  Check,
+  ChevronLeft,
+  CheckCircle2,
+  ShieldCheck,
+  Info,
+  QrCode,
+  FileText,
+  Phone,
+  CreditCard,
+} from "lucide-react";
 import Link from "next/link";
 import { useAlert } from "@/components/ModalProvider";
 
-export default function PaymentPage() {
+export default function BankTransferInfoPage() {
   const showAlert = useAlert();
   const router = useRouter();
-  const [loading, setLoading] = React.useState(false);
-  const [success, setSuccess] = React.useState(false);
-  const [initErr, setInitErr] = React.useState("");
-  const [amount, setAmount] = React.useState(0);
-  const [periodLabel, setPeriodLabel] = React.useState("");
-  const [paidSummary, setPaidSummary] = React.useState<number | null>(null);
-  const [paymentId, setPaymentId] = React.useState<string | null>(null);
-  const [testMode, setTestMode] = React.useState(false);
 
-  const [cardName, setCardName] = React.useState("");
-  const [cardNumber, setCardNumber] = React.useState("");
-  const [expireMonth, setExpireMonth] = React.useState("");
-  const [expireYear, setExpireYear] = React.useState("");
-  const [cvc, setCvc] = React.useState("");
-  const [iyzicoReady, setIyzicoReady] = React.useState<boolean | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [copiedIban, setCopiedIban] = React.useState(false);
+  const [copiedDesc, setCopiedDesc] = React.useState(false);
+
+  const [siteSettings, setSiteSettings] = React.useState<{
+    iban?: string | null;
+    bankName?: string | null;
+    managerName?: string | null;
+    phone?: string | null;
+    aidat?: string | null;
+  }>({});
+
+  const [residentName, setResidentName] = React.useState("Sakin");
+  const [apartmentNo, setApartmentNo] = React.useState("");
+  const [unpaidBalance, setUnpaidBalance] = React.useState(0);
 
   React.useEffect(() => {
-    let cancelled = false;
+    try {
+      const raw = localStorage.getItem("user");
+      if (raw) {
+        const u = JSON.parse(raw);
+        if (u.name) setResidentName(u.name);
+        if (u.apartmentNo) setApartmentNo(u.apartmentNo);
+      }
+    } catch {}
+
     (async () => {
-      setInitErr("");
-      const cred = { credentials: "include" as const };
       try {
-        const [settRes, payRes, payConfRes] = await Promise.all([
-          fetch("/api/settings", cred),
-          fetch("/api/payments", cred),
-          fetch("/api/payment/config", cred),
+        const [settingsRes, paymentsRes] = await Promise.all([
+          fetch("/api/settings", { credentials: "include" }),
+          fetch("/api/payments", { credentials: "include" }),
         ]);
 
-        // Iyzico durumunu kontrol et
-        if (payConfRes.ok) {
-          const conf = await payConfRes.json().catch(() => null) as { configured?: boolean } | null;
-          if (!cancelled && conf) setIyzicoReady(!!conf.configured);
-        } else if (!cancelled) {
-          setIyzicoReady(false);
-        }
-        let defaultAidat = 0;
-        if (settRes.ok) {
-          const s: unknown = await settRes.json().catch(() => null);
-          if (s && typeof s === "object" && "aidat" in s && typeof (s as { aidat?: unknown }).aidat === "string") {
-            const n = Number(String((s as { aidat: string }).aidat).replace(",", "."));
-            if (Number.isFinite(n) && n > 0) defaultAidat = Math.round(n * 100) / 100;
-          }
+        if (settingsRes.ok) {
+          const s = await settingsRes.json();
+          setSiteSettings(s);
         }
 
-        let unpaid = 0;
-        let period = "";
-        if (payRes.ok) {
-          const plist: unknown = await payRes.json().catch(() => null);
+        if (paymentsRes.ok) {
+          const plist = await paymentsRes.json();
           if (Array.isArray(plist)) {
-            const rows = plist as {
-              amount?: unknown;
-              status?: unknown;
-              period?: unknown;
-            }[];
-            unpaid = rows
-              .filter((r) => r.status === "Bekliyor")
-              .reduce((a, r) => {
-                const n = Number(r.amount);
-                return a + (Number.isFinite(n) ? n : 0);
-              }, 0);
-            unpaid = Math.round(unpaid * 100) / 100;
-            const firstUnpaid = rows.find((r) => r.status === "Bekliyor");
-            if (typeof firstUnpaid?.period === "string" && firstUnpaid.period.trim()) {
-              period = firstUnpaid.period.trim();
-            }
+            const unpaid = plist
+              .filter((p: { status: string }) => p.status === "Bekliyor")
+              .reduce((a: number, p: { amount: number }) => a + Number(p.amount), 0);
+            setUnpaidBalance(unpaid);
           }
-        } else if (!cancelled) {
-          setInitErr("Ön bilgiler sunucudan alınamadı. Tekrar deneyin veya yöneticinize başvurun.");
         }
-
-        if (cancelled) return;
-
-        const useAmount = unpaid > 0 ? unpaid : defaultAidat;
-        const usePeriod = period || new Date().toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
-
-        if (useAmount <= 0 && !period) {
-          setInitErr("Ödeme kaydı veya varsayılan aidat tutarı görünmüyor. Lütfen yönetiminizle iletişime geçin.");
-        }
-
-        setAmount(Math.max(0, useAmount));
-        setPeriodLabel(usePeriod);
-      } catch {
-        if (!cancelled) setInitErr("Bağlantı hatası.");
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\D/g, "").slice(0, 16);
-    return v.replace(/(.{4})/g, "$1 ").trim();
-  };
+  const defaultIban = siteSettings.iban || "TR33 0006 1005 1982 0000 1234 56";
+  const defaultBank = siteSettings.bankName || "Ziraat Bankası / Site Yönetim Hesabı";
+  const defaultManager = siteSettings.managerName || "Site Yönetim Kurulu";
+  const paymentDescription = `${apartmentNo ? `Daire ${apartmentNo}` : "Daire"} - ${residentName} - Aidat`;
 
-  const handlePayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading || amount <= 0) return;
-
-    if (!cardNumber || cardNumber.replace(/\s/g, "").length < 16) {
-      await showAlert({ message: "Geçerli bir kart numarası girin.", variant: "error" });
-      return;
-    }
-
-    if (!expireMonth || !expireYear || expireMonth.length < 2 || expireYear.length < 2) {
-      await showAlert({ message: "Son kullanma tarihini girin.", variant: "error" });
-      return;
-    }
-
-    if (!cvc || cvc.length < 3) {
-      await showAlert({ message: "CVV kodunu girin.", variant: "error" });
-      return;
-    }
-
-    setLoading(true);
-    setInitErr("");
-
-    try {
-      const res = await fetch("/api/payment", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount,
-          cardHolderName: cardName || "TEST",
-          cardNumber: cardNumber.replace(/\s/g, ""),
-          expireMonth,
-          expireYear: `20${expireYear}`,
-          cvc,
-          period: periodLabel || undefined,
-        }),
-      });
-
-      const j: unknown = await res.json().catch(() => null);
-      setLoading(false);
-
-      if (!res.ok) {
-        let msg = "Ödeme oluşturulamadı.";
-        if (j && typeof j === "object" && "error" in j && typeof (j as { error?: unknown }).error === "string") {
-          msg = (j as { error: string }).error;
-        }
-        await showAlert({ message: msg, variant: "error" });
-        return;
-      }
-
-      const data = j as { paymentId?: string; testMode?: boolean; error?: string; resultCode?: string };
-      setPaymentId(data.paymentId || null);
-      setPaidSummary(amount);
-      setTestMode(!!data.testMode);
-      setSuccess(true);
-    } catch {
-      setLoading(false);
-      await showAlert({ message: "Bağlantı hatası. Tekrar deneyin.", variant: "error" });
+  const handleCopy = (text: string, type: "iban" | "desc") => {
+    navigator.clipboard.writeText(text);
+    if (type === "iban") {
+      setCopiedIban(true);
+      setTimeout(() => setCopiedIban(false), 2000);
+    } else {
+      setCopiedDesc(true);
+      setTimeout(() => setCopiedDesc(false), 2000);
     }
   };
-
-  const amountDisplay = `${amount.toLocaleString("tr-TR", {
-    minimumFractionDigits: amount % 1 ? 2 : 0,
-    maximumFractionDigits: 2,
-  })} ₺`;
-
-  if (success && paidSummary != null) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center">
-        <div className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 p-4 rounded-full mb-6">
-          <CheckCircle2 className="h-16 w-16" />
-        </div>
-        <h2 className="text-3xl font-bold mb-2">Ödeme Başarılı</h2>
-        <p className="text-zinc-600 dark:text-zinc-400 mb-2 max-w-md">
-          {`${paidSummary.toLocaleString("tr-TR")} ₺ tutarındaki ödeme başarıyla işlendi.`}
-        </p>
-        {testMode && (
-          <div className="mb-4 px-4 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-sm text-amber-700 dark:text-amber-300 font-semibold">
-            Test modu — Gerçek ücret tahsil edilmedi. Iyzico yapılandırıldığında gerçek ödeme alınacaktır.
-          </div>
-        )}
-        {paymentId && (
-          <p className="text-xs text-zinc-500 mb-4">
-            İşlem No: <span className="font-mono">{paymentId}</span>
-          </p>
-        )}
-        <div className="flex gap-3">
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
-          >
-            Panele dön
-          </button>
-          <Link
-            href="/dashboard/payments"
-            className="px-6 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 rounded-xl font-semibold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
-          >
-            Ödeme geçmişi
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="p-4 sm:p-8 max-w-2xl mx-auto">
-      <button
-        onClick={() => router.back()}
-        className="flex items-center text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 mb-6 transition-colors"
+    <div className="p-4 sm:p-8 max-w-3xl mx-auto space-y-6 pb-20">
+      {/* Geri Dön */}
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
       >
-        <ChevronLeft className="h-4 w-4 mr-1" /> Geri dön
-      </button>
+        <ChevronLeft className="h-4 w-4" /> Paneline Dön
+      </Link>
 
-      <h2 className="text-2xl font-bold tracking-tight mb-2">Güvenli Ödeme</h2>
-      <p className="text-zinc-500 mb-8">
-        Kart bilgileriniz 256-bit SSL ile şifrelenir. Sunucularımızda kart numarası saklanmaz.
-      </p>
-
-      {iyzicoReady === false && (
-        <div className="mb-6 rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/25 p-4 text-sm text-amber-950 dark:text-amber-100 flex items-start gap-2">
-          <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+      {/* Başlık */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-3 pb-4 border-b border-slate-100">
           <div>
-            <p className="font-bold">Test Modu</p>
-            <p className="mt-1">Iyzico ödeme altyapısı yapılandırılmamış. Yapılan ödemeler sadece kayıt altına alınır, gerçek ücret tahsil edilmez. Gerçek ödeme için Iyzico API anahtarlarını yapılandırın.</p>
-          </div>
-        </div>
-      )}
-
-      {initErr && (
-        <div className="mb-6 rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/25 p-4 text-sm text-amber-950 dark:text-amber-100 flex items-start gap-2">
-          <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-          {initErr}
-        </div>
-      )}
-
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm">
-        <div className="flex items-center justify-between mb-8 pb-6 border-b border-zinc-100 dark:border-zinc-800">
-          <div>
-            <p className="text-sm font-medium text-zinc-500">Ödenecek tutar</p>
-            <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{amountDisplay}</p>
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
+              Resmi Banka Havale / EFT Bilgileri
+            </span>
+            <h1 className="text-2xl font-black text-slate-900 mt-2">
+              Aidat & Ortak Gider Ödeme Rehberi
+            </h1>
           </div>
           <div className="text-right">
-            <p className="text-sm font-medium text-zinc-500">Dönem</p>
-            <p className="text-lg font-semibold mt-1 max-w-[12rem] line-clamp-2">{periodLabel || "—"}</p>
+            <span className="text-xs text-slate-500 block font-medium">Toplam Bekleyen Borç</span>
+            <span className="text-2xl font-black text-indigo-600">
+              ₺{unpaidBalance.toLocaleString("tr-TR")}
+            </span>
           </div>
         </div>
 
-        <form onSubmit={handlePayment} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium mb-1.5">Kart üzerindeki isim</label>
-            <input
-              type="text"
-              maxLength={80}
-              value={cardName}
-              onChange={(e) => setCardName(e.target.value)}
-              className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 py-3 px-4 focus:ring-2 focus:ring-indigo-600 outline-none"
-              placeholder="AD SOYAD"
-            />
-          </div>
+        {/* Bilgilendirme Notu */}
+        <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/60 flex items-start gap-3">
+          <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <p className="text-xs text-amber-900 leading-relaxed">
+            <strong>Komisyonsuz & Güvenli Ödeme:</strong> Aidat ödemelerinizi doğrudan site yönetiminin
+            aşağıda yer alan resmi banka hesabına EFT / Havale veya FAST yoluyla %0 komisyonla iletebilirsiniz.
+          </p>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1.5">Kart numarası</label>
-            <div className="relative">
-              <input
-                type="text"
-                maxLength={19}
-                value={cardNumber}
-                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 py-3 pl-4 pr-12 focus:ring-2 focus:ring-indigo-600 outline-none"
-                placeholder="0000 0000 0000 0000"
-              />
-              <CreditCard className="absolute right-4 top-3.5 h-5 w-5 text-zinc-400" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Ay</label>
-              <input
-                type="text"
-                maxLength={2}
-                value={expireMonth}
-                onChange={(e) => setExpireMonth(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 py-3 px-4 focus:ring-2 focus:ring-indigo-600 outline-none"
-                placeholder="12"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Yıl</label>
-              <input
-                type="text"
-                maxLength={2}
-                value={expireYear}
-                onChange={(e) => setExpireYear(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 py-3 px-4 focus:ring-2 focus:ring-indigo-600 outline-none"
-                placeholder="28"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1.5">CVV</label>
-              <input
-                type="text"
-                maxLength={3}
-                value={cvc}
-                onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 3))}
-                className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 py-3 px-4 focus:ring-2 focus:ring-indigo-600 outline-none"
-                placeholder="123"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800">
-            <Lock className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span className="text-xs text-emerald-700 dark:text-emerald-300">
-              256-bit SSL şifreleme ile güvenli ödeme. Kart bilgileriniz saklanmaz.
+        {/* Banka ve IBAN Kartı */}
+        <div className="p-6 rounded-2xl bg-slate-900 text-white space-y-4 shadow-lg shadow-slate-900/10">
+          <div className="flex items-center justify-between text-slate-400 text-xs">
+            <span className="flex items-center gap-1.5 font-bold">
+              <Building2 className="h-4 w-4 text-indigo-400" /> {defaultBank}
             </span>
+            <span className="font-medium">{defaultManager}</span>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading || amount <= 0}
-            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl font-bold text-lg transition-all flex items-center justify-center disabled:opacity-55 shadow-lg shadow-indigo-600/20"
+          <div>
+            <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+              HESAP IBAN NUMARASI
+            </label>
+            <div className="flex items-center justify-between bg-slate-800/90 rounded-xl p-3 border border-slate-700">
+              <span className="font-mono text-sm sm:text-base font-bold tracking-wider text-slate-100 break-all">
+                {defaultIban}
+              </span>
+              <button
+                onClick={() => handleCopy(defaultIban, "iban")}
+                className="ml-3 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shrink-0 transition-colors"
+              >
+                {copiedIban ? (
+                  <>
+                    <Check className="h-3.5 w-3.5" /> Kopyalandı
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5" /> IBAN Kopyala
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+              ÖNERİLEN HAVALE AÇIKLAMASI
+            </label>
+            <div className="flex items-center justify-between bg-slate-800/90 rounded-xl p-3 border border-slate-700">
+              <span className="text-xs sm:text-sm font-semibold text-slate-200 truncate">
+                {paymentDescription}
+              </span>
+              <button
+                onClick={() => handleCopy(paymentDescription, "desc")}
+                className="ml-3 px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-colors"
+              >
+                {copiedDesc ? (
+                  <>
+                    <Check className="h-3.5 w-3.5" /> Kopyalandı
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5" /> Kopyala
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 3 Adımda Ödeme */}
+        <div className="space-y-3 pt-2">
+          <h3 className="text-sm font-bold text-slate-800">Nasıl Ödeme Yaparım?</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
+              <span className="h-6 w-6 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center mb-2">
+                1
+              </span>
+              <h4 className="text-xs font-bold text-slate-800 mb-1">Banka Uygulamanızı Açın</h4>
+              <p className="text-[11px] text-slate-500 leading-normal">
+                Kullandığınız bankanın mobil uygulamasından Para Transferi &gt; IBAN seçeneğine girin.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
+              <span className="h-6 w-6 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center mb-2">
+                2
+              </span>
+              <h4 className="text-xs font-bold text-slate-800 mb-1">IBAN & Açıklamayı Yazın</h4>
+              <p className="text-[11px] text-slate-500 leading-normal">
+                Yukarıdaki IBAN&apos;ı yapıştırın ve açıklama kısmına daire numaranızı ekleyin.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
+              <span className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center justify-center mb-2">
+                3
+              </span>
+              <h4 className="text-xs font-bold text-slate-800 mb-1">Otomatik Kasa Kaydı</h4>
+              <p className="text-[11px] text-slate-500 leading-normal">
+                Ödemeniz site yönetimi tarafından onaylandıktan sonra borç bakiyenizden otomatik düşer.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Yönetici İletişim */}
+        {siteSettings.phone && (
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2.5">
+              <Phone className="h-4 w-4 text-indigo-600" />
+              <div>
+                <span className="text-xs font-bold text-slate-800">Yönetici İletişim / WhatsApp:</span>
+                <span className="text-xs text-slate-600 ml-1.5">{siteSettings.phone}</span>
+              </div>
+            </div>
+            <a
+              href={`tel:${siteSettings.phone}`}
+              className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100"
+            >
+              Ara
+            </a>
+          </div>
+        )}
+
+        {/* Aksiyon Butonları */}
+        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+          <Link
+            href="/dashboard/payments"
+            className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
           >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <span className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                İşleniyor...
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5" />
-                {amountDisplay} Öde
-              </span>
-            )}
-          </button>
-        </form>
+            Ödeme Geçmişini İncele &gt;
+          </Link>
+          <Link
+            href="/dashboard"
+            className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition-colors"
+          >
+            Tamam, Paneline Dön
+          </Link>
+        </div>
       </div>
     </div>
   );
