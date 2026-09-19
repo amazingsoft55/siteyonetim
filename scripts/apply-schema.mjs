@@ -29,6 +29,14 @@ try {
 const sqlPath = path.join(root, "drizzle", "full-schema.sql");
 const sql = fs.readFileSync(sqlPath, "utf8");
 sqlite.exec(sql);
+
+// Migration for existing sqlite databases
+try {
+  sqlite.exec("ALTER TABLE users ADD COLUMN status text NOT NULL DEFAULT 'APPROVED'");
+} catch {
+  // Column already exists
+}
+
 sqlite.close();
 
 console.log("Tamam:", dbPath);

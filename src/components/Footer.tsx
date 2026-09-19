@@ -1,27 +1,34 @@
 import Link from "next/link";
-import { Building2, Mail, Phone, MapPin, Heart } from "lucide-react";
+import { Building2, Mail, Phone, MapPin, ShieldCheck, Heart } from "lucide-react";
+import { SiteLogo } from "@/components/SiteLogo";
 
 const footerLinks = {
-  platform: {
-    title: "Platform",
+  moduller: {
+    title: "Platform & Özellikler",
     links: [
-      { href: "/destek", label: "Destek" },
-      { href: "/hakkimizda", label: "Hakkımızda" },
-      { href: "/iletisim", label: "İletişim" },
+      { href: "/ozellikler", label: "Tüm Özellikler" },
+      { href: "/ozellikler#aidat", label: "Aidat & Finans Takibi" },
+      { href: "/ozellikler#duyuru", label: "Duyuru Yönetimi" },
+      { href: "/ozellikler#ariza", label: "Arıza & Talep Sistemi" },
+      { href: "/fiyatlandirma", label: "Fiyatlandırma Paketleri" },
+    ],
+  },
+  kurumsal: {
+    title: "Kurumsal & Destek",
+    links: [
+      { href: "/destek", label: "Yardım & Destek Merkezi" },
+      { href: "/hakkimizda", label: "Hakkımızda & Vizyon" },
+      { href: "/iletisim", label: "İletişim & Ofis" },
+      { href: "/gizlilik-politikasi", label: "Gizlilik Politikası" },
+      { href: "/kullanim-sartlari", label: "Kullanım Şartları" },
     ],
   },
   hesap: {
-    title: "Hesap",
+    title: "Kullanıcı İşlemleri",
     links: [
-      { href: "/login", label: "Giriş Yap" },
-      { href: "/sifre-sifirla", label: "Şifremi Unuttum" },
-    ],
-  },
-  yasal: {
-    title: "Yasal",
-    links: [
-      { href: "/gizlilik-politikasi", label: "Gizlilik Politikası" },
-      { href: "/kullanim-sartlari", label: "Kullanım Şartları" },
+      { href: "/kayit", label: "Hesap Aç / Kayıt Ol" },
+      { href: "/login", label: "Yönetici & Sakin Girişi" },
+      { href: "/sifremi-unuttum", label: "Şifre Sıfırlama" },
     ],
   },
 };
@@ -29,34 +36,39 @@ const footerLinks = {
 export function Footer() {
   const y = new Date().getFullYear();
   return (
-    <footer className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+    <footer className="border-t border-slate-200/80 bg-white text-slate-700">
       <div className="max-w-6xl mx-auto px-6 py-14">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-10">
 
-          {/* Marka */}
+          {/* Marka & Tanıtım */}
           <div className="md:col-span-2 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md shadow-indigo-600/30">
-                <Building2 className="h-5 w-5 text-white" />
+            <div className="flex items-center gap-2.5">
+              <div className="flex items-center justify-center h-10 w-10 shrink-0 rounded-xl overflow-hidden bg-white ring-1 ring-slate-200">
+                <SiteLogo width={36} height={36} rounded className="rounded-md" alt="Site Yönetimi logosu" />
               </div>
-              <span className="text-base font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">
-                Site Yönetimi
-              </span>
+              <div className="flex flex-col">
+                <span className="text-base font-bold text-slate-900 tracking-tight">
+                  Site Yönetimi
+                </span>
+                <span className="text-xs text-slate-600">
+                  Kat Mülkiyeti Kanunu Uyumlu Platform
+                </span>
+              </div>
             </div>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-xs">
-              Türkiye&apos;nin modern apartman ve site yönetim platformu. Sakinler ve yöneticiler için tek çözüm.
+            <p className="text-sm text-slate-600 leading-relaxed max-w-sm">
+              Apartman, site ve toplu yapı yönetimlerini dijitalleştiren, aidat tahsilatını hızlandıran ve sakin iletişimini kolaylaştıran bulut tabanlı yönetim çözümü.
             </p>
-            <div className="space-y-2 pt-2">
-              <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-                <Mail className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
-                <span>destek@siteyonetimi.app</span>
+            <div className="space-y-2 pt-1 text-xs text-slate-600">
+              <div className="flex items-center gap-2">
+                <Mail className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
+                <a href="mailto:destek@siteyonetimi.app" className="hover:text-indigo-600">destek@siteyonetimi.app</a>
               </div>
-              <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-                <Phone className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
-                <span>+90 (212) 000 00 00</span>
+              <div className="flex items-center gap-2">
+                <Phone className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
+                <span>0 (850) 123 45 67</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-                <MapPin className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
+              <div className="flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
                 <span>İstanbul, Türkiye</span>
               </div>
             </div>
@@ -65,15 +77,15 @@ export function Footer() {
           {/* Link kolonları */}
           {Object.values(footerLinks).map((col) => (
             <div key={col.title}>
-              <h3 className="text-xs font-extrabold text-zinc-900 dark:text-zinc-50 uppercase tracking-widest mb-4">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">
                 {col.title}
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-2.5">
                 {col.links.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                      className="text-sm text-slate-600 hover:text-indigo-600 transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -84,14 +96,13 @@ export function Footer() {
           ))}
         </div>
 
-        {/* Alt çizgi */}
-        <div className="mt-12 pt-6 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-zinc-400 dark:text-zinc-500">
-            © {y} Site Yönetimi. Tüm hakları saklıdır.
-          </p>
-          <p className="flex items-center gap-1 text-xs text-zinc-400 dark:text-zinc-500">
-            Türkiye&apos;de <Heart className="h-3 w-3 fill-rose-500 text-rose-500" /> ile yapıldı
-          </p>
+        {/* Alt Bilgi & Güvenlik Rozetleri */}
+        <div className="mt-12 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-emerald-600" />
+            <span>256-Bit SSL Şifreleme &amp; KVKK Uyumlu Güvenli Veri Saklama</span>
+          </div>
+          <p>© {y} Site Yönetimi. Tüm hakları saklıdır.</p>
         </div>
       </div>
     </footer>

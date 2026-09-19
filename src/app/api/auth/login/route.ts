@@ -38,6 +38,7 @@ export async function POST(request: Request) {
       emailOrPhone: users.emailOrPhone,
       passwordHash: users.passwordHash,
       role: users.role,
+      status: users.status,
       siteId: users.siteId,
       apartmentNo: users.apartmentNo,
       mustChangePassword: users.mustChangePassword,
@@ -54,6 +55,20 @@ export async function POST(request: Request) {
 
     if (!isValidPassword) {
       return NextResponse.json({ error: "Hatalı giriş bilgileri." }, { status: 401 });
+    }
+
+    if (user.status === "PENDING") {
+      return NextResponse.json(
+        { error: "Hesabınız yönetici onayında beklemektedir. Yöneticiniz onayladığında e-posta adresinize bilgilendirme iletilecektir." },
+        { status: 403 }
+      );
+    }
+
+    if (user.status === "REJECTED") {
+      return NextResponse.json(
+        { error: "Hesap başvurunuz onaylanmamıştır. Lütfen site yöneticiniz ile iletişime geçin." },
+        { status: 403 }
+      );
     }
 
     const nowIso = new Date().toISOString();

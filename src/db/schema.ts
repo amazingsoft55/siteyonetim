@@ -16,6 +16,7 @@ export const users = sqliteTable("users", {
   emailOrPhone: text("email_or_phone").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   role: text("role", { enum: ["SUPER_ADMIN", "ADMIN", "USER"] }).notNull().default("USER"),
+  status: text("status", { enum: ["PENDING", "APPROVED", "REJECTED"] }).notNull().default("APPROVED"),
   siteId: text("site_id").references(() => sites.id),
   apartmentNo: text("apartment_no"),
   lastLoginAt: text("last_login_at"),

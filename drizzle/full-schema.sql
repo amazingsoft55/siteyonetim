@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `email_or_phone` text NOT NULL,
   `password_hash` text NOT NULL,
   `role` text NOT NULL DEFAULT 'USER',
+  `status` text NOT NULL DEFAULT 'APPROVED',
   `site_id` text,
   `apartment_no` text,
   `last_login_at` text,

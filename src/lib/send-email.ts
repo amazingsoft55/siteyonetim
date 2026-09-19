@@ -6,10 +6,14 @@ import {
   buildWelcomeEmailHtml,
   buildPaymentReceiptEmailHtml,
   buildSupportTicketUpdateEmailHtml,
+  buildAccountApprovedEmailHtml,
+  buildAccountPendingAdminNotificationEmailHtml,
   type BrandedEmailOptions,
   type WelcomeEmailOptions,
   type PaymentReceiptOptions,
   type SupportTicketUpdateOptions,
+  type AccountApprovedEmailOptions,
+  type AccountPendingAdminNotificationOptions,
 } from "@/lib/email-template";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
@@ -158,3 +162,22 @@ export async function sendSupportTicketUpdateEmail(
   const html = buildSupportTicketUpdateEmailHtml(opts);
   return sendBrandedEmail({ to, subject: `Talep Güncellendi: #${opts.ticketId} — Site Yönetimi`, html });
 }
+
+/** 7. Hesap Onaylandı E-postası (Yönetici onaylayınca kullanıcıya iletilir) */
+export async function sendAccountApprovedEmail(
+  to: string,
+  opts: AccountApprovedEmailOptions
+): Promise<SendResult> {
+  const html = buildAccountApprovedEmailHtml(opts);
+  return sendBrandedEmail({ to, subject: `🎉 Hesabınız Onaylandı — ${opts.siteName}`, html });
+}
+
+/** 8. Yöneticiye Yeni Sakin Kayıt Bildirimi E-postası */
+export async function sendAccountPendingAdminNotificationEmail(
+  to: string,
+  opts: AccountPendingAdminNotificationOptions
+): Promise<SendResult> {
+  const html = buildAccountPendingAdminNotificationEmailHtml(opts);
+  return sendBrandedEmail({ to, subject: `🔔 Yeni Sakin Kayıt Başvurusu: ${opts.userName} — ${opts.siteName}`, html });
+}
+

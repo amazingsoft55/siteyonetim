@@ -2,16 +2,19 @@
 
 import Link from "next/link";
 import * as React from "react";
-import { Search, ArrowRight, RefreshCw, Plus, CreditCard, X, CheckCircle } from "lucide-react";
+import { Search, ArrowRight, RefreshCw, Plus, CreditCard, X, CheckCircle, Check, Clock, UserCheck } from "lucide-react";
 import { useAlert } from "@/components/ModalProvider";
 
 type Resident = {
   id: string;
   name: string;
+  emailOrPhone?: string;
   blok: string;
   daire: string;
   borc: number;
   durum: string;
+  status?: "PENDING" | "APPROVED" | "REJECTED";
+  createdAt?: string | null;
 };
 
 type PaymentForm = {
@@ -85,13 +88,53 @@ export default function ResidentsPage() {
     return () => { alive = false; };
   }, []);
 
+  async function handleApproveResident(userId: string, action: "APPROVE" | "REJECT") {
+    try {
+      const res = await fetch("/api/admin/residents/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, action }),
+        credentials: "include",
+      });
+      const data = (await res.json()) as { error?: string; message?: string };
+      if (!res.ok) {
+        await showAlert({
+          title: "İşlem Başarısız",
+          message: data?.error || "İşlem tamamlanamadı.",
+          variant: "error",
+        });
+        return;
+      }
+      await showAlert({
+        title: "Başarılı",
+        message: data?.message || (action === "APPROVE" ? "Sakin hesabı onaylandı ve e-posta iletildi!" : "Başvuru reddedildi."),
+        variant: action === "APPROVE" ? "success" : "info",
+      });
+      await reload();
+    } catch {
+      await showAlert({
+        title: "Hata",
+        message: "Sunucu hatası oluştu.",
+        variant: "error",
+      });
+    }
+  }
+
+  const pendingCount = React.useMemo(() => {
+    return residents.filter((r) => r.status === "PENDING").length;
+  }, [residents]);
+
   const filteredResidents = residents.filter((r) => {
     const matchSearch =
       r.name.toLowerCase().includes(search.toLowerCase()) ||
       r.daire.toLowerCase().includes(search.toLowerCase()) ||
-      r.id.toLowerCase().includes(search.toLowerCase());
+      r.id.toLowerCase().includes(search.toLowerCase()) ||
+      (r.emailOrPhone && r.emailOrPhone.toLowerCase().includes(search.toLowerCase()));
     const matchBlok = selectedBlok === "Hepsi" || r.blok === selectedBlok;
-    const matchStatus = selectedStatus === "Hepsi" || r.durum === selectedStatus;
+    const matchStatus =
+      selectedStatus === "Hepsi" ||
+      (selectedStatus === "Onay Bekliyor" && r.status === "PENDING") ||
+      (selectedStatus !== "Onay Bekliyor" && r.durum === selectedStatus && r.status !== "PENDING");
     return matchSearch && matchBlok && matchStatus;
   });
 
@@ -105,7 +148,7 @@ export default function ResidentsPage() {
       setForm((f) => ({ ...f, userId: "", amount: "" }));
     } else {
       setBulkMode(true);
-      setSelectedUsers(new Set(filteredResidents.map((r) => r.id)));
+      setSelectedUsers(new Set(filteredResidents.filter((r) => r.status !== "PENDING").map((r) => r.id)));
       setForm((f) => ({ ...f, userId: "", amount: "" }));
     }
     setModalOpen(true);
@@ -241,12 +284,36 @@ export default function ResidentsPage() {
         </div>
       )}
 
+      {/* Onay Bekleyen Sakinler Bildirim Çubuğu */}
+      {pendingCount > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-extrabold text-sm shrink-0 shadow-xs">
+              {pendingCount}
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-amber-950">Onay Bekleyen Sakin Başvurusu Var</h4>
+              <p className="text-xs text-amber-800 mt-0.5">
+                Web üzerinden sitenize kayıt olmuş {pendingCount} adet sakin incelenmeyi beklemektedir.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedStatus(selectedStatus === "Onay Bekliyor" ? "Hepsi" : "Onay Bekliyor")}
+            className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-xs transition-all shrink-0"
+          >
+            {selectedStatus === "Onay Bekliyor" ? "Tüm Sakinleri Göster" : "Başvuruları Listele"}
+          </button>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 p-5 rounded-3xl shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
         <div className="relative md:col-span-2">
           <input
             type="text"
-            placeholder="İsim veya daire ara…"
+            placeholder="İsim, e-posta veya daire ara…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-zinc-950 dark:text-zinc-50"
@@ -269,10 +336,11 @@ export default function ResidentsPage() {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 py-3 px-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-zinc-950 dark:text-zinc-50 appearance-none"
+            className="w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 py-3 px-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-zinc-950 dark:text-zinc-50 appearance-none font-medium"
           >
             <option value="Hepsi">Tüm durumlar</option>
-            <option value="Düzenli">Düzenli</option>
+            <option value="Onay Bekliyor">⚠️ Onay Bekleyenler {pendingCount > 0 ? `(${pendingCount})` : ""}</option>
+            <option value="Düzenli">Düzenli (Borçsuz)</option>
             <option value="Borçlu">Borçlu</option>
           </select>
         </div>
@@ -328,40 +396,74 @@ export default function ResidentsPage() {
                         <div className="h-9 w-9 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 text-indigo-600 dark:text-indigo-300 flex items-center justify-center font-bold text-xs uppercase">
                           {res.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                         </div>
-                        <span>{res.name}</span>
+                        <div>
+                          <span>{res.name}</span>
+                          {res.emailOrPhone && (
+                            <span className="block text-[11px] font-normal text-zinc-500">{res.emailOrPhone}</span>
+                          )}
+                        </div>
                       </div>
-                      <span className="block text-[10px] font-mono text-zinc-400 mt-1">{res.id.slice(0, 8)}…</span>
                     </td>
                     <td className="px-6 py-4 text-zinc-600 dark:text-zinc-400 font-semibold">
                       {res.blok} · {res.daire}
                     </td>
                     <td className="px-6 py-4 text-right font-black">
-                      {res.borc > 0 ? (
+                      {res.status === "PENDING" ? (
+                        <span className="text-zinc-400 text-xs font-normal">—</span>
+                      ) : res.borc > 0 ? (
                         <span className="text-rose-600 dark:text-rose-400">{res.borc.toLocaleString("tr-TR")} ₺</span>
                       ) : (
                         <span className="text-emerald-600 dark:text-emerald-400">Borçsuz</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                          res.durum === "Düzenli"
-                            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                            : "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"
-                        }`}
-                      >
-                        {res.durum}
-                      </span>
+                      {res.status === "PENDING" ? (
+                        <span className="rounded-full px-2.5 py-1 text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 inline-flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-amber-600" />
+                          Onay Bekliyor
+                        </span>
+                      ) : (
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                            res.durum === "Düzenli"
+                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                              : "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"
+                          }`}
+                        >
+                          {res.durum}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => openModal(res.id)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 px-3 py-1.5 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
-                      >
-                        <CreditCard className="h-3.5 w-3.5" />
-                        Aidat Ekle
-                      </button>
+                      {res.status === "PENDING" ? (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleApproveResident(res.id, "APPROVE")}
+                            className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 text-white px-3 py-1.5 text-xs font-bold hover:bg-emerald-700 transition-colors shadow-xs cursor-pointer"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                            Onayla
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleApproveResident(res.id, "REJECT")}
+                            className="inline-flex items-center gap-1 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1.5 text-xs font-bold hover:bg-rose-100 transition-colors cursor-pointer"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                            Reddet
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => openModal(res.id)}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 px-3 py-1.5 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors cursor-pointer"
+                        >
+                          <CreditCard className="h-3.5 w-3.5" />
+                          Aidat Ekle
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

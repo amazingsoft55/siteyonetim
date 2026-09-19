@@ -30,6 +30,25 @@ export type WelcomeEmailOptions = {
   loginUrl?: string;
 };
 
+export type AccountApprovedEmailOptions = {
+  name: string;
+  siteName: string;
+  emailOrPhone: string;
+  apartmentNo?: string | null;
+  role?: string;
+  loginUrl?: string;
+  managerName?: string;
+  managerPhone?: string;
+};
+
+export type AccountPendingAdminNotificationOptions = {
+  userName: string;
+  userEmailOrPhone: string;
+  siteName: string;
+  apartmentNo?: string | null;
+  adminReviewUrl?: string;
+};
+
 export type PasswordResetEmailOptions = {
   recipientName?: string;
   resetUrl: string;
@@ -590,6 +609,147 @@ export function buildSupportTicketUpdateEmailHtml(opts: SupportTicketUpdateOptio
     badgeBg: "#e0f2fe",
     accentColor: accent,
     footerNote: "Talebinize ek mesaj yazmak veya sürecini takip etmek için yönetim paneline giriş yapabilirsiniz.",
+    contentHtml,
+  });
+}
+
+/* ==========================================================================
+   9. HESAP ONAYLANDI ŞABLONU (ACCOUNT APPROVED)
+   ========================================================================== */
+
+export function buildAccountApprovedEmailHtml(opts: AccountApprovedEmailOptions): string {
+  const accent = "#4f46e5";
+  const loginUrl = opts.loginUrl || `${getPublicSiteUrl()}/login`;
+
+  const contentHtml = `
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="display: inline-block; width: 56px; height: 56px; line-height: 56px; border-radius: 50%; background-color: #ecfdf5; text-align: center; margin-bottom: 12px;">
+        <span style="font-size: 28px; vertical-align: middle;">🎉</span>
+      </div>
+      <h1 style="margin: 0 0 10px; font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.3; letter-spacing: -0.5px;">
+        Hesabınız Başarıyla Onaylandı!
+      </h1>
+      <p style="margin: 0; font-size: 15px; color: #475569; line-height: 1.6;">
+        Sayın <strong>${opts.name}</strong>, <strong>${opts.siteName}</strong> için yapmış olduğunuz hesap başvurusu site yönetimi tarafından incelenmiş ve onaylanmıştır.
+      </p>
+    </div>
+
+    <!-- Onay Detay Kartı -->
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; margin: 20px 0 24px;">
+      <tr>
+        <td style="padding: 22px;">
+          <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td style="font-size: 13px; color: #64748b; padding-bottom: 10px;">Site / Apartman:</td>
+              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 10px;">${opts.siteName}</td>
+            </tr>
+            ${opts.apartmentNo ? `
+            <tr>
+              <td style="font-size: 13px; color: #64748b; padding-bottom: 10px;">Daire Numarası:</td>
+              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 10px;">Daire ${opts.apartmentNo}</td>
+            </tr>` : ""}
+            <tr>
+              <td style="font-size: 13px; color: #64748b; padding-bottom: 10px;">Kayıtlı E-Posta / Telefon:</td>
+              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 10px;">${opts.emailOrPhone}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 13px; color: #64748b;">Hesap Durumu:</td>
+              <td align="right" style="font-size: 13px; font-weight: 700; color: #059669;">● Aktif — Giriş Yapılabilir</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 8px; padding: 14px 16px; margin: 18px 0 24px;">
+      <p style="margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #15803d;">Sakin Paneli ile Neler Yapabilirsiniz?</p>
+      <p style="margin: 0; font-size: 12px; color: #166534; line-height: 1.6;">
+        &bull; Aylık aidat ve ortak gider durumunuzu takip edebilirsiniz.<br/>
+        &bull; Yönetim duyurularını anlık olarak görüntüleyebilirsiniz.<br/>
+        &bull; Arıza, istek ve şikayetlerinizi doğrudan yöneticiye iletebilirsiniz.
+      </p>
+    </div>
+
+    <!-- CTA Butonu -->
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 24px 0 16px;">
+      <tr>
+        <td align="center">
+          <a href="${loginUrl}" style="background-color: #4f46e5; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 700; padding: 14px 36px; border-radius: 12px; display: inline-block;">
+            Hemen Giriş Yapın &rarr;
+          </a>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  return buildBaseEmailWrapper({
+    title: "Hesabınız Onaylandı",
+    badge: "HESAP ONAYLANDI",
+    badgeColor: "#059669",
+    badgeBg: "#ecfdf5",
+    accentColor: accent,
+    footerNote: "Bu e-posta site yöneticiniz tarafından onaylanan hesabınız için gönderilmiştir.",
+    contentHtml,
+  });
+}
+
+/* ==========================================================================
+   10. YÖNETİCİYE YENİ SAKİN KAYIT BİLDİRİM ŞABLONU
+   ========================================================================== */
+
+export function buildAccountPendingAdminNotificationEmailHtml(opts: AccountPendingAdminNotificationOptions): string {
+  const accent = "#f59e0b";
+  const reviewUrl = opts.adminReviewUrl || `${getPublicSiteUrl()}/admin/residents`;
+
+  const contentHtml = `
+    <h1 style="margin: 0 0 14px; font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.35; letter-spacing: -0.5px;">
+      Yeni Sakin Kayıt Başvurusu 🔔
+    </h1>
+    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #334155;">
+      <strong>${opts.siteName}</strong> için yeni bir sakin kayıt başvurusu yapıldı. Başvuruyu inceleyip onaylayabilirsiniz.
+    </p>
+
+    <!-- Detay Kartı -->
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; margin: 20px 0 24px;">
+      <tr>
+        <td style="padding: 20px;">
+          <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td style="font-size: 13px; color: #64748b; padding-bottom: 8px;">Başvuran Adı:</td>
+              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 8px;">${opts.userName}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 13px; color: #64748b; padding-bottom: 8px;">E-Posta / Telefon:</td>
+              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 8px;">${opts.userEmailOrPhone}</td>
+            </tr>
+            ${opts.apartmentNo ? `
+            <tr>
+              <td style="font-size: 13px; color: #64748b;">Daire Numarası:</td>
+              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a;">Daire ${opts.apartmentNo}</td>
+            </tr>` : ""}
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 24px 0 16px;">
+      <tr>
+        <td align="center">
+          <a href="${reviewUrl}" style="background-color: #4f46e5; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 700; padding: 14px 32px; border-radius: 12px; display: inline-block;">
+            Başvuruyu Yönetici Panelinde İncele &rarr;
+          </a>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  return buildBaseEmailWrapper({
+    title: "Yeni Sakin Kayıt Başvurusu",
+    badge: "YENİ BAŞVURU",
+    badgeColor: "#d97706",
+    badgeBg: "#fef3c7",
+    accentColor: accent,
+    footerNote: "Bu e-posta yöneticisi olduğunuz siteye yeni bir sakin kaydı yapıldığında bilgilendirme amacıyla gönderilir.",
     contentHtml,
   });
 }

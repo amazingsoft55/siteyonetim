@@ -23,7 +23,10 @@ export async function GET() {
       .select({
         id: users.id,
         name: users.name,
+        emailOrPhone: users.emailOrPhone,
         apartmentNo: users.apartmentNo,
+        status: users.status,
+        createdAt: users.createdAt,
       })
       .from(users)
       .where(and(eq(users.siteId, session.siteId), eq(users.role, "USER")));
@@ -50,10 +53,13 @@ export async function GET() {
       return {
         id: u.id,
         name: u.name,
+        emailOrPhone: u.emailOrPhone,
+        status: u.status || "APPROVED",
         blok: "—",
         daire: u.apartmentNo?.trim() ? u.apartmentNo : "—",
         borc,
-        durum: borc > 0 ? "Borçlu" : "Düzenli",
+        durum: u.status === "PENDING" ? "Onay Bekliyor" : borc > 0 ? "Borçlu" : "Düzenli",
+        createdAt: u.createdAt,
       };
     });
 
