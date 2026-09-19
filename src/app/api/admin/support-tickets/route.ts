@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { desc, eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
-import { adminSupportTickets } from "@/db/schema";
+import { adminSupportTickets, sites, users } from "@/db/schema";
+import { sendContactFormNotificationToSupport } from "@/lib/send-email";
 
 
 function forbidden() {
@@ -88,6 +89,27 @@ export async function POST(request: Request) {
     .from(adminSupportTickets)
     .where(eq(adminSupportTickets.id, id))
     .limit(1);
+
+  // Destek ekibine e-posta bildirimi gönder
+  try {
+    const userRow = await d.db.select().from(users).where(eq(users.id, session.id)).limit(1);
+    const siteRow = await d.db.select().from(sites).where(eq(sites.id, session.siteId)).limit(1);
+    const senderName = userRow[0]?.name || "Yönetici";
+    const senderContact = userRow[0]?.emailOrPhone || "destek@siteyonetim.keskindev.com";
+    const siteName = siteRow[0]?.name || "Site";
+
+    await sendContactFormNotificationToSupport({
+      source: "Yönetici Destek Paneli",
+      name: `${senderName} (${siteName})`,
+      email: senderContact.includes("@") ? senderContact : "destek@siteyonetim.keskindev.com",
+      phone: !senderContact.includes("@") ? senderContact : null,
+      subject: `[Panel Destek] ${subject}`,
+      message: bodyText,
+      ticketId: id,
+    });
+  } catch (e) {
+    console.error("Yönetici destek bileti bildirimi gönderilemedi:", e);
+  }
 
   return NextResponse.json(row[0]);
 }

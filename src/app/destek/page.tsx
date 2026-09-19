@@ -114,10 +114,10 @@ export default function DestekPublicPage() {
                 <div>
                   <h3 className="font-bold text-sm text-slate-900">E-Posta ile İletişim</h3>
                   <a
-                    href="mailto:destek@siteyonetimi.app"
+                    href="mailto:destek@siteyonetim.keskindev.com"
                     className="text-xs font-semibold text-indigo-600 hover:underline"
                   >
-                    destek@siteyonetimi.app
+                    destek@siteyonetim.keskindev.com
                   </a>
                 </div>
               </div>

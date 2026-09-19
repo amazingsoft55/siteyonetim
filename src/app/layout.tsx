@@ -57,11 +57,6 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        <link rel="icon" href="/logo.png" />
-        <meta name="theme-color" content="#4f46e5" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-background text-foreground">
         {jsonLdBlocks.map((data, i) => (
           <script
@@ -72,8 +67,9 @@ export default function RootLayout({
         ))}
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
+          forcedTheme="light"
+          enableSystem={false}
           disableTransitionOnChange
         >
           <ModalProvider>

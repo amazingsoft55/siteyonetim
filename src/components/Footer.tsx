@@ -61,7 +61,7 @@ export function Footer() {
             <div className="space-y-2 pt-1 text-xs text-slate-600">
               <div className="flex items-center gap-2">
                 <Mail className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
-                <a href="mailto:destek@siteyonetimi.app" className="hover:text-indigo-600">destek@siteyonetimi.app</a>
+                <a href="mailto:destek@siteyonetim.keskindev.com" className="hover:text-indigo-600">destek@siteyonetim.keskindev.com</a>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-3.5 w-3.5 shrink-0 text-indigo-600" />

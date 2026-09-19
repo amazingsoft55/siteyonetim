@@ -79,8 +79,8 @@ export default function Iletisim() {
                 <div>
                   <h3 className="font-bold text-sm text-slate-900">E-Posta Adresleri</h3>
                   <p className="text-xs text-slate-600 mt-1">
-                    Genel: <a href="mailto:info@siteyonetimi.app" className="text-indigo-600 hover:underline">info@siteyonetimi.app</a><br />
-                    Destek: <a href="mailto:destek@siteyonetimi.app" className="text-indigo-600 hover:underline">destek@siteyonetimi.app</a>
+                    Genel: <a href="mailto:destek@siteyonetim.keskindev.com" className="text-indigo-600 hover:underline">destek@siteyonetim.keskindev.com</a><br />
+                    Destek: <a href="mailto:destek@siteyonetim.keskindev.com" className="text-indigo-600 hover:underline">destek@siteyonetim.keskindev.com</a>
                   </p>
                 </div>
               </div>

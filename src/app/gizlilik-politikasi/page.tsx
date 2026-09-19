@@ -148,7 +148,7 @@ export default function GizlilikPolitikasi() {
                 <div className="mt-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-indigo-500" />
-                    <span>destek@siteyonetimi.app</span>
+                    <span>destek@siteyonetim.keskindev.com</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-indigo-500" />

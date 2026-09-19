@@ -34,7 +34,7 @@ export function buildOrganizationJsonLd(): Record<string, unknown> {
       "@type": "ContactPoint",
       contactType: "customer service",
       availableLanguage: "Turkish",
-      email: "destek@siteyonetimi.app",
+      email: "destek@siteyonetim.keskindev.com",
       telephone: "+90-212-000-00-00",
     },
     sameAs: [],
@@ -134,7 +134,7 @@ export function buildLocalBusinessJsonLd(): Record<string, unknown> {
     description: "Apartman ve site yönetimi için dijital platform",
     url: siteUrl,
     telephone: "+90-212-000-00-00",
-    email: "destek@siteyonetimi.app",
+    email: "destek@siteyonetim.keskindev.com",
     address: {
       "@type": "PostalAddress",
       addressLocality: "İstanbul",

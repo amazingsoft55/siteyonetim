@@ -4,6 +4,10 @@ import { and, count, eq, gte } from "drizzle-orm";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
 import { platformPublicContact } from "@/db/schema";
+import {
+  sendContactFormNotificationToSupport,
+  sendContactFormAutoReplyToUser,
+} from "@/lib/send-email";
 
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -98,6 +102,28 @@ export async function POST(request: Request) {
     });
   } catch (e) {
     return jsonSqlError(e, "Mesaj kaydedilemedi. Şema güncelliğini doğrulayın (platform_public_contact).");
+  }
+
+  // Destek ekibine ve kullanıcıya e-posta gönderimi
+  try {
+    await sendContactFormNotificationToSupport({
+      source,
+      name,
+      email,
+      phone: phone || null,
+      subject,
+      message: body,
+      ticketId: id,
+    });
+
+    await sendContactFormAutoReplyToUser({
+      name,
+      email,
+      subject,
+      source,
+    });
+  } catch (e) {
+    console.error("Destek bildirim e-postası gönderilemedi:", e);
   }
 
   return NextResponse.json({
