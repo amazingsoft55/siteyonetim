@@ -18,7 +18,6 @@ import {
   CheckCircle2,
   RefreshCw,
   ChevronLeft,
-  Info,
   X,
   Users,
 } from "lucide-react";
@@ -100,7 +99,6 @@ export default function CommunityChatPage() {
   const [mobileTab, setMobileTab] = React.useState<"channels" | "chat">("chat");
 
   const [currentUserRole, setCurrentUserRole] = React.useState<string>("USER");
-  const [currentUserName, setCurrentUserName] = React.useState<string>("Sakin");
   const [currentApartment, setCurrentApartment] = React.useState<string>("");
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
@@ -112,14 +110,13 @@ export default function CommunityChatPage() {
       if (raw) {
         const u = JSON.parse(raw);
         if (u.role) setCurrentUserRole(u.role);
-        if (u.name) setCurrentUserName(u.name);
         if (u.apartmentNo) setCurrentApartment(u.apartmentNo);
       }
     } catch {}
   }, []);
 
   // Fetch Channels
-  const fetchChannels = async () => {
+  const fetchChannels = React.useCallback(async () => {
     try {
       const res = await fetch("/api/community/channels", { credentials: "include" });
       const data = await res.json();
@@ -136,11 +133,11 @@ export default function CommunityChatPage() {
     } finally {
       setLoadingChannels(false);
     }
-  };
+  }, [activeChannelId]);
 
   React.useEffect(() => {
     fetchChannels();
-  }, []);
+  }, [fetchChannels]);
 
   // Fetch Messages for active channel
   const fetchMessages = React.useCallback(async (channelId: string, showSpinner = false) => {
@@ -212,7 +209,7 @@ export default function CommunityChatPage() {
       await fetchMessages(activeChannelId, false);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Mesaj gönderilemedi";
-      showAlert("Hata", msg);
+      showAlert({ title: "Hata", message: msg, variant: "error" });
     } finally {
       setSending(false);
     }
@@ -221,12 +218,12 @@ export default function CommunityChatPage() {
   // Create Poll
   const handleCreatePoll = async () => {
     if (!pollQuestion.trim()) {
-      showAlert("Uyarı", "Lütfen anket sorusunu girin.");
+      showAlert({ title: "Uyarı", message: "Lütfen anket sorusunu girin.", variant: "warning" });
       return;
     }
     const cleanOptions = pollOptions.map((o) => o.trim()).filter(Boolean);
     if (cleanOptions.length < 2) {
-      showAlert("Uyarı", "En az 2 seçenek eklemelisiniz.");
+      showAlert({ title: "Uyarı", message: "En az 2 seçenek eklemelisiniz.", variant: "warning" });
       return;
     }
 
@@ -252,10 +249,10 @@ export default function CommunityChatPage() {
       setPollQuestion("");
       setPollOptions(["", ""]);
       await fetchMessages(activeChannelId, false);
-      showAlert("Başarılı", "Anket oylamaya açıldı!");
+      showAlert({ title: "Başarılı", message: "Anket oylamaya açıldı!", variant: "success" });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Anket oluşturulamadı";
-      showAlert("Hata", msg);
+      showAlert({ title: "Hata", message: msg, variant: "error" });
     } finally {
       setSending(false);
     }
@@ -280,12 +277,13 @@ export default function CommunityChatPage() {
 
   // Delete message
   const handleDeleteMessage = async (msgId: string) => {
-    const ok = await showConfirm(
-      "Mesajı Sil",
-      "Bu mesajı silmek istediğinizden emin misiniz?",
-      "Evet, Sil",
-      "Vazgeç"
-    );
+    const ok = await showConfirm({
+      title: "Mesajı Sil",
+      message: "Bu mesajı silmek istediğinizden emin misiniz?",
+      confirmLabel: "Evet, Sil",
+      cancelLabel: "Vazgeç",
+      variant: "warning",
+    });
     if (!ok) return;
 
     try {
@@ -297,10 +295,10 @@ export default function CommunityChatPage() {
         setMessages((prev) => prev.filter((m) => m.id !== msgId));
       } else {
         const d = await res.json();
-        showAlert("Hata", d.error || "Silinemedi");
+        showAlert({ title: "Hata", message: d.error || "Silinemedi", variant: "error" });
       }
     } catch {
-      showAlert("Hata", "İşlem sırasında bir hata oluştu");
+      showAlert({ title: "Hata", message: "İşlem sırasında bir hata oluştu", variant: "error" });
     }
   };
 
@@ -316,7 +314,7 @@ export default function CommunityChatPage() {
         <div className="flex items-center gap-2 text-xs font-medium text-emerald-800">
           <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
           <span>
-            <strong>KVKK & Gizlilik Korumalı:</strong> Telefon numaranız gizlidir, komşularınız yalnızca dairenizi (
+            <strong>KVKK &amp; Gizlilik Korumalı:</strong> Telefon numaranız gizlidir, komşularınız yalnızca dairenizi (
             <span className="font-semibold">{currentApartment ? `Daire ${currentApartment}` : "Daireniz"}</span>) görür.
           </span>
         </div>
