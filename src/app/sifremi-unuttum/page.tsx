@@ -82,20 +82,16 @@ export default function SifremiUnuttumPage() {
           </p>
         </div>
         {emailReady === false && (
-          <div className="text-sm rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-100 p-3 space-y-1">
-            <p>
+          <div className="text-xs rounded-xl border border-amber-200 bg-amber-50 text-amber-900 p-3 space-y-1">
+            <p className="font-semibold">
               Sunucuda e-posta ayarları henüz tamamlanmadı.
-              {emailMissing.length > 0 ?
-                <> Eksik: {emailMissing.join(", ")}.</>
-              : null}{" "}
-              (<Link href="/kurulum#gmail" className="underline">kurulum rehberi</Link>)
+              {emailMissing.length > 0 ? (
+                <> Eksik değişken: <strong>{emailMissing.join(", ")}</strong></>
+              ) : null}
             </p>
-            {emailMissing.includes("GMAIL_REFRESH_TOKEN") && (
-              <p className="text-xs">
-                Google OAuth&apos;da <strong>403 access_denied</strong> aldıysanız: Cloud Console → OAuth consent screen →
-                Test users → <strong>ccode4779@gmail.com</strong> ekleyin, sonra yeniden yetkilendirin.
-              </p>
-            )}
+            <p className="text-[11px] text-amber-800">
+              Lütfen Cloudflare / Sunucu panelinizden <code>RESEND_API_KEY</code> ortam değişkenini tanımlayın.
+            </p>
           </div>
         )}
         {msg ? (

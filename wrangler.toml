@@ -22,3 +22,4 @@ database_id = "8b9b5e1c-41e6-461a-8d4e-fc9779da53cc"
 
 [vars]
 EMAIL_FROM = "Site Yönetimi <bildirim@siteyonetim.keskindev.com>"
+RESEND_API_KEY = "re_AAznBFf4_FyEd22TqUzsQUw97GNbgnDmX"
