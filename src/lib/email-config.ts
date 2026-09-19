@@ -6,8 +6,12 @@ export type EmailProviderStatus = {
   missing: string[];
 };
 
-/** Gmail (OAuth), Gmail SMTP veya Resend yapılandırılmış mı? */
+/** Resend veya Gmail yapılandırılmış mı? */
 export function getEmailProviderStatus(): EmailProviderStatus {
+  if (process.env.RESEND_API_KEY?.trim()) {
+    return { configured: true, provider: "resend", missing: [] };
+  }
+
   if (process.env.GMAIL_APP_PASSWORD?.trim()) {
     return { configured: true, provider: "gmail_smtp", missing: [] };
   }
@@ -17,15 +21,8 @@ export function getEmailProviderStatus(): EmailProviderStatus {
   }
 
   const missing: string[] = [];
-  if (!process.env.GMAIL_CLIENT_ID?.trim()) missing.push("GMAIL_CLIENT_ID");
-  if (!process.env.GMAIL_CLIENT_SECRET?.trim()) missing.push("GMAIL_CLIENT_SECRET");
-  if (!process.env.GMAIL_REFRESH_TOKEN?.trim()) missing.push("GMAIL_REFRESH_TOKEN");
+  if (!process.env.RESEND_API_KEY?.trim()) missing.push("RESEND_API_KEY");
 
-  if (process.env.RESEND_API_KEY?.trim()) {
-    return { configured: true, provider: "resend", missing: [] };
-  }
-
-  missing.push("RESEND_API_KEY (veya Gmail SMTP/OAuth değişkenleri)");
   return { configured: false, provider: "none", missing };
 }
 
@@ -34,5 +31,5 @@ export function isEmailConfigured(): boolean {
 }
 
 export function emailNotConfiguredMessage(): string {
-  return "E-posta servisi yapılandırılmamış. Cloudflare Workers ortam değişkenlerine GMAIL_APP_PASSWORD ve GMAIL_USER ekleyin.";
+  return "E-posta servisi yapılandırılmamış. Lütfen RESEND_API_KEY ortam değişkenini tanımlayın.";
 }

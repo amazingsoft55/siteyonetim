@@ -6,9 +6,9 @@ type SendResult = { ok: true } | { ok: false; error: string };
 
 function emailFromAddress(): string {
   return (
-    process.env.GMAIL_FROM?.trim() ||
     process.env.EMAIL_FROM?.trim() ||
-    "Site Yönetimi <ccode4779@gmail.com>"
+    process.env.GMAIL_FROM?.trim() ||
+    "Site Yönetimi <bildirim@siteyonetim.keskindev.com>"
   );
 }
 
@@ -92,9 +92,15 @@ export async function sendBrandedEmail(input: {
   subject: string;
   html: string;
 }): Promise<SendResult> {
+  // 1. Öncelik: Resend (Ana kurumsal mail sağlayıcısı)
+  if (process.env.RESEND_API_KEY?.trim()) {
+    return sendViaResend(input);
+  }
+  // 2. Yedek: Gmail SMTP
   if (process.env.GMAIL_APP_PASSWORD?.trim()) {
     return sendViaSmtp(input);
   }
+  // 3. Yedek: Gmail OAuth
   if (isGmailConfigured()) {
     return sendViaGmail(input);
   }
