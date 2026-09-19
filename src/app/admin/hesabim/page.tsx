@@ -32,6 +32,49 @@ export default function AdminAccountPage() {
   const [err, setErr] = React.useState("");
   const [msg, setMsg] = React.useState("");
 
+  // E-posta Test State
+  const [testEmailRecipient, setTestEmailRecipient] = React.useState("");
+  const [testingEmail, setTestingEmail] = React.useState(false);
+  const [testEmailResult, setTestEmailResult] = React.useState<{ ok: boolean; message?: string; error?: string } | null>(null);
+
+  async function handleSendTestEmail(type: "default" | "support") {
+    const target = (testEmailRecipient || login).trim();
+    if (!target || !target.includes("@")) {
+      setTestEmailResult({ ok: false, error: "Lütfen geçerli bir e-posta adresi girin." });
+      return;
+    }
+
+    setTestingEmail(true);
+    setTestEmailResult(null);
+
+    try {
+      const res = await fetch("/api/admin/email/test", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: target, type }),
+      });
+
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; message?: string; error?: string } | null;
+
+      if (!res.ok || !data?.ok) {
+        setTestEmailResult({
+          ok: false,
+          error: data?.error || "E-posta gönderimi başarısız oldu. Lütfen Resend ayarlarınızı kontrol edin.",
+        });
+      } else {
+        setTestEmailResult({
+          ok: true,
+          message: data.message || "Test e-postası başarıyla gönderildi!",
+        });
+      }
+    } catch {
+      setTestEmailResult({ ok: false, error: "Sunucuya bağlanırken bir hata oluştu." });
+    } finally {
+      setTestingEmail(false);
+    }
+  }
+
   // Hesap Silme State
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [deletePassword, setDeletePassword] = React.useState("");
@@ -66,8 +109,12 @@ export default function AdminAccountPage() {
         return;
       }
 
-      // Başarılı silme -> Ana sayfaya veya Giriş sayfasına yönlendir
-      window.location.href = "/login?deleted=1";
+      // Başarılı silme -> Yerel depolamayı tamamen temizle ve Giriş sayfasına zorla yönlendir
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch {}
+      window.location.replace("/login?deleted=1");
     } catch {
       setDeleteErr("Sunucuya bağlanırken bir hata oluştu.");
       setDeleting(false);
@@ -297,6 +344,62 @@ export default function AdminAccountPage() {
             {saving ? "Kaydediliyor…" : "Bilgileri Kaydet"}
           </button>
         </form>
+      </section>
+
+      {/* E-posta Altyapısı Canlı Test & Teşhis */}
+      <section className="rounded-3xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 p-6 shadow-sm space-y-4">
+        <div>
+          <h2 className="text-base font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-2">
+            📧 E-posta Altyapısı Canlı Testi
+          </h2>
+          <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-1 leading-relaxed">
+            Bildirim (Hoş geldin, duyurular) veya Destek (şifre sıfırlama, biletler) e-posta kanallarınızın çalışıp çalışmadığını anlık olarak test edin.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase">Test E-posta Alıcısı</label>
+            <input
+              type="email"
+              className="mt-1 w-full rounded-2xl border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 bg-white dark:bg-zinc-950 text-sm"
+              value={testEmailRecipient || login}
+              onChange={(e) => setTestEmailRecipient(e.target.value)}
+              placeholder="ornek@domain.com"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => handleSendTestEmail("default")}
+              disabled={testingEmail}
+              className="flex-1 py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition disabled:opacity-50 shadow-sm"
+            >
+              {testingEmail ? "Gönderiliyor…" : "🔔 Bildirim Kanalını Test Et"}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSendTestEmail("support")}
+              disabled={testingEmail}
+              className="flex-1 py-2.5 px-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition disabled:opacity-50 shadow-sm"
+            >
+              {testingEmail ? "Gönderiliyor…" : "🛡️ Destek Kanalını Test Et"}
+            </button>
+          </div>
+
+          {testEmailResult && (
+            <div
+              className={`p-3 rounded-2xl text-xs font-medium border animate-in fade-in ${
+                testEmailResult.ok
+                  ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300"
+                  : "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400"
+              }`}
+            >
+              {testEmailResult.ok ? testEmailResult.message : testEmailResult.error}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Tehlikeli Bölge: Hesabı Kalıcı Olarak Sil */}

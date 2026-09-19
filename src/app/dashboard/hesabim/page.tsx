@@ -135,7 +135,12 @@ export default function ResidentAccountPage() {
         return;
       }
 
-      window.location.href = "/login?deleted=1";
+      // Başarılı silme -> Yerel depolamayı temizle ve giriş sayfasına yönlendir
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch {}
+      window.location.replace("/login?deleted=1");
     } catch {
       setDeleteErr("Sunucuya bağlanırken bir hata oluştu.");
       setDeleting(false);

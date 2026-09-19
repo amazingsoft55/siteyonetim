@@ -68,10 +68,20 @@ export async function POST(request: Request) {
       message: "Hesabınız ve tüm ilişkili verileriniz kalıcı olarak başarıyla silindi.",
     });
 
-    // Oturum çerezini temizle
+    // Oturum çerezlerini (token ve session) derhal ve tamamen imha et
+    response.cookies.set("token", "", {
+      path: "/",
+      expires: new Date(0),
+      maxAge: 0,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+
     response.cookies.set("session", "", {
       path: "/",
       expires: new Date(0),
+      maxAge: 0,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
