@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     const d = await acquireDatabase();
     if (!d.ok) return await databaseUnavailable();
 
-    const body = await req.json().catch(() => ({}));
+    const body = (await req.json().catch(() => ({}))) as { pollId?: string; optionIndex?: number };
     const { pollId, optionIndex } = body;
 
     if (!pollId || typeof optionIndex !== "number") {

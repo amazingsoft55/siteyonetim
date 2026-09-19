@@ -153,7 +153,16 @@ export async function POST(req: Request) {
     if (!d.ok) return await databaseUnavailable();
 
     const siteId = session.siteId || "default_site";
-    const body = await req.json().catch(() => ({}));
+    const body = (await req.json().catch(() => ({}))) as {
+      channelId?: string;
+      content?: string;
+      imageUrl?: string;
+      poll?: {
+        question?: string;
+        options?: string[];
+        expiresAt?: string;
+      };
+    };
     const { channelId, content, imageUrl, poll } = body;
 
     if (!channelId || typeof channelId !== "string") {

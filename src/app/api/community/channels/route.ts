@@ -127,7 +127,7 @@ export async function POST(req: Request) {
     if (!d.ok) return await databaseUnavailable();
 
     const siteId = session.siteId || "default_site";
-    const body = await req.json().catch(() => ({}));
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const { name, description, icon, isAnnouncementOnly } = body;
 
     if (!name || typeof name !== "string" || !name.trim()) {
