@@ -124,8 +124,8 @@ export default function AdminCommunityPage() {
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Kanal oluşturulamadı");
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (!res.ok) throw new Error(data?.error || "Kanal oluşturulamadı");
 
       setShowNewChannelModal(false);
       setNewChannelName("");
@@ -160,7 +160,8 @@ export default function AdminCommunityPage() {
         setMessages((prev) => prev.filter((m) => m.id !== msgId));
         showAlert({ title: "Başarılı", message: "Mesaj gruptan kaldırıldı.", variant: "success" });
       } else {
-        showAlert({ title: "Hata", message: "Mesaj silinemedi.", variant: "error" });
+        const d = (await res.json().catch(() => null)) as { error?: string } | null;
+        showAlert({ title: "Hata", message: d?.error || "Mesaj silinemedi.", variant: "error" });
       }
     } catch {
       showAlert({ title: "Hata", message: "Bağlantı hatası oluştu.", variant: "error" });

@@ -199,9 +199,9 @@ export default function CommunityChatPage() {
           imageUrl: imageUrl.trim() || undefined,
         }),
       });
-      const data = await res.json();
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
       if (!res.ok) {
-        throw new Error(data.error || "Mesaj gönderilemedi");
+        throw new Error(data?.error || "Mesaj gönderilemedi");
       }
       setText("");
       setImageUrl("");
@@ -242,8 +242,8 @@ export default function CommunityChatPage() {
           },
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Anket oluşturulamadı");
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (!res.ok) throw new Error(data?.error || "Anket oluşturulamadı");
 
       setShowPollModal(false);
       setPollQuestion("");
@@ -294,8 +294,8 @@ export default function CommunityChatPage() {
       if (res.ok) {
         setMessages((prev) => prev.filter((m) => m.id !== msgId));
       } else {
-        const d = await res.json();
-        showAlert({ title: "Hata", message: d.error || "Silinemedi", variant: "error" });
+        const d = (await res.json().catch(() => null)) as { error?: string } | null;
+        showAlert({ title: "Hata", message: d?.error || "Silinemedi", variant: "error" });
       }
     } catch {
       showAlert({ title: "Hata", message: "İşlem sırasında bir hata oluştu", variant: "error" });
