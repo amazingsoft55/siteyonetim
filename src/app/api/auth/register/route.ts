@@ -5,7 +5,7 @@ import { eq, and, sql } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { databaseUnavailable } from "@/server/database/access";
 import type { PlatformDatabase } from "@/db/platform";
-import { sendAccountPendingAdminNotificationEmail } from "@/lib/send-email";
+import { sendAccountPendingAdminNotificationEmail, sendWelcomeEmail } from "@/lib/send-email";
 import { createNotification } from "@/lib/notify";
 import { parseInviteCodeInput, generateSiteInviteCode } from "@/lib/site-code";
 
@@ -235,8 +235,36 @@ export async function POST(request: Request) {
       }
     }
 
-    // Bildirimler (Hata verse dahi kullanıcı kaydını asla engellemez)
+    // Bildirimler & Hoş Geldin E-postası (Hata verse dahi kullanıcı kaydını asla engellemez)
     try {
+      // 1. Yeni Kaydolan Kullanıcıya / Yöneticiye Hoş Geldiniz E-postası
+      if (emailOrPhone.includes("@")) {
+        try {
+          const mailRes = await sendWelcomeEmail(emailOrPhone, {
+            name,
+            siteName: resolvedSiteName,
+            emailOrPhone,
+            apartmentNo: accountType === "RESIDENT" ? (apartmentNo || null) : null,
+            role: userRole,
+          });
+          console.log("Hoş geldin e-postası sonucu:", mailRes);
+        } catch (mailErr) {
+          console.error("Hoş geldin e-postası gönderilemedi:", mailErr);
+        }
+      }
+
+      // 2. Sistem İçi Hoş Geldiniz Bildirimi
+      try {
+        createNotification(db, {
+          userId,
+          title: "Hoş Geldiniz!",
+          body: `${resolvedSiteName} sistemine başarıyla kaydoldunuz.`,
+          type: "SYSTEM",
+          href: userRole === "ADMIN" ? "/admin/residents" : "/dashboard",
+        });
+      } catch {}
+
+      // 3. Sakin katıldığında Yöneticiye Bildirim
       if (siteId && userRole === "USER") {
         const siteAdmins = await db
           .select({ id: users.id, emailOrPhone: users.emailOrPhone, name: users.name })

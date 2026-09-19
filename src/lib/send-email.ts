@@ -39,19 +39,36 @@ export function emailReplyTo(): string {
   return "destek@siteyonetim.keskindev.com";
 }
 
-function getApiKey(type?: "default" | "support"): string | undefined {
+async function getApiKey(type?: "default" | "support"): Promise<string | undefined> {
+  let key: string | undefined;
   if (type === "support") {
-    return (
+    key =
       process.env.RESEND_SUPPORT_API_KEY?.trim() ||
       process.env.RESEND_API_KEY_SUPPORT?.trim() ||
-      process.env.RESEND_API_KEY?.trim()
-    );
+      process.env.RESEND_API_KEY?.trim();
+  } else {
+    key =
+      process.env.RESEND_API_KEY?.trim() ||
+      process.env.RESEND_SUPPORT_API_KEY?.trim() ||
+      process.env.RESEND_API_KEY_SUPPORT?.trim();
   }
-  return (
-    process.env.RESEND_API_KEY?.trim() ||
-    process.env.RESEND_SUPPORT_API_KEY?.trim() ||
-    process.env.RESEND_API_KEY_SUPPORT?.trim()
-  );
+
+  if (!key) {
+    try {
+      const mod = await import("@opennextjs/cloudflare");
+      const ctx = await mod.getCloudflareContext({ async: true });
+      const env = ctx.env as Record<string, string> | undefined;
+      if (env) {
+        if (type === "support") {
+          key = env.RESEND_SUPPORT_API_KEY || env.RESEND_API_KEY_SUPPORT || env.RESEND_API_KEY;
+        } else {
+          key = env.RESEND_API_KEY || env.RESEND_SUPPORT_API_KEY || env.RESEND_API_KEY_SUPPORT;
+        }
+      }
+    } catch {}
+  }
+
+  return key;
 }
 
 async function sendViaResend(input: {
@@ -61,8 +78,9 @@ async function sendViaResend(input: {
   fromType?: "default" | "support";
   from?: string;
 }): Promise<SendResult> {
-  const key = getApiKey(input.fromType);
+  const key = await getApiKey(input.fromType);
   if (!key) {
+    console.error("E-posta gönderilemedi: RESEND_API_KEY tanımlı değil.");
     return { ok: false, error: "RESEND_API_KEY tanımlı değil." };
   }
 
