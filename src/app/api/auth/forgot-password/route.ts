@@ -53,8 +53,7 @@ export async function POST(request: Request) {
     if (!send.ok) {
       return NextResponse.json(
         {
-          error:
-            "E-posta gönderilemedi. Gmail ayarlarını (GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN) kontrol edin.",
+          error: "E-posta gönderilemedi. Lütfen RESEND_API_KEY anahtarınızı kontrol edin.",
           detail: send.error,
         },
         { status: 502 },

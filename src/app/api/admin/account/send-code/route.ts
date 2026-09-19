@@ -64,7 +64,7 @@ export async function POST() {
     if (!sent.ok) {
       return NextResponse.json(
         {
-          error: "Doğrulama kodu gönderilemedi. Gmail (GMAIL_*) ayarlarını kontrol edin.",
+          error: "Doğrulama kodu gönderilemedi. Lütfen RESEND_API_KEY anahtarını kontrol edin.",
           detail: sent.error,
         },
         { status: 502 },
