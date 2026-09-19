@@ -18,5 +18,5 @@ export function getPublicSiteUrl(request?: Request): string {
   if (fromEnv && fromEnv.startsWith("http")) return fromEnv;
   const vercel = process.env.VERCEL_URL?.trim();
   if (vercel) return vercel.startsWith("http") ? vercel.replace(/\/$/, "") : `https://${vercel}`;
-  return "https://siteyonetim.mustafakeskin2290.workers.dev";
+  return "https://siteyonetim.keskindev.com";
 }
