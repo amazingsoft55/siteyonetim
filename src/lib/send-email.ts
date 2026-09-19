@@ -1,7 +1,19 @@
-import { buildBrandedEmailHtml } from "@/lib/email-template";
+import {
+  buildBrandedEmailHtml,
+  buildPasswordResetEmailHtml,
+  buildVerificationCodeEmailHtml,
+  buildAnnouncementEmailHtml,
+  buildWelcomeEmailHtml,
+  buildPaymentReceiptEmailHtml,
+  buildSupportTicketUpdateEmailHtml,
+  type BrandedEmailOptions,
+  type WelcomeEmailOptions,
+  type PaymentReceiptOptions,
+  type SupportTicketUpdateOptions,
+} from "@/lib/email-template";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
-type SendResult = { ok: true } | { ok: false; error: string };
+export type SendResult = { ok: true } | { ok: false; error: string };
 
 function emailFromAddress(): string {
   return (
@@ -50,16 +62,20 @@ async function sendViaResend(input: {
   return { ok: true };
 }
 
+/** Ham HTML e-postası gönderimi (Resend altyapısı ile) */
 export async function sendBrandedEmail(input: {
   to: string;
   subject: string;
   html: string;
 }): Promise<SendResult> {
-  // Yalnızca Resend kullanılır
   return sendViaResend(input);
 }
 
-/** Şifre sıfırlama bağlantısı — tüm roller (süper yönetici, yönetici, sakin). */
+/* ==========================================================================
+   ÖZEL E-POSTA ŞABLONU GÖNDERİM FONKSİYONLARI
+   ========================================================================== */
+
+/** 1. Şifre Sıfırlama E-postası */
 export async function sendPasswordResetEmail(
   to: string,
   resetPathWithToken: string,
@@ -69,49 +85,41 @@ export async function sendPasswordResetEmail(
   const base = getPublicSiteUrl(request).replace(/\/$/, "");
   const path = resetPathWithToken.startsWith("/") ? resetPathWithToken : `/${resetPathWithToken}`;
   const url = `${base}${path}`;
-  const greeting = recipientName?.trim() ? `Merhaba <strong>${recipientName.trim()}</strong>,` : "Merhaba,";
 
-  const html = buildBrandedEmailHtml({
-    title: "Şifre Sıfırlama",
-    intro: `${greeting} hesabınız için şifre sıfırlama isteği alındı. Aşağıdaki düğmeye tıklayarak yeni şifrenizi belirleyebilirsiniz.`,
-    bodyHtml: `
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;margin:0 0 20px">
-        <tr><td style="padding:16px 18px">
-          <p style="margin:0;font-size:13px;color:#991b1b"><strong>Güvenlik Uyarısı:</strong> Bu bağlantı yaklaşık <strong>1 saat</strong> geçerlidir. Eğer bu isteği siz yapmadıysanız, lütfen bu e-postayı görmezden gelin.</p>
-        </td></tr>
-      </table>
-    `,
-    ctaHref: url,
-    ctaLabel: "Yeni Şifre Belirle",
-    footerNote: "Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz. Hesabınız güvendedir.",
-    accentColor: "#dc2626",
+  const html = buildPasswordResetEmailHtml({
+    recipientName,
+    resetUrl: url,
+    expiresInMinutes: 60,
   });
 
-  return sendBrandedEmail({ to, subject: "Şifre Sıfırlama — Site Yönetimi", html });
+  return sendBrandedEmail({ to, subject: "Şifre Sıfırlama Talebi — Site Yönetimi", html });
 }
 
-/** Süper yönetici hesap değişikliği doğrulama kodu */
-export async function sendAccountVerificationEmail(to: string, code: string): Promise<SendResult> {
-  const html = buildBrandedEmailHtml({
-    title: "Doğrulama Kodu",
-    intro: "Hesabınızda e-posta veya şifre değişikliği için doğrulama kodunuz aşağıdadır:",
-    bodyHtml: `
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f0fdf4;border:2px dashed #22c55e;border-radius:12px;margin:0 0 16px">
-        <tr><td style="padding:24px;text-align:center">
-          <p style="margin:0 0 8px;font-size:11px;color:#16a34a;font-weight:700;text-transform:uppercase;letter-spacing:1px">Doğrulama Kodu</p>
-          <p style="margin:0;font-size:30px;font-weight:700;letter-spacing:6px;color:#15803d;font-family:'Courier New',monospace">${code}</p>
-        </td></tr>
-      </table>
-      <p style="margin:0;font-size:12px;color:#777;text-align:center">Kod yaklaşık <strong>15 dakika</strong> geçerlidir.</p>
-    `,
-    footerNote: "Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz.",
-    accentColor: "#22c55e",
+/** 2. Güvenlik Doğrulama Kodu E-postası (2FA / Süper Yönetici Onayı) */
+export async function sendAccountVerificationEmail(
+  to: string,
+  code: string,
+  purpose: string = "hesap güvenlik doğrulama"
+): Promise<SendResult> {
+  const html = buildVerificationCodeEmailHtml({
+    code,
+    purpose,
+    expiresInMinutes: 15,
   });
 
-  return sendBrandedEmail({ to, subject: "Doğrulama Kodu — Site Yönetimi", html });
+  return sendBrandedEmail({ to, subject: `Doğrulama Kodunuz: ${code} — Site Yönetimi`, html });
 }
 
-/** Duyuru bildirim e-postası — sakinlere ve yöneticilere gönderilir */
+/** 3. Yeni Sakin / Yönetici Hoş Geldiniz E-postası */
+export async function sendWelcomeEmail(
+  to: string,
+  opts: WelcomeEmailOptions
+): Promise<SendResult> {
+  const html = buildWelcomeEmailHtml(opts);
+  return sendBrandedEmail({ to, subject: `Site Yönetimi'ne Hoş Geldiniz — ${opts.siteName}`, html });
+}
+
+/** 4. Yeni Duyuru Bildirimi E-postası */
 export async function sendAnnouncementEmail(
   to: string,
   recipientName: string,
@@ -122,24 +130,31 @@ export async function sendAnnouncementEmail(
   const base = getPublicSiteUrl().replace(/\/$/, "");
   const truncated = announcementContent.length > 300 ? announcementContent.slice(0, 300) + "..." : announcementContent;
 
-  const html = buildBrandedEmailHtml({
-    title: `Yeni Duyuru`,
-    intro: `Merhaba <strong>${recipientName || "Değerli Sakin"}</strong>, yeni bir duyuru yayınlandı.`,
-    bodyHtml: `
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fafafa;border:1px solid #eee;border-radius:12px;margin:0 0 20px">
-        <tr><td style="padding:20px">
-          <p style="margin:0 0 10px;display:inline-block;background:#ede9fe;color:#7c3aed;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px">${category}</p>
-          <h2 style="margin:12px 0 8px;font-size:16px;font-weight:700;color:#1a1a2e;line-height:1.4">${announcementTitle}</h2>
-          <p style="margin:0;font-size:14px;line-height:1.7;color:#555">${truncated}</p>
-        </td></tr>
-      </table>
-      <p style="margin:0 0 16px;font-size:12px;color:#999;text-align:center">Duyurunun tüm içeriğini ve görsellerini görüntülemek için panele giriş yapın.</p>
-    `,
-    ctaHref: `${base}/dashboard/announcements`,
-    ctaLabel: "Duyuruları Görüntüle",
-    footerNote: "Bu e-posta site yönetimi tarafından gönderilen bir duyuru bildirimdir.",
-    accentColor: "#7c3aed",
+  const html = buildAnnouncementEmailHtml({
+    recipientName,
+    title: announcementTitle,
+    content: truncated,
+    category,
+    viewUrl: `${base}/dashboard/announcements`,
   });
 
-  return sendBrandedEmail({ to, subject: `Yeni Duyuru: ${announcementTitle} — Site Yönetimi`, html });
+  return sendBrandedEmail({ to, subject: `Duyuru: ${announcementTitle} — Site Yönetimi`, html });
+}
+
+/** 5. Aidat & Ödeme Makbuzu E-postası */
+export async function sendPaymentReceiptEmail(
+  to: string,
+  opts: PaymentReceiptOptions
+): Promise<SendResult> {
+  const html = buildPaymentReceiptEmailHtml(opts);
+  return sendBrandedEmail({ to, subject: `Ödeme Makbuzu: #${opts.receiptNo} (${opts.period}) — Site Yönetimi`, html });
+}
+
+/** 6. Talep & Arıza Durum Güncellemesi E-postası */
+export async function sendSupportTicketUpdateEmail(
+  to: string,
+  opts: SupportTicketUpdateOptions
+): Promise<SendResult> {
+  const html = buildSupportTicketUpdateEmailHtml(opts);
+  return sendBrandedEmail({ to, subject: `Talep Güncellendi: #${opts.ticketId} — Site Yönetimi`, html });
 }
