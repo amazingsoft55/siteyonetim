@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { db } from "@/db";
+import { getSession } from "@/lib/session";
+import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import {
   communityMessages,
   communityChannels,
@@ -8,13 +8,13 @@ import {
   communityPollVotes,
   users,
 } from "@/db/schema";
-import { eq, desc, asc, and, inArray } from "drizzle-orm";
+import { eq, asc, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 export async function GET(req: Request) {
   try {
     const session = await getSession();
-    if (!session || !session.userId) {
+    if (!session || !session.id) {
       return NextResponse.json({ error: "Oturum açmanız gerekiyor" }, { status: 401 });
     }
 
@@ -24,18 +24,11 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Kanal ID zorunludur" }, { status: 400 });
     }
 
-    const [currentUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, session.userId))
-      .limit(1);
-
-    if (!currentUser) {
-      return NextResponse.json({ error: "Kullanıcı bulunamadı" }, { status: 404 });
-    }
+    const d = await acquireDatabase();
+    if (!d.ok) return await databaseUnavailable();
 
     // Mesajları çek
-    const rawMessages = await db
+    const rawMessages = await d.db
       .select({
         id: communityMessages.id,
         channelId: communityMessages.channelId,
@@ -74,12 +67,12 @@ export async function GET(req: Request) {
     >();
 
     if (pollIds.length > 0) {
-      const polls = await db
+      const polls = await d.db
         .select()
         .from(communityPolls)
         .where(inArray(communityPolls.id, pollIds));
 
-      const votes = await db
+      const votes = await d.db
         .select()
         .from(communityPollVotes)
         .where(inArray(communityPollVotes.pollId, pollIds));
@@ -95,7 +88,7 @@ export async function GET(req: Request) {
         const pollVotes = votes.filter((v) => v.pollId === poll.id);
         const totalVotes = pollVotes.length;
 
-        const userVote = pollVotes.find((v) => v.userId === session.userId);
+        const userVote = pollVotes.find((v) => v.userId === session.id);
         const userVotedOption = userVote !== undefined ? userVote.optionIndex : null;
 
         const optionsWithVotes = parsedOptions.map((opt, idx) => {
@@ -121,8 +114,8 @@ export async function GET(req: Request) {
     }
 
     const formattedMessages = rawMessages.map((m) => {
-      const isAuthor = m.userId === session.userId;
-      const isAdmin = currentUser.role === "ADMIN" || currentUser.role === "SUPER_ADMIN";
+      const isAuthor = m.userId === session.id;
+      const isAdmin = session.role === "ADMIN" || session.role === "SUPER_ADMIN";
       return {
         id: m.id,
         channelId: m.channelId,
@@ -152,16 +145,14 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const session = await getSession();
-    if (!session || !session.userId) {
+    if (!session || !session.id) {
       return NextResponse.json({ error: "Oturum açmanız gerekiyor" }, { status: 401 });
     }
 
-    const [user] = await db.select().from(users).where(eq(users.id, session.userId)).limit(1);
-    if (!user) {
-      return NextResponse.json({ error: "Kullanıcı bulunamadı" }, { status: 404 });
-    }
+    const d = await acquireDatabase();
+    if (!d.ok) return await databaseUnavailable();
 
-    const siteId = user.siteId || "default_site";
+    const siteId = session.siteId || "default_site";
     const body = await req.json().catch(() => ({}));
     const { channelId, content, imageUrl, poll } = body;
 
@@ -170,7 +161,7 @@ export async function POST(req: Request) {
     }
 
     // Kanal yetkisini kontrol et
-    const [channel] = await db
+    const [channel] = await d.db
       .select()
       .from(communityChannels)
       .where(eq(communityChannels.id, channelId))
@@ -180,7 +171,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Kanal bulunamadı" }, { status: 404 });
     }
 
-    if (channel.isAnnouncementOnly && user.role !== "ADMIN" && user.role !== "SUPER_ADMIN") {
+    if (channel.isAnnouncementOnly && session.role !== "ADMIN" && session.role !== "SUPER_ADMIN") {
       return NextResponse.json(
         { error: "Bu kanal yalnızca resmi duyurular içindir. Sakinler mesaj yazamaz." },
         { status: 403 }
@@ -196,11 +187,11 @@ export async function POST(req: Request) {
     // Eğer anket oluşturuluyorsa
     if (poll && typeof poll.question === "string" && Array.isArray(poll.options) && poll.options.length >= 2) {
       createdPollId = "poll_" + nanoid(10);
-      await db.insert(communityPolls).values({
+      await d.db.insert(communityPolls).values({
         id: createdPollId,
         siteId,
         channelId,
-        createdBy: user.id,
+        createdBy: session.id,
         question: poll.question.trim(),
         options: JSON.stringify(poll.options.map((o: unknown) => String(o).trim()).filter(Boolean)),
         expiresAt: poll.expiresAt ? String(poll.expiresAt) : null,
@@ -208,11 +199,11 @@ export async function POST(req: Request) {
     }
 
     const messageId = "msg_" + nanoid(12);
-    await db.insert(communityMessages).values({
+    await d.db.insert(communityMessages).values({
       id: messageId,
       siteId,
       channelId,
-      userId: user.id,
+      userId: session.id,
       content: content ? String(content).trim() : (poll ? poll.question : "Paylaşım"),
       imageUrl: imageUrl ? String(imageUrl).trim() : null,
       pollId: createdPollId,
@@ -228,14 +219,12 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const session = await getSession();
-    if (!session || !session.userId) {
+    if (!session || !session.id) {
       return NextResponse.json({ error: "Oturum açmanız gerekiyor" }, { status: 401 });
     }
 
-    const [user] = await db.select().from(users).where(eq(users.id, session.userId)).limit(1);
-    if (!user) {
-      return NextResponse.json({ error: "Kullanıcı bulunamadı" }, { status: 404 });
-    }
+    const d = await acquireDatabase();
+    if (!d.ok) return await databaseUnavailable();
 
     const { searchParams } = new URL(req.url);
     const messageId = searchParams.get("id");
@@ -243,7 +232,7 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Mesaj ID zorunludur" }, { status: 400 });
     }
 
-    const [msg] = await db
+    const [msg] = await d.db
       .select()
       .from(communityMessages)
       .where(eq(communityMessages.id, messageId))
@@ -253,14 +242,14 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Mesaj bulunamadı" }, { status: 404 });
     }
 
-    const isAuthor = msg.userId === user.id;
-    const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
+    const isAuthor = msg.userId === session.id;
+    const isAdmin = session.role === "ADMIN" || session.role === "SUPER_ADMIN";
 
     if (!isAuthor && !isAdmin) {
       return NextResponse.json({ error: "Bu mesajı silme yetkiniz yok" }, { status: 403 });
     }
 
-    await db.delete(communityMessages).where(eq(communityMessages.id, messageId));
+    await d.db.delete(communityMessages).where(eq(communityMessages.id, messageId));
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {

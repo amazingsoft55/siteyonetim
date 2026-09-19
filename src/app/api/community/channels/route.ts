@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { db } from "@/db";
-import { communityChannels, communityMessages, users } from "@/db/schema";
-import { eq, asc, desc, sql, and } from "drizzle-orm";
+import { getSession } from "@/lib/session";
+import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
+import { communityChannels, users } from "@/db/schema";
+import { eq, asc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 const DEFAULT_CHANNELS = [
@@ -56,22 +56,20 @@ const DEFAULT_CHANNELS = [
   },
 ];
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const session = await getSession();
-    if (!session || !session.userId) {
+    if (!session || !session.id) {
       return NextResponse.json({ error: "Oturum açmanız gerekiyor" }, { status: 401 });
     }
 
-    const [user] = await db.select().from(users).where(eq(users.id, session.userId)).limit(1);
-    if (!user) {
-      return NextResponse.json({ error: "Kullanıcı bulunamadı" }, { status: 404 });
-    }
+    const d = await acquireDatabase();
+    if (!d.ok) return await databaseUnavailable();
 
-    const siteId = user.siteId || "default_site";
+    const siteId = session.siteId || "default_site";
 
     // Kanalları getir
-    let channels = await db
+    let channels = await d.db
       .select()
       .from(communityChannels)
       .where(eq(communityChannels.siteId, siteId))
@@ -82,7 +80,7 @@ export async function GET(req: Request) {
       const inserted = [];
       for (const def of DEFAULT_CHANNELS) {
         const id = "ch_" + nanoid(10);
-        await db.insert(communityChannels).values({
+        await d.db.insert(communityChannels).values({
           id,
           siteId,
           name: def.name,
@@ -117,16 +115,18 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const session = await getSession();
-    if (!session || !session.userId) {
+    if (!session || !session.id) {
       return NextResponse.json({ error: "Oturum açmanız gerekiyor" }, { status: 401 });
     }
 
-    const [user] = await db.select().from(users).where(eq(users.id, session.userId)).limit(1);
-    if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
+    if (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN") {
       return NextResponse.json({ error: "Kanal oluşturma yetkiniz yok" }, { status: 403 });
     }
 
-    const siteId = user.siteId || "default_site";
+    const d = await acquireDatabase();
+    if (!d.ok) return await databaseUnavailable();
+
+    const siteId = session.siteId || "default_site";
     const body = await req.json().catch(() => ({}));
     const { name, description, icon, isAnnouncementOnly } = body;
 
@@ -141,7 +141,7 @@ export async function POST(req: Request) {
       .slice(0, 40);
 
     const id = "ch_" + nanoid(10);
-    await db.insert(communityChannels).values({
+    await d.db.insert(communityChannels).values({
       id,
       siteId,
       name: name.trim(),

@@ -3,19 +3,11 @@
 import * as React from "react";
 import {
   MessagesSquare,
-  Megaphone,
-  HeartHandshake,
-  ShoppingBag,
-  Sparkles,
-  Lightbulb,
   Plus,
   Trash2,
   Lock,
-  Vote,
   ShieldCheck,
   RefreshCw,
-  Search,
-  CheckCircle2,
   X,
   Users,
 } from "lucide-react";
@@ -64,7 +56,7 @@ export default function AdminCommunityPage() {
   const [savingChannel, setSavingChannel] = React.useState(false);
 
   // Load Channels
-  const fetchChannels = async () => {
+  const fetchChannels = React.useCallback(async () => {
     try {
       const res = await fetch("/api/community/channels", { credentials: "include" });
       const data = await res.json();
@@ -79,11 +71,11 @@ export default function AdminCommunityPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedChannelId]);
 
   React.useEffect(() => {
     fetchChannels();
-  }, []);
+  }, [fetchChannels]);
 
   // Fetch Messages for selected channel
   const fetchMessages = React.useCallback(async (channelId: string) => {
@@ -114,7 +106,7 @@ export default function AdminCommunityPage() {
   const handleCreateChannel = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newChannelName.trim()) {
-      showAlert("Hata", "Lütfen kanal adını girin.");
+      showAlert({ title: "Hata", message: "Lütfen kanal adını girin.", variant: "error" });
       return;
     }
 
@@ -139,10 +131,10 @@ export default function AdminCommunityPage() {
       setNewChannelName("");
       setNewChannelDesc("");
       await fetchChannels();
-      showAlert("Başarılı", "Yeni komşuluk grubu/kanalı oluşturuldu.");
+      showAlert({ title: "Başarılı", message: "Yeni komşuluk grubu/kanalı oluşturuldu.", variant: "success" });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "İşlem başarısız";
-      showAlert("Hata", msg);
+      showAlert({ title: "Hata", message: msg, variant: "error" });
     } finally {
       setSavingChannel(false);
     }
@@ -150,12 +142,13 @@ export default function AdminCommunityPage() {
 
   // Delete message (Moderation)
   const handleDeleteMessage = async (msgId: string) => {
-    const ok = await showConfirm(
-      "Mesajı Kaldır",
-      "Bu mesajı uygunsuzluk veya kural ihlali sebebiyle gruptan silmek istediğinize emin misiniz?",
-      "Evet, Sil",
-      "Vazgeç"
-    );
+    const ok = await showConfirm({
+      title: "Mesajı Kaldır",
+      message: "Bu mesajı uygunsuzluk veya kural ihlali sebebiyle gruptan silmek istediğinize emin misiniz?",
+      confirmLabel: "Evet, Sil",
+      cancelLabel: "Vazgeç",
+      variant: "warning",
+    });
     if (!ok) return;
 
     try {
@@ -165,12 +158,12 @@ export default function AdminCommunityPage() {
       });
       if (res.ok) {
         setMessages((prev) => prev.filter((m) => m.id !== msgId));
-        showAlert("Başarılı", "Mesaj gruptan kaldırıldı.");
+        showAlert({ title: "Başarılı", message: "Mesaj gruptan kaldırıldı.", variant: "success" });
       } else {
-        showAlert("Hata", "Mesaj silinemedi.");
+        showAlert({ title: "Hata", message: "Mesaj silinemedi.", variant: "error" });
       }
     } catch {
-      showAlert("Hata", "Bağlantı hatası oluştu.");
+      showAlert({ title: "Hata", message: "Bağlantı hatası oluştu.", variant: "error" });
     }
   };
 
@@ -183,7 +176,7 @@ export default function AdminCommunityPage() {
         <div>
           <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2.5">
             <MessagesSquare className="h-7 w-7 text-indigo-600" />
-            Topluluk & Komşu Grupları Yönetimi
+            Topluluk &amp; Komşu Grupları Yönetimi
           </h1>
           <p className="text-slate-500 text-xs sm:text-sm mt-1">
             Bina içi tematik sohbet kanallarını düzenleyin, yeni gruplar açın ve mesajları modere edin.
@@ -225,6 +218,7 @@ export default function AdminCommunityPage() {
             <button
               onClick={() => fetchChannels()}
               className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+              title="Yenile"
             >
               <RefreshCw className="h-3.5 w-3.5" />
             </button>
@@ -369,7 +363,7 @@ export default function AdminCommunityPage() {
             <form onSubmit={handleCreateChannel} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Kanal Adı & İkon
+                  Kanal Adı &amp; İkon
                 </label>
                 <input
                   type="text"
