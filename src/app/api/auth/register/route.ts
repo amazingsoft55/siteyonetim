@@ -160,8 +160,8 @@ export async function POST(request: Request) {
           inviteCode: generatedCode,
         });
         inserted = true;
-      } catch {
-        // D1'de invite_code kolonu henüz yoksa kolonsuz ekle
+      } catch (err) {
+        console.warn("Insert sites with inviteCode failed, trying fallback:", err);
       }
 
       if (!inserted) {
@@ -171,9 +171,21 @@ export async function POST(request: Request) {
             name: newSiteName,
             plan: "starter",
           });
+          inserted = true;
         } catch (insertErr) {
-          console.error("Site ekleme hatası:", insertErr);
-          throw insertErr;
+          console.warn("Insert sites with plan failed, trying minimal:", insertErr);
+        }
+      }
+
+      if (!inserted) {
+        try {
+          await db.insert(sites).values({
+            id: siteId,
+            name: newSiteName,
+          });
+        } catch (minimalErr) {
+          console.error("Minimal site insert error:", minimalErr);
+          throw minimalErr;
         }
       }
       resolvedSiteName = newSiteName;
@@ -184,19 +196,60 @@ export async function POST(request: Request) {
     const userRole = accountType === "MANAGER" ? "ADMIN" : "USER";
     const userStatus = "APPROVED"; // Sakin ve Yönetici hesapları anında aktif olur
 
-    await db.insert(users).values({
-      id: userId,
-      name,
-      emailOrPhone,
-      passwordHash,
-      role: userRole,
-      status: userStatus,
-      siteId: siteId || null,
-      apartmentNo: accountType === "RESIDENT" ? (apartmentNo || null) : null,
-      mustChangePassword: false,
-    });
+    let insertedUser = false;
+    try {
+      await db.insert(users).values({
+        id: userId,
+        name,
+        emailOrPhone,
+        passwordHash,
+        role: userRole,
+        status: userStatus,
+        siteId: siteId || null,
+        apartmentNo: accountType === "RESIDENT" ? (apartmentNo || null) : null,
+        mustChangePassword: false,
+      });
+      insertedUser = true;
+    } catch (e1) {
+      console.warn("User insert 1 failed, trying fallback 2:", e1);
+    }
 
-    // Bildirimler
+    if (!insertedUser) {
+      try {
+        await db.insert(users).values({
+          id: userId,
+          name,
+          emailOrPhone,
+          passwordHash,
+          role: userRole,
+          status: userStatus,
+          siteId: siteId || null,
+          apartmentNo: accountType === "RESIDENT" ? (apartmentNo || null) : null,
+        });
+        insertedUser = true;
+      } catch (e2) {
+        console.warn("User insert 2 failed, trying minimal fallback:", e2);
+      }
+    }
+
+    if (!insertedUser) {
+      try {
+        await db.insert(users).values({
+          id: userId,
+          name,
+          emailOrPhone,
+          passwordHash,
+          role: userRole,
+          siteId: siteId || null,
+          apartmentNo: accountType === "RESIDENT" ? (apartmentNo || null) : null,
+        });
+      } catch (e3) {
+        console.error("User insert 3 minimal error:", e3);
+        throw e3;
+      }
+    }
+
+    // Bildirimler (Hata verse dahi kullanıcı kaydını asla engellemez)
     try {
       if (siteId && userRole === "USER") {
         const siteAdmins = await db
@@ -205,25 +258,31 @@ export async function POST(request: Request) {
           .where(and(eq(users.siteId, siteId), eq(users.role, "ADMIN")));
 
         for (const admin of siteAdmins) {
-          createNotification(db, {
-            userId: admin.id,
-            title: "Yeni Sakin Katıldı",
-            body: `${name} (${apartmentNo ? `Daire ${apartmentNo}` : "Daire belirtilmemiş"}) siteye katıldı.`,
-            type: "SYSTEM",
-            href: "/admin/residents",
-          });
-
-          if (admin.emailOrPhone.includes("@")) {
-            void sendAccountPendingAdminNotificationEmail(admin.emailOrPhone, {
-              userName: name,
-              userEmailOrPhone: emailOrPhone,
-              siteName: resolvedSiteName,
-              apartmentNo: apartmentNo || undefined,
+          try {
+            createNotification(db, {
+              userId: admin.id,
+              title: "Yeni Sakin Katıldı",
+              body: `${name} (${apartmentNo ? `Daire ${apartmentNo}` : "Daire belirtilmemiş"}) siteye katıldı.`,
+              type: "SYSTEM",
+              href: "/admin/residents",
             });
-          }
+          } catch {}
+
+          try {
+            if (admin.emailOrPhone.includes("@")) {
+              void sendAccountPendingAdminNotificationEmail(admin.emailOrPhone, {
+                userName: name,
+                userEmailOrPhone: emailOrPhone,
+                siteName: resolvedSiteName,
+                apartmentNo: apartmentNo || undefined,
+              });
+            }
+          } catch {}
         }
       }
-    } catch {}
+    } catch (notifErr) {
+      console.warn("Notification error ignored during registration:", notifErr);
+    }
 
     return NextResponse.json({
       ok: true,
