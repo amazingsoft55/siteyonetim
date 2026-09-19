@@ -20,7 +20,7 @@ function forbidden() {
 
 export async function GET() {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN" || !session.siteId) return forbidden();
+  if (!session || !session.id) return forbidden();
 
   const d = await acquireDatabase();
   if (!d.ok) return await databaseUnavailable();
@@ -36,8 +36,9 @@ export async function GET() {
       emailOrPhone: u.emailOrPhone,
       role: u.role,
       siteId: u.siteId,
+      apartmentNo: u.apartmentNo,
       accountChangesCount: count,
-      requiresVerificationForCredentials: count >= 1,
+      requiresVerificationForCredentials: count >= 1 && u.role === "ADMIN",
       canReceiveEmailCode: looksLikeEmail(u.emailOrPhone),
       freeChangeRemaining: count === 0,
     });
@@ -56,7 +57,7 @@ type PatchBody = {
 
 export async function PATCH(request: Request) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN" || !session.siteId) return forbidden();
+  if (!session || !session.id) return forbidden();
 
   const d = await acquireDatabase();
   if (!d.ok) return await databaseUnavailable();
