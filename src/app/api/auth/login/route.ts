@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPlatformDb } from "@/db/platform";
 import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { signJwt } from "@/lib/auth";
 import { cookies } from "next/headers";
@@ -32,6 +32,8 @@ export async function POST(request: Request) {
       return await databaseUnavailable();
     }
 
+    const cleanIdentifier = usernameOrPhone.trim().toLowerCase();
+
     const loginColumns = {
       id: users.id,
       name: users.name,
@@ -44,22 +46,33 @@ export async function POST(request: Request) {
       mustChangePassword: users.mustChangePassword,
     };
 
-    const userList = await db.select(loginColumns).from(users).where(eq(users.emailOrPhone, usernameOrPhone)).limit(1);
+    const userList = await db
+      .select(loginColumns)
+      .from(users)
+      .where(
+        or(
+          eq(users.emailOrPhone, cleanIdentifier),
+          eq(users.emailOrPhone, usernameOrPhone.trim())
+        )
+      )
+      .limit(1);
+
     const user = userList[0];
 
     if (!user) {
-      return NextResponse.json({ error: "Hatalı giriş bilgileri." }, { status: 401 });
+      return NextResponse.json({ error: "Hatalı e-posta/telefon veya şifre." }, { status: 401 });
     }
 
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
 
     if (!isValidPassword) {
-      return NextResponse.json({ error: "Hatalı giriş bilgileri." }, { status: 401 });
+      return NextResponse.json({ error: "Hatalı e-posta/telefon veya şifre." }, { status: 401 });
     }
 
-    if (user.status === "PENDING") {
+    // Yöneticiler her zaman doğrudan onaylıdır; sakinler PENDING ise bilgilendirilir
+    if (user.role === "USER" && user.status === "PENDING") {
       return NextResponse.json(
-        { error: "Hesabınız yönetici onayında beklemektedir. Yöneticiniz onayladığında e-posta adresinize bilgilendirme iletilecektir." },
+        { error: "Hesabınız yönetici onayında beklemektedir. Yöneticiniz onayladığında giriş yapabileceksiniz." },
         { status: 403 }
       );
     }

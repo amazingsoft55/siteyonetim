@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { SiteLogo } from "@/components/SiteLogo";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import {
@@ -14,57 +13,99 @@ import {
   Home,
   ArrowRight,
   CheckCircle2,
-  ShieldCheck,
+  KeyRound,
+  Loader2,
+  AlertCircle,
   Clock,
   Sparkles,
-  HelpCircle,
+  ShieldCheck,
 } from "lucide-react";
 
-type SiteOption = {
+type VerifiedSite = {
   id: string;
   name: string;
   address?: string | null;
+  inviteCode: string;
+  apartmentNo?: string | null;
 };
 
-export default function RegisterPage() {
+function RegisterFormInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const initialCode = searchParams.get("kod") || searchParams.get("code") || "";
+  const initialDaire = searchParams.get("daire") || searchParams.get("apt") || "";
+
   const [accountType, setAccountType] = React.useState<"RESIDENT" | "MANAGER">("RESIDENT");
   const [name, setName] = React.useState("");
   const [emailOrPhone, setEmailOrPhone] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [passwordConfirm, setPasswordConfirm] = React.useState("");
-  const [siteId, setSiteId] = React.useState("");
-  const [newSiteName, setNewSiteName] = React.useState("");
-  const [apartmentNo, setApartmentNo] = React.useState("");
   const [termsAccepted, setTermsAccepted] = React.useState(true);
 
-  const [sites, setSites] = React.useState<SiteOption[]>([]);
-  const [sitesLoading, setSitesLoading] = React.useState(true);
+  // Sakin için: Katılım Kodu & Daire
+  const [inviteCode, setInviteCode] = React.useState(initialCode);
+  const [apartmentNo, setApartmentNo] = React.useState(initialDaire);
+  const [verifyingCode, setVerifyingCode] = React.useState(false);
+  const [verifiedSite, setVerifiedSite] = React.useState<VerifiedSite | null>(null);
+  const [codeError, setCodeError] = React.useState("");
+
+  // Yönetici için: Yeni Site Adı
+  const [newSiteName, setNewSiteName] = React.useState("");
+
   const [submitting, setSubmitting] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState("");
   const [successData, setSuccessData] = React.useState<{ message: string } | null>(null);
 
-  React.useEffect(() => {
-    async function loadSites() {
-      try {
-        const res = await fetch("/api/public/sites");
-        if (res.ok) {
-          const data = (await res.json()) as SiteOption[];
-          if (Array.isArray(data)) {
-            setSites(data);
-            if (data.length > 0) {
-              setSiteId(data[0].id);
-            }
-          }
-        }
-      } catch {
-        // Sessiz devam
-      } finally {
-        setSitesLoading(false);
-      }
+  // Katılım Kodunu Doğrulama Fonksiyonu
+  const verifyCode = React.useCallback(async (codeToVerify: string) => {
+    const clean = codeToVerify.trim();
+    if (!clean || clean.length < 3) {
+      setVerifiedSite(null);
+      setCodeError("");
+      return;
     }
-    loadSites();
-  }, []);
+
+    setVerifyingCode(true);
+    setCodeError("");
+
+    try {
+      const res = await fetch(`/api/public/sites/verify-code?code=${encodeURIComponent(clean)}`);
+      const data = (await res.json()) as { ok?: boolean; valid?: boolean; site?: VerifiedSite; error?: string };
+
+      if (res.ok && data.valid && data.site) {
+        setVerifiedSite(data.site);
+        setCodeError("");
+        if (data.site.apartmentNo && !apartmentNo) {
+          setApartmentNo(data.site.apartmentNo);
+        }
+      } else {
+        setVerifiedSite(null);
+        setCodeError(data?.error || "Geçersiz katılım kodu. Yöneticinizin verdiği kodu kontrol edin.");
+      }
+    } catch {
+      setVerifiedSite(null);
+      setCodeError("Kod kontrol edilirken bağlantı hatası oluştu.");
+    } finally {
+      setVerifyingCode(false);
+    }
+  }, [apartmentNo]);
+
+  // URL'den kod geldiyse ilk yüklemede otomatik doğrula
+  React.useEffect(() => {
+    if (initialCode) {
+      void verifyCode(initialCode);
+    }
+  }, [initialCode, verifyCode]);
+
+  // Kod değiştiğinde 400ms debounce ile doğrula
+  React.useEffect(() => {
+    if (!inviteCode.trim() || inviteCode === initialCode) return;
+    const timer = setTimeout(() => {
+      void verifyCode(inviteCode);
+    }, 450);
+    return () => clearTimeout(timer);
+  }, [inviteCode, initialCode, verifyCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,6 +131,18 @@ export default function RegisterPage() {
       setErrorMsg("Devam etmek için kullanım şartlarını kabul etmelisiniz.");
       return;
     }
+
+    if (accountType === "RESIDENT") {
+      if (!inviteCode.trim()) {
+        setErrorMsg("Lütfen yöneticinizin size verdiği Site Katılım Kodunu girin.");
+        return;
+      }
+      if (!apartmentNo.trim()) {
+        setErrorMsg("Lütfen daire / kapı numaranızı belirtin.");
+        return;
+      }
+    }
+
     if (accountType === "MANAGER" && !newSiteName.trim()) {
       setErrorMsg("Lütfen yöneteceğiniz site / apartman adını belirtin.");
       return;
@@ -106,9 +159,10 @@ export default function RegisterPage() {
           emailOrPhone: emailOrPhone.trim().toLowerCase(),
           password,
           accountType,
-          siteId: accountType === "RESIDENT" ? siteId : undefined,
-          newSiteName: accountType === "MANAGER" ? newSiteName.trim() : undefined,
+          inviteCode: accountType === "RESIDENT" ? inviteCode.trim() : undefined,
+          siteId: accountType === "RESIDENT" && verifiedSite ? verifiedSite.id : undefined,
           apartmentNo: accountType === "RESIDENT" ? apartmentNo.trim() : undefined,
+          newSiteName: accountType === "MANAGER" ? newSiteName.trim() : undefined,
         }),
       });
 
@@ -137,49 +191,53 @@ export default function RegisterPage() {
       <main className="flex-1 max-w-5xl mx-auto px-4 py-12 sm:py-16 w-full flex items-center justify-center">
         {successData ? (
           /* Başarılı Kayıt Bildirim Kartı */
-          <div className="w-full max-w-lg bg-white rounded-3xl p-8 sm:p-10 shadow-lg border border-slate-200/80 text-center animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-lg bg-white rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-200/80 text-center animate-in zoom-in-95 duration-200">
             <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-emerald-600 ring-8 ring-emerald-50/50">
               <CheckCircle2 className="h-9 w-9" />
             </div>
 
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold mb-3 border border-amber-200/60">
-              <Clock className="h-3.5 w-3.5" />
-              YÖNETİCİ ONAYI BEKLENİYOR
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold mb-3 border border-emerald-200">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {accountType === "MANAGER" ? "SİTE VE YÖNETİCİ HESABI AKTİF" : "KAYDINIZ TAMAMLANDI"}
             </div>
 
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-3">
-              Başvurunuz Başarıyla Alındı!
+              Hesabınız Başarıyla Oluşturuldu!
             </h1>
 
             <p className="text-sm text-slate-600 leading-relaxed mb-6">
               {successData.message}
             </p>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left space-y-2 mb-8 text-xs text-slate-600">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left space-y-2.5 mb-8 text-xs text-slate-600">
               <div className="flex items-start gap-2">
-                <span className="font-bold text-slate-900 shrink-0">1. Aşama:</span>
-                <span>Site yöneticiniz hesabınızı ve daire bilginizi kontrol edecektir.</span>
+                <span className="font-bold text-slate-900 shrink-0">1. Adım:</span>
+                <span>
+                  {accountType === "MANAGER"
+                    ? "Yönetici panelinize giriş yaparak sitenizi ve sakinlerinizi yönetmeye başlayabilirsiniz."
+                    : "Belirlediğiniz şifre ile sisteme hemen giriş yapabilirsiniz."}
+                </span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="font-bold text-slate-900 shrink-0">2. Aşama:</span>
-                <span>Onay verildiği an <strong>{emailOrPhone}</strong> adresinize giriş bağlantısı gönderilecektir.</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="font-bold text-slate-900 shrink-0">3. Aşama:</span>
-                <span>Gelen e-postadaki butona tıklayarak veya şifrenizle doğrudan giriş yapabileceksiniz.</span>
+                <span className="font-bold text-slate-900 shrink-0">2. Adım:</span>
+                <span>
+                  {accountType === "MANAGER"
+                    ? "Panelinizdeki özel 'Site Katılım Kodu'nu apartman sakinlerinizle paylaşın."
+                    : "Topluluk sohbetine katılabilir, anketleri oylayabilir ve duyuruları takip edebilirsiniz."}
+                </span>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 href="/login"
-                className="flex-1 py-3 px-4 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-sm"
+                className="flex-1 py-3 px-4 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-sm text-center"
               >
-                Giriş Sayfasına Dön
+                Giriş Sayfasına Git
               </Link>
               <Link
                 href="/"
-                className="py-3 px-4 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all"
+                className="py-3 px-4 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all text-center"
               >
                 Ana Sayfa
               </Link>
@@ -187,17 +245,16 @@ export default function RegisterPage() {
           </div>
         ) : (
           /* Kayıt Formu */
-          <div className="w-full max-w-xl bg-white rounded-3xl p-6 sm:p-10 shadow-md border border-slate-200/80">
-            
-            {/* Başlık & Tip Seçici */}
+          <div className="w-full max-w-xl bg-white rounded-3xl p-6 sm:p-10 shadow-xl border border-slate-200/80">
+            {/* Başlık & Rol Seçici */}
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-indigo-50 text-indigo-600 mb-3">
+              <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-indigo-50 text-indigo-600 mb-3 shadow-xs">
                 <Building2 className="h-6 w-6" />
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 Yeni Hesap Oluşturun
               </h1>
-              <p className="text-sm text-slate-500 mt-1.5">
+              <p className="text-xs sm:text-sm text-slate-500 mt-1.5">
                 Apartman ve site yönetim sistemine dakikalar içinde katılın
               </p>
 
@@ -229,13 +286,111 @@ export default function RegisterPage() {
             </div>
 
             {errorMsg && (
-              <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium animate-in fade-in">
-                {errorMsg}
+              <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm font-medium animate-in fade-in flex items-center gap-2.5">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{errorMsg}</span>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              
+              {/* 1. Daire Sakini İse: Site Katılım Kodu */}
+              {accountType === "RESIDENT" ? (
+                <div className="space-y-3 p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/90">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        Site Katılım Kodu (Davet Kodu) <span className="text-rose-500">*</span>
+                      </label>
+                      {verifyingCode && (
+                        <span className="text-[11px] text-indigo-600 font-semibold flex items-center gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" /> Kontrol ediliyor...
+                        </span>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <KeyRound className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="Örn: LALE-8421 veya LALE-8421-D12"
+                        value={inviteCode}
+                        onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                        className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm font-mono font-bold tracking-wide outline-none transition-all ${
+                          verifiedSite
+                            ? "border-emerald-500 bg-emerald-50/40 text-emerald-950 focus:ring-2 focus:ring-emerald-200"
+                            : codeError
+                            ? "border-rose-400 bg-rose-50/40 text-rose-950 focus:ring-2 focus:ring-rose-200"
+                            : "border-slate-300 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Doğrulandıysa Otomatik Site Bilgisi Rozeti */}
+                  {verifiedSite ? (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-2.5 text-xs text-emerald-900 animate-in fade-in">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-emerald-950">
+                          Site: {verifiedSite.name}
+                        </p>
+                        <p className="text-[11px] text-emerald-700 mt-0.5">
+                          {verifiedSite.address || "Sistemde kayıtlı site"} &bull; Kod: {verifiedSite.inviteCode}
+                        </p>
+                      </div>
+                    </div>
+                  ) : codeError ? (
+                    <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                      <span>{codeError}</span>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-slate-500">
+                      💡 Site yöneticinizin WhatsApp veya panodan paylaştığı katılım kodunu girin. Site adı otomatik eşleşecektir.
+                    </p>
+                  )}
+
+                  {/* Daire / Kapı No */}
+                  <div className="pt-1">
+                    <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
+                      Daire / Kapı No <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Home className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="Örn: Daire 8 veya Blok A - No 14"
+                        value={apartmentNo}
+                        onChange={(e) => setApartmentNo(e.target.value)}
+                        className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* 2. Yönetici İse: Yeni Site Adı */
+                <div className="p-4 sm:p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-2">
+                  <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
+                    Yöneteceğiniz Site / Apartman Adı <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Örn: Güneş Sitesi veya Huzur Apt."
+                      value={newSiteName}
+                      onChange={(e) => setNewSiteName(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition-all"
+                    />
+                  </div>
+                  <p className="text-[11px] text-indigo-700 pt-1">
+                    ✨ Kayıt sonrasında sakinlerinize vereceğiniz <strong>Site Katılım Kodu</strong> otomatik üretilecektir.
+                  </p>
+                </div>
+              )}
+
               {/* Ad Soyad */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
@@ -271,74 +426,9 @@ export default function RegisterPage() {
                   />
                 </div>
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Onaylandığında bilgilendirme bu adrese iletilecektir.
+                  Onay ve şifre sıfırlama bildirimleri bu adrese iletilecektir.
                 </p>
               </div>
-
-              {/* Daire Sakini ise: Site & Daire Seçimi */}
-              {accountType === "RESIDENT" ? (
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Site / Apartman
-                    </label>
-                    {sites.length > 0 ? (
-                      <select
-                        value={siteId}
-                        onChange={(e) => setSiteId(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition-all bg-slate-50/50"
-                      >
-                        {sites.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        type="text"
-                        placeholder="Site adı"
-                        value={siteId}
-                        onChange={(e) => setSiteId(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm bg-slate-50/50"
-                      />
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Daire / Kapı No
-                    </label>
-                    <div className="relative">
-                      <Home className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                      <input
-                        type="text"
-                        placeholder="Örn: 4 veya B-12"
-                        value={apartmentNo}
-                        onChange={(e) => setApartmentNo(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition-all bg-slate-50/50"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* Yönetici ise: Yeni Site Adı */
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Yöneteceğiniz Site / Apartman Adı <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                    <input
-                      type="text"
-                      required
-                      placeholder="Örn: Güneş Sitesi veya Huzur Apt."
-                      value={newSiteName}
-                      onChange={(e) => setNewSiteName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition-all bg-slate-50/50"
-                    />
-                  </div>
-                </div>
-              )}
 
               {/* Şifre ve Tekrar */}
               <div className="grid sm:grid-cols-2 gap-3">
@@ -386,9 +476,13 @@ export default function RegisterPage() {
                     className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                   />
                   <span>
-                    <Link href="/kullanim-sartlari" className="text-indigo-600 underline font-medium">Kullanım Şartları</Link>
-                    {" "}ve{" "}
-                    <Link href="/gizlilik-politikasi" className="text-indigo-600 underline font-medium">Gizlilik Politikası</Link>
+                    <Link href="/kullanim-sartlari" className="text-indigo-600 underline font-medium">
+                      Kullanım Şartları
+                    </Link>{" "}
+                    ve{" "}
+                    <Link href="/gizlilik-politikasi" className="text-indigo-600 underline font-medium">
+                      Gizlilik Politikası
+                    </Link>
                     &apos;nı okudum, kabul ediyorum.
                   </span>
                 </label>
@@ -423,5 +517,13 @@ export default function RegisterPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-slate-500">Yükleniyor...</div>}>
+      <RegisterFormInner />
+    </React.Suspense>
   );
 }

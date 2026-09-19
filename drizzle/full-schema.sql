@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS `sites` (
   `address` text,
   `plan` text NOT NULL DEFAULT 'starter',
   `plan_expires_at` text,
+  `invite_code` text,
   `created_at` text DEFAULT (CURRENT_TIMESTAMP)
 );
 

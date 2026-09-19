@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import * as React from "react";
-import { Search, ArrowRight, RefreshCw, Plus, CreditCard, X, CheckCircle, Check, Clock, UserCheck } from "lucide-react";
+import { Search, ArrowRight, RefreshCw, Plus, CreditCard, X, CheckCircle, Check, Clock, UserCheck, KeyRound, Copy, CheckCheck } from "lucide-react";
 import { useAlert } from "@/components/ModalProvider";
 
 type Resident = {
@@ -65,6 +65,9 @@ export default function ResidentsPage() {
   const [selectedUsers, setSelectedUsers] = React.useState<Set<string>>(new Set());
   const [bulkMode, setBulkMode] = React.useState(false);
 
+  const [siteInfo, setSiteInfo] = React.useState<{ inviteCode: string; inviteLink: string; siteName: string } | null>(null);
+  const [copied, setCopied] = React.useState(false);
+
   async function reload() {
     setErr("");
     const res = await fetch("/api/admin/residents", { credentials: "include" });
@@ -83,10 +86,32 @@ export default function ResidentsPage() {
     (async () => {
       setLoading(true);
       await reload();
+      try {
+        const sRes = await fetch("/api/admin/site-info", { credentials: "include" });
+        if (sRes.ok) {
+          const sData = (await sRes.json()) as { inviteCode?: string; inviteLink?: string; siteName?: string } | null;
+          if (alive && sData?.inviteCode && sData?.inviteLink && sData?.siteName) {
+            setSiteInfo({
+              inviteCode: sData.inviteCode,
+              inviteLink: sData.inviteLink,
+              siteName: sData.siteName,
+            });
+          }
+        }
+      } catch {}
       if (alive) setLoading(false);
     })();
     return () => { alive = false; };
   }, []);
+
+  const copyInviteLink = async () => {
+    if (!siteInfo?.inviteLink) return;
+    try {
+      await navigator.clipboard.writeText(siteInfo.inviteLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {}
+  };
 
   async function handleApproveResident(userId: string, action: "APPROVE" | "REJECT") {
     try {
@@ -277,6 +302,53 @@ export default function ResidentsPage() {
           </button>
         </div>
       </div>
+
+      {/* Site Katılım Kodu & Sakin Davet Kartı */}
+      {siteInfo && (
+        <div className="rounded-3xl border border-indigo-200 bg-white p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+              <KeyRound className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
+                  Sakin Katılım Kodu
+                </span>
+                <span className="text-xs text-slate-500 font-medium">({siteInfo.siteName})</span>
+              </div>
+              <p className="text-lg font-black text-slate-900 font-mono tracking-wider mt-1">
+                {siteInfo.inviteCode}
+              </p>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Sakinlerinize bu kodu veya doğrudan davet linkini ileterek siteye kolayca kaydolmalarını sağlayabilirsiniz.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={copyInviteLink}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200/80 transition-all"
+            >
+              {copied ? <CheckCheck className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+              <span>{copied ? "Link Kopyalandı!" : "Davet Linkini Kopyala"}</span>
+            </button>
+
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(
+                `Merhabalar, ${siteInfo.siteName} apartman/site yönetim portalımıza katılmak için aşağıdaki linkten kaydolabilirsiniz:\n\n${siteInfo.inviteLink}\n\nSite Katılım Kodunuz: ${siteInfo.inviteCode}`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all"
+            >
+              <span>WhatsApp ile Sakinlere Gönder</span>
+            </a>
+          </div>
+        </div>
+      )}
 
       {err && (
         <div className="rounded-2xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 p-4 text-sm text-rose-950 dark:text-rose-100">

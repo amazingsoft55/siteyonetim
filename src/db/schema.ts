@@ -7,6 +7,7 @@ export const sites = sqliteTable("sites", {
   address: text("address"),
   plan: text("plan", { enum: ["starter", "professional", "enterprise"] }).notNull().default("starter"),
   planExpiresAt: text("plan_expires_at"),
+  inviteCode: text("invite_code"),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 

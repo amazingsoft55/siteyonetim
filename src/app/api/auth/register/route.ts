@@ -1,18 +1,20 @@
 import { NextResponse } from "next/server";
 import { getPlatformDb } from "@/db/platform";
 import { users, sites } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or, sql } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { databaseUnavailable } from "@/server/database/access";
 import type { PlatformDatabase } from "@/db/platform";
 import { sendAccountPendingAdminNotificationEmail } from "@/lib/send-email";
 import { createNotification } from "@/lib/notify";
+import { parseInviteCodeInput, generateSiteInviteCode } from "@/lib/site-code";
 
 type RegisterBody = {
   name?: unknown;
   emailOrPhone?: unknown;
   password?: unknown;
   siteId?: unknown;
+  inviteCode?: unknown;
   newSiteName?: unknown;
   apartmentNo?: unknown;
   accountType?: unknown; // "RESIDENT" | "MANAGER"
@@ -25,8 +27,9 @@ export async function POST(request: Request) {
     const emailOrPhone = typeof raw.emailOrPhone === "string" ? raw.emailOrPhone.trim().toLowerCase() : "";
     const password = typeof raw.password === "string" ? raw.password : "";
     let siteId = typeof raw.siteId === "string" ? raw.siteId.trim() : "";
+    const inviteCodeRaw = typeof raw.inviteCode === "string" ? raw.inviteCode.trim() : "";
     const newSiteName = typeof raw.newSiteName === "string" ? raw.newSiteName.trim() : "";
-    const apartmentNo = typeof raw.apartmentNo === "string" ? raw.apartmentNo.trim() : "";
+    let apartmentNo = typeof raw.apartmentNo === "string" ? raw.apartmentNo.trim() : "";
     const accountType = raw.accountType === "MANAGER" ? "MANAGER" : "RESIDENT";
 
     if (!name || name.length < 2) {
@@ -64,30 +67,108 @@ export async function POST(request: Request) {
 
     let resolvedSiteName = "Site Yönetimi";
 
-    // Yeni site oluşturma veya mevcut siteye bağlanma
-    if (accountType === "MANAGER" && newSiteName) {
+    // 1. Daire Sakini İçin Katılım Kodu ile Site ve Daire Doğrulama
+    if (accountType === "RESIDENT") {
+      const codeToSearch = inviteCodeRaw || siteId;
+      if (!codeToSearch) {
+        return NextResponse.json(
+          { error: "Lütfen site yöneticinizin size ilettiği Katılım Kodunu girin." },
+          { status: 400 }
+        );
+      }
+
+      const parsed = parseInviteCodeInput(codeToSearch);
+      if (parsed.apartmentNo && !apartmentNo) {
+        apartmentNo = parsed.apartmentNo;
+      }
+
+      // invite_code veya id ile siteyi bul
+      let matchedSite = (
+        await db
+          .select({
+            id: sites.id,
+            name: sites.name,
+            inviteCode: sites.inviteCode,
+          })
+          .from(sites)
+          .where(
+            or(
+              eq(sql`UPPER(${sites.inviteCode})`, parsed.siteCodeOnly.toUpperCase()),
+              eq(sql`UPPER(${sites.id})`, parsed.siteCodeOnly.toUpperCase()),
+              eq(sites.id, parsed.siteCodeOnly)
+            )
+          )
+          .limit(1)
+      )[0];
+
+      // Bulunamazsa dinamik kod eşleşmesini dene
+      if (!matchedSite) {
+        const allSites = await db
+          .select({
+            id: sites.id,
+            name: sites.name,
+            inviteCode: sites.inviteCode,
+          })
+          .from(sites);
+
+        for (const s of allSites) {
+          const expectedCode = s.inviteCode || generateSiteInviteCode(s.name, s.id);
+          if (expectedCode.toUpperCase() === parsed.siteCodeOnly.toUpperCase()) {
+            matchedSite = s;
+            if (!s.inviteCode) {
+              try {
+                await db
+                  .update(sites)
+                  .set({ inviteCode: expectedCode })
+                  .where(eq(sites.id, s.id));
+              } catch {}
+            }
+            break;
+          }
+        }
+      }
+
+      if (!matchedSite) {
+        return NextResponse.json(
+          { error: "Geçersiz site katılım kodu. Lütfen yöneticinizden aldığınız kodu kontrol edin." },
+          { status: 400 }
+        );
+      }
+
+      siteId = matchedSite.id;
+      resolvedSiteName = matchedSite.name;
+    }
+
+    // 2. Yeni Yönetici İçin Site ve Katılım Kodu Oluşturma
+    else if (accountType === "MANAGER") {
+      if (!newSiteName) {
+        return NextResponse.json({ error: "Lütfen yöneteceğiniz site / apartman adını girin." }, { status: 400 });
+      }
       siteId = crypto.randomUUID();
+
+      // Benzersiz Katılım Kodu Üretimi (Aynı isimli sitelerde bile %100 benzersiz)
+      let generatedCode = generateSiteInviteCode(newSiteName, siteId);
+      let attempts = 0;
+      while (attempts < 5) {
+        const dup = await db.select({ id: sites.id }).from(sites).where(eq(sites.inviteCode, generatedCode)).limit(1);
+        if (dup.length === 0) break;
+        generatedCode = `${generateSiteInviteCode(newSiteName)}-${Math.floor(1000 + Math.random() * 9000)}`;
+        attempts++;
+      }
+
       await db.insert(sites).values({
         id: siteId,
         name: newSiteName,
         plan: "starter",
+        inviteCode: generatedCode,
       });
       resolvedSiteName = newSiteName;
-    } else if (siteId) {
-      const siteRows = await db
-        .select({ id: sites.id, name: sites.name })
-        .from(sites)
-        .where(eq(sites.id, siteId))
-        .limit(1);
-
-      if (siteRows.length > 0) {
-        resolvedSiteName = siteRows[0].name;
-      }
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
     const userId = crypto.randomUUID();
     const userRole = accountType === "MANAGER" ? "ADMIN" : "USER";
+    const userStatus = "APPROVED"; // Geçerli kod ile kayıt olan sakin ve yönetici hemen giriş yapabilir
 
     await db.insert(users).values({
       id: userId,
@@ -95,13 +176,13 @@ export async function POST(request: Request) {
       emailOrPhone,
       passwordHash,
       role: userRole,
-      status: "PENDING", // Yönetici onayı bekliyor
+      status: userStatus,
       siteId: siteId || null,
-      apartmentNo: apartmentNo || null,
+      apartmentNo: accountType === "RESIDENT" ? (apartmentNo || null) : null,
       mustChangePassword: false,
     });
 
-    // Site yöneticilerine veya süper yöneticiye sistem içi bildirim ve e-posta tetikle
+    // Site yöneticilerine sistem içi bildirim ve e-posta tetikle
     try {
       if (siteId && userRole === "USER") {
         const siteAdmins = await db
@@ -112,8 +193,8 @@ export async function POST(request: Request) {
         for (const admin of siteAdmins) {
           createNotification(db, {
             userId: admin.id,
-            title: "Yeni Sakin Başvurusu",
-            body: `${name} (${apartmentNo ? `Daire ${apartmentNo}` : "Daire belirtilmemiş"}) onay bekliyor.`,
+            title: "Yeni Sakin Katıldı",
+            body: `${name} (${apartmentNo ? `Daire ${apartmentNo}` : "Daire belirtilmemiş"}) siteye katıldı.`,
             type: "SYSTEM",
             href: "/admin/residents",
           });
@@ -134,8 +215,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      message: "Kaydınız başarıyla alındı. Yönetici onayından sonra e-posta adresinize giriş bağlantısı gönderilecektir.",
-      status: "PENDING",
+      message:
+        accountType === "MANAGER"
+          ? "Site ve yönetici hesabınız oluşturuldu! Şimdi giriş yapabilirsiniz."
+          : "Kaydınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.",
+      status: "APPROVED",
     });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
