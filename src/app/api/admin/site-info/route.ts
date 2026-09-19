@@ -20,18 +20,37 @@ export async function GET(request: Request) {
     return await databaseUnavailable();
   }
 
-  const siteRows = await db
-    .select({
-      id: sites.id,
-      name: sites.name,
-      address: sites.address,
-      inviteCode: sites.inviteCode,
-    })
-    .from(sites)
-    .where(eq(sites.id, session.siteId))
-    .limit(1);
+  let site: { id: string; name: string; address?: string | null; inviteCode?: string | null } | null = null;
 
-  const site = siteRows[0];
+  try {
+    const siteRows = await db
+      .select({
+        id: sites.id,
+        name: sites.name,
+        address: sites.address,
+        inviteCode: sites.inviteCode,
+      })
+      .from(sites)
+      .where(eq(sites.id, session.siteId))
+      .limit(1);
+
+    site = siteRows[0] || null;
+  } catch {
+    try {
+      const basicRows = await db
+        .select({
+          id: sites.id,
+          name: sites.name,
+          address: sites.address,
+        })
+        .from(sites)
+        .where(eq(sites.id, session.siteId))
+        .limit(1);
+
+      site = basicRows[0] || null;
+    } catch {}
+  }
+
   if (!site) {
     return NextResponse.json({ error: "Site kaydı bulunamadı." }, { status: 404 });
   }

@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
 import { getPlatformDb } from "@/db/platform";
 import { users, sites } from "@/db/schema";
-import { eq, and, or, sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { databaseUnavailable } from "@/server/database/access";
 import type { PlatformDatabase } from "@/db/platform";
 import { sendAccountPendingAdminNotificationEmail } from "@/lib/send-email";
 import { createNotification } from "@/lib/notify";
 import { parseInviteCodeInput, generateSiteInviteCode } from "@/lib/site-code";
+
+function generateSafeId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `id-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
 
 type RegisterBody = {
   name?: unknown;
@@ -67,7 +74,7 @@ export async function POST(request: Request) {
 
     let resolvedSiteName = "Site Yönetimi";
 
-    // 1. Daire Sakini İçin Katılım Kodu ile Site ve Daire Doğrulama
+    // 1. Daire Sakini Kaydı: Katılım Kodu Doğrulama
     if (accountType === "RESIDENT") {
       const codeToSearch = inviteCodeRaw || siteId;
       if (!codeToSearch) {
@@ -82,28 +89,10 @@ export async function POST(request: Request) {
         apartmentNo = parsed.apartmentNo;
       }
 
-      // invite_code veya id ile siteyi bul
-      let matchedSite = (
-        await db
-          .select({
-            id: sites.id,
-            name: sites.name,
-            inviteCode: sites.inviteCode,
-          })
-          .from(sites)
-          .where(
-            or(
-              eq(sql`UPPER(${sites.inviteCode})`, parsed.siteCodeOnly.toUpperCase()),
-              eq(sql`UPPER(${sites.id})`, parsed.siteCodeOnly.toUpperCase()),
-              eq(sites.id, parsed.siteCodeOnly)
-            )
-          )
-          .limit(1)
-      )[0];
+      let matchedSite: { id: string; name: string } | null = null;
 
-      // Bulunamazsa dinamik kod eşleşmesini dene
-      if (!matchedSite) {
-        const allSites = await db
+      try {
+        const siteRows = await db
           .select({
             id: sites.id,
             name: sites.name,
@@ -111,20 +100,35 @@ export async function POST(request: Request) {
           })
           .from(sites);
 
-        for (const s of allSites) {
-          const expectedCode = s.inviteCode || generateSiteInviteCode(s.name, s.id);
-          if (expectedCode.toUpperCase() === parsed.siteCodeOnly.toUpperCase()) {
-            matchedSite = s;
-            if (!s.inviteCode) {
-              try {
-                await db
-                  .update(sites)
-                  .set({ inviteCode: expectedCode })
-                  .where(eq(sites.id, s.id));
-              } catch {}
-            }
+        for (const s of siteRows) {
+          const expectedCode = (s.inviteCode || generateSiteInviteCode(s.name, s.id)).toUpperCase();
+          if (
+            expectedCode === parsed.siteCodeOnly.toUpperCase() ||
+            s.id.toUpperCase() === parsed.siteCodeOnly.toUpperCase()
+          ) {
+            matchedSite = { id: s.id, name: s.name };
             break;
           }
+        }
+      } catch {
+        // invite_code kolonu henüz D1'de yoksa temel alanlarla ara
+        try {
+          const basicSites = await db
+            .select({ id: sites.id, name: sites.name })
+            .from(sites);
+
+          for (const s of basicSites) {
+            const expectedCode = generateSiteInviteCode(s.name, s.id).toUpperCase();
+            if (
+              expectedCode === parsed.siteCodeOnly.toUpperCase() ||
+              s.id.toUpperCase() === parsed.siteCodeOnly.toUpperCase()
+            ) {
+              matchedSite = { id: s.id, name: s.name };
+              break;
+            }
+          }
+        } catch (queryErr) {
+          console.error("Site sorgulama hatası:", queryErr);
         }
       }
 
@@ -139,36 +143,46 @@ export async function POST(request: Request) {
       resolvedSiteName = matchedSite.name;
     }
 
-    // 2. Yeni Yönetici İçin Site ve Katılım Kodu Oluşturma
+    // 2. Yönetici Kaydı: Yeni Site ve Katılım Kodu Oluşturma
     else if (accountType === "MANAGER") {
       if (!newSiteName) {
         return NextResponse.json({ error: "Lütfen yöneteceğiniz site / apartman adını girin." }, { status: 400 });
       }
-      siteId = crypto.randomUUID();
+      siteId = generateSafeId();
+      const generatedCode = generateSiteInviteCode(newSiteName, siteId);
 
-      // Benzersiz Katılım Kodu Üretimi (Aynı isimli sitelerde bile %100 benzersiz)
-      let generatedCode = generateSiteInviteCode(newSiteName, siteId);
-      let attempts = 0;
-      while (attempts < 5) {
-        const dup = await db.select({ id: sites.id }).from(sites).where(eq(sites.inviteCode, generatedCode)).limit(1);
-        if (dup.length === 0) break;
-        generatedCode = `${generateSiteInviteCode(newSiteName)}-${Math.floor(1000 + Math.random() * 9000)}`;
-        attempts++;
+      let inserted = false;
+      try {
+        await db.insert(sites).values({
+          id: siteId,
+          name: newSiteName,
+          plan: "starter",
+          inviteCode: generatedCode,
+        });
+        inserted = true;
+      } catch {
+        // D1'de invite_code kolonu henüz yoksa kolonsuz ekle
       }
 
-      await db.insert(sites).values({
-        id: siteId,
-        name: newSiteName,
-        plan: "starter",
-        inviteCode: generatedCode,
-      });
+      if (!inserted) {
+        try {
+          await db.insert(sites).values({
+            id: siteId,
+            name: newSiteName,
+            plan: "starter",
+          });
+        } catch (insertErr) {
+          console.error("Site ekleme hatası:", insertErr);
+          throw insertErr;
+        }
+      }
       resolvedSiteName = newSiteName;
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const userId = crypto.randomUUID();
+    const userId = generateSafeId();
     const userRole = accountType === "MANAGER" ? "ADMIN" : "USER";
-    const userStatus = "APPROVED"; // Geçerli kod ile kayıt olan sakin ve yönetici hemen giriş yapabilir
+    const userStatus = "APPROVED"; // Sakin ve Yönetici hesapları anında aktif olur
 
     await db.insert(users).values({
       id: userId,
@@ -182,7 +196,7 @@ export async function POST(request: Request) {
       mustChangePassword: false,
     });
 
-    // Site yöneticilerine sistem içi bildirim ve e-posta tetikle
+    // Bildirimler
     try {
       if (siteId && userRole === "USER") {
         const siteAdmins = await db
@@ -209,20 +223,20 @@ export async function POST(request: Request) {
           }
         }
       }
-    } catch {
-      // Bildirim gönderimi ana kayıt işlemini engellememeli
-    }
+    } catch {}
 
     return NextResponse.json({
       ok: true,
       message:
         accountType === "MANAGER"
-          ? "Site ve yönetici hesabınız oluşturuldu! Şimdi giriş yapabilirsiniz."
+          ? "Site ve yönetici hesabınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz."
           : "Kaydınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.",
       status: "APPROVED",
+      siteName: resolvedSiteName,
     });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: "Kayıt işlemi sırasında bir hata oluştu.", details: msg }, { status: 500 });
+    console.error("Kayıt hatası:", error);
+    return NextResponse.json({ error: "Kayıt işlemi sırasında bir hata oluştu: " + msg }, { status: 500 });
   }
 }

@@ -31,29 +31,10 @@ export async function GET(request: Request) {
     return await databaseUnavailable();
   }
 
-  // 1. invite_code veya id ile eşleşen siteyi ara
-  const siteRows = await db
-    .select({
-      id: sites.id,
-      name: sites.name,
-      address: sites.address,
-      inviteCode: sites.inviteCode,
-    })
-    .from(sites)
-    .where(
-      or(
-        eq(sql`UPPER(${sites.inviteCode})`, parsed.siteCodeOnly.toUpperCase()),
-        eq(sql`UPPER(${sites.id})`, parsed.siteCodeOnly.toUpperCase()),
-        eq(sites.id, parsed.siteCodeOnly)
-      )
-    )
-    .limit(1);
+  let matchedSite: { id: string; name: string; address?: string | null; inviteCode?: string | null } | null = null;
 
-  let site = siteRows[0];
-
-  // 2. Eğer bulunamadıysa ve sitede henüz invite_code atanmamışsa (tüm siteleri kontrol et)
-  if (!site) {
-    const allSites = await db
+  try {
+    const siteRows = await db
       .select({
         id: sites.id,
         name: sites.name,
@@ -62,26 +43,53 @@ export async function GET(request: Request) {
       })
       .from(sites);
 
-    for (const s of allSites) {
+    for (const s of siteRows) {
       const expectedCode = s.inviteCode || generateSiteInviteCode(s.name, s.id);
-      if (expectedCode.toUpperCase() === parsed.siteCodeOnly.toUpperCase()) {
-        site = s;
-        // Eksikse veritabanında kodunu güncelle
-        if (!s.inviteCode) {
-          try {
-            await db
-              .update(sites)
-              .set({ inviteCode: expectedCode })
-              .where(eq(sites.id, s.id));
-            site.inviteCode = expectedCode;
-          } catch {}
-        }
+      if (
+        expectedCode.toUpperCase() === parsed.siteCodeOnly.toUpperCase() ||
+        s.id.toUpperCase() === parsed.siteCodeOnly.toUpperCase()
+      ) {
+        matchedSite = {
+          id: s.id,
+          name: s.name,
+          address: s.address,
+          inviteCode: expectedCode,
+        };
         break;
       }
     }
+  } catch {
+    // D1'de invite_code kolonu henüz yoksa temel alanlarla ara
+    try {
+      const basicSites = await db
+        .select({
+          id: sites.id,
+          name: sites.name,
+          address: sites.address,
+        })
+        .from(sites);
+
+      for (const s of basicSites) {
+        const expectedCode = generateSiteInviteCode(s.name, s.id);
+        if (
+          expectedCode.toUpperCase() === parsed.siteCodeOnly.toUpperCase() ||
+          s.id.toUpperCase() === parsed.siteCodeOnly.toUpperCase()
+        ) {
+          matchedSite = {
+            id: s.id,
+            name: s.name,
+            address: s.address,
+            inviteCode: expectedCode,
+          };
+          break;
+        }
+      }
+    } catch (queryErr) {
+      console.error("Site verify sorgu hatası:", queryErr);
+    }
   }
 
-  if (!site) {
+  if (!matchedSite) {
     return NextResponse.json({
       ok: false,
       valid: false,
@@ -89,15 +97,15 @@ export async function GET(request: Request) {
     });
   }
 
-  const finalInviteCode = site.inviteCode || generateSiteInviteCode(site.name, site.id);
+  const finalInviteCode = matchedSite.inviteCode || generateSiteInviteCode(matchedSite.name, matchedSite.id);
 
   return NextResponse.json({
     ok: true,
     valid: true,
     site: {
-      id: site.id,
-      name: site.name,
-      address: site.address || "Belirtilmemiş",
+      id: matchedSite.id,
+      name: matchedSite.name,
+      address: matchedSite.address || "Belirtilmemiş",
       inviteCode: finalInviteCode,
       apartmentNo: parsed.apartmentNo,
     },
