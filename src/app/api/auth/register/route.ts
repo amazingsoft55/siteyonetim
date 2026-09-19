@@ -161,31 +161,28 @@ export async function POST(request: Request) {
         });
         inserted = true;
       } catch (err) {
-        console.warn("Insert sites with inviteCode failed, trying fallback:", err);
+        console.warn("Drizzle insert sites failed, trying raw SQL fallback:", err);
       }
 
       if (!inserted) {
         try {
-          await db.insert(sites).values({
-            id: siteId,
-            name: newSiteName,
-            plan: "starter",
-          });
+          await db.run(
+            sql`INSERT INTO sites (id, name, plan) VALUES (${siteId}, ${newSiteName}, 'starter')`
+          );
           inserted = true;
-        } catch (insertErr) {
-          console.warn("Insert sites with plan failed, trying minimal:", insertErr);
+        } catch (rawErr) {
+          console.warn("Raw SQL insert sites 1 failed, trying minimal:", rawErr);
         }
       }
 
       if (!inserted) {
         try {
-          await db.insert(sites).values({
-            id: siteId,
-            name: newSiteName,
-          });
-        } catch (minimalErr) {
-          console.error("Minimal site insert error:", minimalErr);
-          throw minimalErr;
+          await db.run(
+            sql`INSERT INTO sites (id, name) VALUES (${siteId}, ${newSiteName})`
+          );
+        } catch (rawErr2) {
+          console.error("Sites raw SQL failed:", rawErr2);
+          throw rawErr2;
         }
       }
       resolvedSiteName = newSiteName;
@@ -207,44 +204,33 @@ export async function POST(request: Request) {
         status: userStatus,
         siteId: siteId || null,
         apartmentNo: accountType === "RESIDENT" ? (apartmentNo || null) : null,
-        mustChangePassword: false,
       });
       insertedUser = true;
     } catch (e1) {
-      console.warn("User insert 1 failed, trying fallback 2:", e1);
+      console.warn("Drizzle insert users failed, trying raw SQL fallback:", e1);
     }
 
     if (!insertedUser) {
       try {
-        await db.insert(users).values({
-          id: userId,
-          name,
-          emailOrPhone,
-          passwordHash,
-          role: userRole,
-          status: userStatus,
-          siteId: siteId || null,
-          apartmentNo: accountType === "RESIDENT" ? (apartmentNo || null) : null,
-        });
+        const aptVal = accountType === "RESIDENT" ? (apartmentNo || null) : null;
+        const siteVal = siteId || null;
+        await db.run(
+          sql`INSERT INTO users (id, name, email_or_phone, password_hash, role, status, site_id, apartment_no) VALUES (${userId}, ${name}, ${emailOrPhone}, ${passwordHash}, ${userRole}, ${userStatus}, ${siteVal}, ${aptVal})`
+        );
         insertedUser = true;
       } catch (e2) {
-        console.warn("User insert 2 failed, trying minimal fallback:", e2);
+        console.warn("Raw SQL insert 1 failed, trying minimal fallback:", e2);
       }
     }
 
     if (!insertedUser) {
       try {
-        await db.insert(users).values({
-          id: userId,
-          name,
-          emailOrPhone,
-          passwordHash,
-          role: userRole,
-          siteId: siteId || null,
-          apartmentNo: accountType === "RESIDENT" ? (apartmentNo || null) : null,
-        });
+        const siteVal = siteId || null;
+        await db.run(
+          sql`INSERT INTO users (id, name, email_or_phone, password_hash, role, site_id) VALUES (${userId}, ${name}, ${emailOrPhone}, ${passwordHash}, ${userRole}, ${siteVal})`
+        );
       } catch (e3) {
-        console.error("User insert 3 minimal error:", e3);
+        console.error("User insert raw SQL minimal error:", e3);
         throw e3;
       }
     }
