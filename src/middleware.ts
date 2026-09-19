@@ -16,6 +16,7 @@ function getSecretKey() {
 function isPublicApiPath(path: string): boolean {
   const publicPaths = [
     "/api/auth/login",
+    "/api/auth/register",
     "/api/auth/logout",
     "/api/auth/me",
     "/api/auth/complete-password",
@@ -24,6 +25,7 @@ function isPublicApiPath(path: string): boolean {
     "/api/setup/status",
     "/api/telemetry/pageview",
     "/api/public/contact",
+    "/api/public/sites",
     "/api/plans",
     "/api/features",
   ];
