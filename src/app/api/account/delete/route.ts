@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { getSession } from "@/lib/session";
 import { acquireDatabase, databaseUnavailable } from "@/server/database/access";
 import { jsonSqlError } from "@/lib/db-query-error";
-import { users } from "@/db/schema";
+import { users, sites } from "@/db/schema";
 import { deleteUserCascade, deleteSiteCascade } from "@/lib/user-cascade-delete";
+import { createNotification } from "@/lib/notify";
+import { sendAccountDeletedEmail } from "@/lib/send-email";
+import { looksLikeEmail } from "@/lib/password-reset";
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -56,7 +59,55 @@ export async function POST(request: Request) {
       );
     }
 
-    // Yönetici ve siteyi de silmek istiyorsa
+    // Site adını öğren
+    let siteName = "Site Yönetimi";
+    if (user.siteId) {
+      const siteRows = await d.db.select({ name: sites.name }).from(sites).where(eq(sites.id, user.siteId)).limit(1);
+      if (siteRows[0]?.name) {
+        siteName = siteRows[0].name;
+      }
+    }
+
+    // 1. Kullanıcıya "Hesabınız Kalıcı Olarak Silindi" onay e-postası gönder
+    if (looksLikeEmail(user.emailOrPhone)) {
+      try {
+        const mailRes = await sendAccountDeletedEmail(user.emailOrPhone, {
+          recipientName: user.name,
+          emailOrPhone: user.emailOrPhone,
+          siteName,
+          apartmentNo: user.apartmentNo,
+          role: user.role,
+        });
+        console.log("[account/delete] Hesap silindi e-postası sonucu:", mailRes);
+      } catch (mailErr) {
+        console.error("[account/delete] Hesap silindi e-postası gönderilemedi:", mailErr);
+      }
+    }
+
+    // 2. Eğer silinen hesap bir Daire Sakini (USER) ise, Site Yöneticisine (ADMIN) bildirim gönder
+    if (user.role === "USER" && user.siteId) {
+      try {
+        const siteAdmins = await d.db
+          .select({ id: users.id })
+          .from(users)
+          .where(and(eq(users.siteId, user.siteId), eq(users.role, "ADMIN")));
+
+        const aptLabel = user.apartmentNo ? ` (Daire ${user.apartmentNo})` : "";
+        for (const admin of siteAdmins) {
+          await createNotification(d.db, {
+            userId: admin.id,
+            title: "Sakin Ayrıldı / Hesap Silindi",
+            body: `${user.name}${aptLabel} sakin hesabını ve platform kaydını kalıcı olarak sildi.`,
+            type: "SYSTEM",
+            href: "/admin/residents",
+          });
+        }
+      } catch (notifErr) {
+        console.error("[account/delete] Yönetici bildirimi eklenemedi:", notifErr);
+      }
+    }
+
+    // 3. Veritabanından kalıcı olarak sil
     if (user.role === "ADMIN" && user.siteId && deleteSiteAlso) {
       await deleteSiteCascade(d.db, user.siteId);
     } else {
@@ -92,3 +143,4 @@ export async function POST(request: Request) {
     return jsonSqlError(error, "Hesap silinirken bir hata oluştu.");
   }
 }
+

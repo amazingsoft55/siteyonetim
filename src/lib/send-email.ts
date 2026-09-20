@@ -9,12 +9,14 @@ import {
   buildSupportTicketUpdateEmailHtml,
   buildAccountApprovedEmailHtml,
   buildAccountPendingAdminNotificationEmailHtml,
+  buildAccountDeletedEmailHtml,
   type BrandedEmailOptions,
   type WelcomeEmailOptions,
   type PaymentReceiptOptions,
   type SupportTicketUpdateOptions,
   type AccountApprovedEmailOptions,
   type AccountPendingAdminNotificationOptions,
+  type AccountDeletedEmailOptions,
 } from "@/lib/email-template";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
@@ -405,4 +407,19 @@ export async function sendContactFormAutoReplyToUser(input: {
     fromType: "support",
   });
 }
+
+/** 11. Hesap Kalıcı Olarak Silindi Onay E-postası (KVKK / Güvenlik bilgilendirmesi) */
+export async function sendAccountDeletedEmail(
+  to: string,
+  opts: AccountDeletedEmailOptions
+): Promise<SendResult> {
+  const html = buildAccountDeletedEmailHtml(opts);
+  return sendBrandedEmail({
+    to,
+    subject: `Hesabınız Silindi — ${opts.siteName || "Site Yönetimi"}`,
+    html,
+    fromType: "support",
+  });
+}
+
 

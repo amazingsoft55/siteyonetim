@@ -103,6 +103,14 @@ export type SupportTicketUpdateOptions = {
   viewUrl?: string;
 };
 
+export type AccountDeletedEmailOptions = {
+  recipientName: string;
+  emailOrPhone: string;
+  siteName?: string;
+  apartmentNo?: string | null;
+  role?: string;
+};
+
 /* ==========================================================================
    1. GENEL / ANA TEMEL ÇERÇEVE ŞABLONU (BASE WRAPPER)
    ========================================================================== */
@@ -753,3 +761,66 @@ export function buildAccountPendingAdminNotificationEmailHtml(opts: AccountPendi
     contentHtml,
   });
 }
+
+/* ==========================================================================
+   11. HESAP SİLİNDİ ONAY E-POSTASI (KVKK & GÜVENLİK BİLGİLENDİRMESİ)
+   ========================================================================== */
+
+export function buildAccountDeletedEmailHtml(opts: AccountDeletedEmailOptions): string {
+  const accent = "#e11d48";
+  const now = new Date().toLocaleString("tr-TR");
+
+  const contentHtml = `
+    <h1 style="margin: 0 0 14px; font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.35; letter-spacing: -0.5px;">
+      Hesabınız Kalıcı Olarak Silindi
+    </h1>
+    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #334155;">
+      Sayın <strong>${opts.recipientName}</strong>,<br /><br />
+      Talebiniz doğrultusunda <strong>${opts.siteName || SITE_BRAND_NAME}</strong> platformundaki hesabınız ve hesaba bağlı tüm kişisel verileriniz sistemimizden <strong>kalıcı olarak silinmiştir (KVKK Uyumlu)</strong>.
+    </p>
+
+    <!-- Bilgi Kartı -->
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 14px; margin: 20px 0 24px;">
+      <tr>
+        <td style="padding: 20px;">
+          <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td style="font-size: 13px; color: #9f1239; padding-bottom: 8px;">Silinen Hesap:</td>
+              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 8px;">${opts.recipientName}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 13px; color: #9f1239; padding-bottom: 8px;">E-Posta / Telefon:</td>
+              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 8px;">${opts.emailOrPhone}</td>
+            </tr>
+            ${opts.apartmentNo ? `
+            <tr>
+              <td style="font-size: 13px; color: #9f1239; padding-bottom: 8px;">Daire:</td>
+              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 8px;">Daire ${opts.apartmentNo}</td>
+            </tr>` : ""}
+            <tr>
+              <td style="font-size: 13px; color: #9f1239;">Silinme Tarihi:</td>
+              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a;">${now}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;">
+      <p style="margin: 0; font-size: 12px; color: #64748b; line-height: 1.6;">
+        💡 Bu işlem sizin bilginiz dışında gerçekleştiyse veya tekrar katılmak isterseniz lütfen site yöneticiniz ile iletişime geçiniz.
+      </p>
+    </div>
+  `;
+
+  return buildBaseEmailWrapper({
+    title: "Hesabınız Kalıcı Olarak Silindi",
+    badge: "HESAP SİLİNDİ",
+    badgeColor: "#e11d48",
+    badgeBg: "#ffe4e6",
+    accentColor: accent,
+    footerNote: "Bu bilgilendirme e-postası güvenlik ve yasal zorunluluk kapsamında gönderilmiştir.",
+    contentHtml,
+  });
+}
+
