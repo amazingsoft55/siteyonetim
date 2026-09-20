@@ -83,9 +83,10 @@ export default function BankTransferInfoPage() {
     })();
   }, []);
 
-  const defaultIban = siteSettings.iban || "TR33 0006 1005 1982 0000 1234 56";
-  const defaultBank = siteSettings.bankName || "Ziraat Bankası / Site Yönetim Hesabı";
-  const defaultManager = siteSettings.managerName || "Site Yönetim Kurulu";
+  const hasIban = Boolean(siteSettings.iban && siteSettings.iban.trim().length > 0);
+  const actualIban = siteSettings.iban?.trim() || "";
+  const actualBank = siteSettings.bankName?.trim() || "Site Yönetim Banka Hesabı";
+  const actualManager = siteSettings.managerName?.trim() || "Site Yönetimi";
   const paymentDescription = `${apartmentNo ? `Daire ${apartmentNo}` : "Daire"} - ${residentName} - Aidat`;
 
   const handleCopy = (text: string, type: "iban" | "desc") => {
@@ -129,73 +130,86 @@ export default function BankTransferInfoPage() {
         </div>
 
         {/* Bilgilendirme Notu */}
-        <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/60 flex items-start gap-3">
-          <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-          <p className="text-xs text-amber-900 leading-relaxed">
-            <strong>Komisyonsuz & Güvenli Ödeme:</strong> Aidat ödemelerinizi doğrudan site yönetiminin
+        <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200/60 flex items-start gap-3">
+          <Info className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
+          <p className="text-xs text-indigo-950 leading-relaxed">
+            <strong>Komisyonsuz Doğrudan Transfer:</strong> Aidat ödemelerinizi doğrudan site yönetiminin
             aşağıda yer alan resmi banka hesabına EFT / Havale veya FAST yoluyla %0 komisyonla iletebilirsiniz.
           </p>
         </div>
 
-        {/* Banka ve IBAN Kartı */}
-        <div className="p-6 rounded-2xl bg-slate-900 text-white space-y-4 shadow-lg shadow-slate-900/10">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
-            <span className="flex items-center gap-1.5 font-bold">
-              <Building2 className="h-4 w-4 text-indigo-400" /> {defaultBank}
-            </span>
-            <span className="font-medium">{defaultManager}</span>
+        {/* Banka ve IBAN Kartı Veya Tanımlanmamış Uyarısı */}
+        {!hasIban ? (
+          <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 space-y-2">
+            <div className="flex items-center gap-2 font-bold text-sm">
+              <Info className="h-5 w-5 text-amber-700 shrink-0" />
+              Banka IBAN Bilgisi Henüz Eklenmemiş
+            </div>
+            <p className="text-xs text-amber-800 leading-relaxed">
+              Site yöneticiniz henüz resmi banka hesap (IBAN) bilgisini sisteme kaydetmemiştir.
+              Ödemenizi yapmak için lütfen site yöneticiniz ile iletişime geçiniz.
+            </p>
           </div>
-
-          <div>
-            <label className="text-[11px] font-semibold text-slate-400 block mb-1">
-              HESAP IBAN NUMARASI
-            </label>
-            <div className="flex items-center justify-between bg-slate-800/90 rounded-xl p-3 border border-slate-700">
-              <span className="font-mono text-sm sm:text-base font-bold tracking-wider text-slate-100 break-all">
-                {defaultIban}
+        ) : (
+          <div className="p-6 rounded-2xl bg-slate-900 text-white space-y-4 shadow-lg shadow-slate-900/10">
+            <div className="flex items-center justify-between text-slate-400 text-xs">
+              <span className="flex items-center gap-1.5 font-bold">
+                <Building2 className="h-4 w-4 text-indigo-400" /> {actualBank}
               </span>
-              <button
-                onClick={() => handleCopy(defaultIban, "iban")}
-                className="ml-3 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shrink-0 transition-colors"
-              >
-                {copiedIban ? (
-                  <>
-                    <Check className="h-3.5 w-3.5" /> Kopyalandı
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3.5 w-3.5" /> IBAN Kopyala
-                  </>
-                )}
-              </button>
+              <span className="font-medium">{actualManager}</span>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+                HESAP IBAN NUMARASI
+              </label>
+              <div className="flex items-center justify-between bg-slate-800/90 rounded-xl p-3 border border-slate-700">
+                <span className="font-mono text-sm sm:text-base font-bold tracking-wider text-slate-100 break-all">
+                  {actualIban}
+                </span>
+                <button
+                  onClick={() => handleCopy(actualIban, "iban")}
+                  className="ml-3 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer"
+                >
+                  {copiedIban ? (
+                    <>
+                      <Check className="h-3.5 w-3.5" /> Kopyalandı
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5" /> IBAN Kopyala
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+                ÖNERİLEN HAVALE AÇIKLAMASI
+              </label>
+              <div className="flex items-center justify-between bg-slate-800/90 rounded-xl p-3 border border-slate-700">
+                <span className="text-xs sm:text-sm font-semibold text-slate-200 truncate">
+                  {paymentDescription}
+                </span>
+                <button
+                  onClick={() => handleCopy(paymentDescription, "desc")}
+                  className="ml-3 px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer"
+                >
+                  {copiedDesc ? (
+                    <>
+                      <Check className="h-3.5 w-3.5" /> Kopyalandı
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5" /> Kopyala
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-
-          <div>
-            <label className="text-[11px] font-semibold text-slate-400 block mb-1">
-              ÖNERİLEN HAVALE AÇIKLAMASI
-            </label>
-            <div className="flex items-center justify-between bg-slate-800/90 rounded-xl p-3 border border-slate-700">
-              <span className="text-xs sm:text-sm font-semibold text-slate-200 truncate">
-                {paymentDescription}
-              </span>
-              <button
-                onClick={() => handleCopy(paymentDescription, "desc")}
-                className="ml-3 px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-colors"
-              >
-                {copiedDesc ? (
-                  <>
-                    <Check className="h-3.5 w-3.5" /> Kopyalandı
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3.5 w-3.5" /> Kopyala
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* 3 Adımda Ödeme */}
         <div className="space-y-3 pt-2">

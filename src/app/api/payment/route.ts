@@ -144,23 +144,12 @@ export async function POST(req: Request) {
         }, { status: 500 });
       }
     } else {
-      // Iyzico yapılandırılmamış — test modu
-      await d.db.insert(payments).values({
-        id: `pay_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        userId: session.id,
-        amount,
-        title: period || "Aidat Ödemesi",
-        status: "PAID",
-        paidAt: new Date().toISOString(),
-      });
-
+      // Iyzico yapılandırılmamış — sanal POS aktif değil
       return NextResponse.json({
-        ok: true,
-        status: "success",
-        paymentId: `test_${conversationId}`,
-        message: "Ödeme test modunda kaydedildi. Gerçek ödeme için Iyzico yapılandırılmalıdır.",
-        testMode: true,
-      });
+        ok: false,
+        status: "disabled",
+        error: "Kredi kartı / Sanal POS entegrasyonu aktif değildir. Lütfen ödemelerinizi Banka Havalesi / EFT (FAST) yöntemi ile doğrudan site hesabına iletiniz.",
+      }, { status: 400 });
     }
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
