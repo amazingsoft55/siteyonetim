@@ -2,11 +2,11 @@ import type { PlatformDatabase } from "@/db/platform";
 import { notifications } from "@/db/schema";
 import { eq, desc, count, sql } from "drizzle-orm";
 
-type NotifyType = "WELCOME" | "PAYMENT" | "ANNOUNCEMENT" | "REQUEST" | "SYSTEM";
+export type NotifyType = "WELCOME" | "PAYMENT" | "ANNOUNCEMENT" | "REQUEST" | "SYSTEM";
 
 /**
  * Kullanıcıya bildirim oluştur.
- * Hata fırlatmaz — sessizce başarısız olur (bildirim sistem hatası sayfayı bozmamalı).
+ * Hata durumunda konsola yazar fakat çağıran fonksiyonu çökertmez.
  */
 export async function createNotification(
   db: PlatformDatabase,
@@ -17,7 +17,7 @@ export async function createNotification(
     type?: NotifyType;
     href?: string;
   },
-) {
+): Promise<boolean> {
   try {
     const id =
       typeof crypto !== "undefined" && crypto.randomUUID
@@ -32,12 +32,14 @@ export async function createNotification(
       type: opts.type ?? "SYSTEM",
       href: opts.href ?? null,
     });
-  } catch {
-    /* Bildirim kayıt hatası sayfayı bozmamalı */
+    return true;
+  } catch (err) {
+    console.error(`[notify] Bildirim eklenirken hata (${opts.userId}):`, err);
+    return false;
   }
 }
 
-/** Kullanıcıya toplu bildirim gönder (aynı sitedekilere duyuru bildirimi vb.) */
+/** Kullanıcılara toplu bildirim gönder (aynı sitedekilere duyuru bildirimi vb.) */
 export async function createBulkNotifications(
   db: PlatformDatabase,
   userIds: string[],
@@ -48,9 +50,12 @@ export async function createBulkNotifications(
     href?: string;
   },
 ) {
-  for (const uid of userIds) {
-    await createNotification(db, { ...opts, userId: uid });
-  }
+  if (!userIds.length) return;
+  
+  // Paralel olarak tüm kullanıcılara bildirim ekle
+  await Promise.allSettled(
+    userIds.map((uid) => createNotification(db, { ...opts, userId: uid }))
+  );
 }
 
 /** Kullanıcının okunmamış bildirim sayısını getir */
@@ -63,7 +68,8 @@ export async function getUnreadCount(db: PlatformDatabase, userId: string): Prom
         sql`${notifications.userId} = ${userId} AND ${notifications.readAt} IS NULL`,
       );
     return result[0]?.c ?? 0;
-  } catch {
+  } catch (err) {
+    console.error(`[notify] Okunmamış bildirim sayısı alınamadı (${userId}):`, err);
     return 0;
   }
 }
@@ -72,7 +78,7 @@ export async function getUnreadCount(db: PlatformDatabase, userId: string): Prom
 export async function getNotifications(
   db: PlatformDatabase,
   userId: string,
-  limit = 20,
+  limit = 30,
 ) {
   try {
     return await db
@@ -81,7 +87,8 @@ export async function getNotifications(
       .where(eq(notifications.userId, userId))
       .orderBy(desc(notifications.createdAt))
       .limit(limit);
-  } catch {
+  } catch (err) {
+    console.error(`[notify] Bildirimler listelenemedi (${userId}):`, err);
     return [];
   }
 }
@@ -96,8 +103,8 @@ export async function markAsRead(db: PlatformDatabase, notificationId: string, u
       .where(
         sql`${notifications.id} = ${notificationId} AND ${notifications.userId} = ${userId}`,
       );
-  } catch {
-    /* sessiz */
+  } catch (err) {
+    console.error(`[notify] Bildirim okundu işaretlenemedi:`, err);
   }
 }
 
@@ -111,7 +118,21 @@ export async function markAllAsRead(db: PlatformDatabase, userId: string) {
       .where(
         sql`${notifications.userId} = ${userId} AND ${notifications.readAt} IS NULL`,
       );
-  } catch {
-    /* sessiz */
+  } catch (err) {
+    console.error(`[notify] Tüm bildirimler okundu işaretlenemedi:`, err);
   }
 }
+
+/** Bildirimi sil */
+export async function deleteNotification(db: PlatformDatabase, notificationId: string, userId: string) {
+  try {
+    await db
+      .delete(notifications)
+      .where(
+        sql`${notifications.id} = ${notificationId} AND ${notifications.userId} = ${userId}`,
+      );
+  } catch (err) {
+    console.error(`[notify] Bildirim silinemedi:`, err);
+  }
+}
+

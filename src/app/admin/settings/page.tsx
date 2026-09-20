@@ -221,6 +221,170 @@ export default function AdminSettingsPage() {
           )}
         </div>
       </div>
+
+      {/* E-posta & Bildirim Test Paneli */}
+      <AdminNotificationTestCard />
+    </div>
+  );
+}
+
+function AdminNotificationTestCard() {
+  const [testEmail, setTestEmail] = React.useState("");
+  const [emailSending, setEmailSending] = React.useState(false);
+  const [emailResult, setEmailResult] = React.useState<{ ok: boolean; message: string } | null>(null);
+
+  const [notifSending, setNotifSending] = React.useState(false);
+  const [notifResult, setNotifResult] = React.useState<{ ok: boolean; message: string } | null>(null);
+
+  const handleSendTestEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testEmail || !testEmail.includes("@")) return;
+
+    setEmailSending(true);
+    setEmailResult(null);
+
+    try {
+      const res = await fetch("/api/admin/email/test", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: testEmail, type: "default" }),
+      });
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; message?: string; error?: string } | null;
+
+      if (res.ok && data?.ok) {
+        setEmailResult({ ok: true, message: data.message || "Test e-postası başarıyla gönderildi!" });
+      } else {
+        setEmailResult({
+          ok: false,
+          message: data?.error || "E-posta gönderilemedi. Lütfen RESEND_API_KEY anahtarınızı kontrol edin.",
+        });
+      }
+    } catch {
+      setEmailResult({ ok: false, message: "Sunucuya bağlanılamadı." });
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
+  const handleSendTestNotification = async () => {
+    setNotifSending(true);
+    setNotifResult(null);
+
+    try {
+      const res = await fetch("/api/admin/notifications/test", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "Sistem Bildirim Testi 🔔",
+          body: `Test başarılı! Saat: ${new Date().toLocaleTimeString("tr-TR")}. Bildirim zili ve sistemi aktif çalışıyor.`,
+          type: "SYSTEM",
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; message?: string; error?: string } | null;
+
+      if (res.ok && data?.ok) {
+        setNotifResult({ ok: true, message: data.message || "Test bildirimi oluşturuldu! Yukarıdaki zili kontrol edin." });
+      } else {
+        setNotifResult({ ok: false, message: data?.error || "Bildirim oluşturulamadı." });
+      }
+    } catch {
+      setNotifResult({ ok: false, message: "Sunucuya bağlanılamadı." });
+    } finally {
+      setNotifSending(false);
+    }
+  };
+
+  return (
+    <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+      <div>
+        <h3 className="text-lg font-extrabold text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+          <Settings className="h-5 w-5 text-indigo-600" />
+          Bildirim & E-posta Altyapı Testi
+        </h3>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+          E-posta (Resend) ve sistem içi bildirim zili altyapınızı canlı olarak test edin.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Sistem İçi Bildirim Testi */}
+        <div className="bg-slate-50 dark:bg-zinc-950/40 p-5 rounded-2xl border border-slate-200/60 dark:border-zinc-800/80 space-y-4 flex flex-col justify-between">
+          <div className="space-y-2">
+            <h4 className="font-bold text-sm text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
+              🔔 Sistem İçi Bildirim Testi
+            </h4>
+            <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
+              Bu buton ile hesabınıza anında bir test bildirimi gönderilir ve yukarıdaki bildirim zilinde kırmızı rozet belirir.
+            </p>
+          </div>
+
+          {notifResult && (
+            <div
+              className={`p-3 rounded-xl text-xs font-semibold ${
+                notifResult.ok
+                  ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                  : "bg-red-50 text-red-800 border border-red-200"
+              }`}
+            >
+              {notifResult.message}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleSendTestNotification}
+            disabled={notifSending}
+            className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+          >
+            {notifSending ? "Bildirim Oluşturuluyor…" : "Sistem İçi Bildirim Gönder"}
+          </button>
+        </div>
+
+        {/* E-posta Gönderim Testi */}
+        <div className="bg-slate-50 dark:bg-zinc-950/40 p-5 rounded-2xl border border-slate-200/60 dark:border-zinc-800/80 space-y-4 flex flex-col justify-between">
+          <div className="space-y-2">
+            <h4 className="font-bold text-sm text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
+              ✉️ Resend E-posta Gönderim Testi
+            </h4>
+            <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
+              Belirttiğiniz e-posta adresine Resend API üzerinden test e-postası iletilir.
+            </p>
+          </div>
+
+          <form onSubmit={handleSendTestEmail} className="space-y-3">
+            <input
+              type="email"
+              required
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              placeholder="ornek@alanadiniz.com"
+              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-2.5 px-3.5 text-xs text-zinc-950 dark:text-zinc-50 outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+
+            {emailResult && (
+              <div
+                className={`p-3 rounded-xl text-xs font-semibold leading-relaxed ${
+                  emailResult.ok
+                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                    : "bg-red-50 text-red-800 border border-red-200"
+                }`}
+              >
+                {emailResult.message}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={emailSending}
+              className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+            >
+              {emailSending ? "E-posta Gönderiliyor…" : "Test E-postası Gönder"}
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

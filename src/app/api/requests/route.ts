@@ -212,20 +212,47 @@ export async function PUT(request: Request) {
 
     const row = await d.db.select().from(residentRequests).where(eq(residentRequests.id, id)).limit(1);
 
-    // Talep sahibine durum değişikliği bildirimi
+    // Talep sahibine durum değişikliği bildirimi (Sistem İçi + E-posta)
     if (row[0]) {
       const statusLabel = uiStatus === "Bekliyor" ? "Beklemede" : uiStatus === "İşlemde" ? "İşlemde" : uiStatus === "Çözüldü" ? "Çözüldü" : "Reddedildi";
       let bodyText = `"${row[0].subject}" talebinin durumu "${statusLabel}" olarak güncellendi.`;
       if (note && uiStatus === "Çözüldü") bodyText += ` Çözüm notu: ${note}`;
       if (note && uiStatus === "Reddedildi") bodyText += ` Red nedeni: ${note}`;
 
-      createNotification(d.db, {
+      await createNotification(d.db, {
         userId: row[0].userId,
-        title: `Talep Durumu Güncellendi`,
+        title: `Talep Durumu: ${statusLabel}`,
         body: bodyText,
         type: "REQUEST",
         href: "/dashboard/requests",
       });
+
+      // Talep sahibi kullanıcıyı bul ve e-posta gönder
+      try {
+        const u = await d.db.select().from(users).where(eq(users.id, row[0].userId)).limit(1);
+        if (u[0] && u[0].emailOrPhone && u[0].emailOrPhone.includes("@")) {
+          const { sendSupportTicketUpdateEmail } = await import("@/lib/send-email");
+          const statusMap: Record<string, "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED"> = {
+            "Bekliyor": "OPEN",
+            "İşlemde": "IN_PROGRESS",
+            "Çözüldü": "RESOLVED",
+            "Reddedildi": "CLOSED",
+          };
+          const dbStat = statusMap[uiStatus] || "OPEN";
+          const mailRes = await sendSupportTicketUpdateEmail(u[0].emailOrPhone, {
+            recipientName: u[0].name || "Sakin",
+            ticketId: row[0].id,
+            ticketTitle: row[0].subject,
+            status: dbStat,
+            statusLabel,
+            adminResponse: note || undefined,
+            viewUrl: `${(process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000").replace(/\/$/, "")}/dashboard/requests`,
+          });
+          console.log("[requests] Talep güncelleme e-postası sonucu:", mailRes);
+        }
+      } catch (mailErr) {
+        console.error("[requests] Talep güncelleme e-postası hatası:", mailErr);
+      }
     }
 
     return NextResponse.json({

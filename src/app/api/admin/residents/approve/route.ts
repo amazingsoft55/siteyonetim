@@ -76,7 +76,7 @@ export async function POST(request: Request) {
         .where(eq(users.id, userId));
 
       // 1. Sistem içi bildirim oluştur
-      createNotification(d.db, {
+      await createNotification(d.db, {
         userId: user.id,
         title: "Hesabınız Onaylandı 🎉",
         body: `${siteName} sakin hesabınız onaylanmıştır. Tüm platform özelliklerini kullanabilirsiniz.`,
@@ -86,15 +86,20 @@ export async function POST(request: Request) {
 
       // 2. Kullanıcıya özel zengin HTML onay e-postası gönder
       if (looksLikeEmail(user.emailOrPhone)) {
-        const base = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000").replace(/\/$/, "");
-        void sendAccountApprovedEmail(user.emailOrPhone, {
-          name: user.name,
-          siteName,
-          emailOrPhone: user.emailOrPhone,
-          apartmentNo: user.apartmentNo,
-          role: user.role,
-          loginUrl: `${base}/login`,
-        });
+        try {
+          const base = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000").replace(/\/$/, "");
+          const mailRes = await sendAccountApprovedEmail(user.emailOrPhone, {
+            name: user.name,
+            siteName,
+            emailOrPhone: user.emailOrPhone,
+            apartmentNo: user.apartmentNo,
+            role: user.role,
+            loginUrl: `${base}/login`,
+          });
+          console.log("[approve] Hesap onay e-postası sonucu:", mailRes);
+        } catch (mailErr) {
+          console.error("[approve] Hesap onay e-postası gönderilemedi:", mailErr);
+        }
       }
 
       return NextResponse.json({

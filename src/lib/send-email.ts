@@ -78,35 +78,61 @@ async function sendViaResend(input: {
   fromType?: "default" | "support";
   from?: string;
 }): Promise<SendResult> {
-  const key = await getApiKey(input.fromType);
-  if (!key) {
-    console.error("E-posta gönderilemedi: RESEND_API_KEY tanımlı değil.");
-    return { ok: false, error: "RESEND_API_KEY tanımlı değil." };
+  const primaryKey = await getApiKey(input.fromType);
+  const secondaryKey = await getApiKey(input.fromType === "support" ? "default" : "support");
+  const keysToTry = [primaryKey, secondaryKey].filter((k): k is string => !!k && k.startsWith("re_"));
+
+  if (keysToTry.length === 0) {
+    console.error("E-posta gönderilemedi: Geçerli bir RESEND_API_KEY veya RESEND_SUPPORT_API_KEY tanımlı değil.");
+    return { ok: false, error: "RESEND_API_KEY tanımlı değil. Lütfen .env.local veya Cloudflare ortam değişkenlerinizi kontrol edin." };
   }
 
   const from = input.from || emailFromAddress(input.fromType || "default");
   const payload: Record<string, unknown> = {
     from,
-    to: [input.to],
+    to: [input.to.trim().toLowerCase()],
     subject: input.subject,
     html: input.html,
     reply_to: emailReplyTo(),
   };
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  let lastError = "";
 
-  if (!res.ok) {
-    const t = await res.text().catch(() => res.statusText);
-    return { ok: false, error: t || `HTTP ${res.status}` };
+  // Anahtarları sırayla dene (401 invalid key durumunda ikincil anahtara geç)
+  for (const key of keysToTry) {
+    try {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        return { ok: true };
+      }
+
+      const text = await res.text().catch(() => res.statusText);
+      try {
+        const parsed = JSON.parse(text) as { message?: string; error?: string; name?: string };
+        lastError = parsed.message || parsed.error || text;
+      } catch {
+        lastError = text || `HTTP ${res.status}`;
+      }
+
+      // Eğer 401 değilse (örn. domain doğrulanmamış 403 vb.) diğer anahtarı denemeye gerek yok
+      if (res.status !== 401) {
+        break;
+      }
+    } catch (netErr) {
+      lastError = netErr instanceof Error ? netErr.message : "Bağlantı hatası";
+    }
   }
-  return { ok: true };
+
+  console.error(`[send-email] Resend API hatası (${from} -> ${input.to}): ${lastError}`);
+  return { ok: false, error: lastError };
 }
 
 /** Ham HTML e-postası gönderimi (Resend altyapısı ile) */

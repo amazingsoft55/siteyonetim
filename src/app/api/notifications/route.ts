@@ -67,3 +67,24 @@ export async function PATCH(request: Request) {
   await markAsRead(d.db, id, session.id);
   return NextResponse.json({ success: true });
 }
+
+/** Bildirimi sil */
+export async function DELETE(request: Request) {
+  const session = await getSession();
+  if (!session) return forbidden();
+
+  const d = await acquireDatabase();
+  if (!d.ok) return await databaseUnavailable();
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id")?.trim();
+
+  if (!id) {
+    return NextResponse.json({ error: "Bildirim kimliği gereklidir." }, { status: 400 });
+  }
+
+  const { deleteNotification } = await import("@/lib/notify");
+  await deleteNotification(d.db, id, session.id);
+  return NextResponse.json({ success: true });
+}
+

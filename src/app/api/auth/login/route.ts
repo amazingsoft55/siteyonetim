@@ -111,18 +111,7 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24,
     });
 
-    // Hoşgeldin bildirimi (her girişte — sadece USER rolüne, email gönderilmez)
-    if (user.role === "USER") {
-      const hour = new Date().getHours();
-      const greeting = hour < 12 ? "Günaydın" : hour < 18 ? "İyi günler" : "İyi akşamlar";
-      createNotification(db, {
-        userId: user.id,
-        title: `${greeting}, ${user.name}!`,
-        body: "Site yönetim platformuna hoş geldiniz. Aidatlarınızı görüntüleyebilir, duyuruları takip edebilir ve taleplerinizi iletebilirsiniz.",
-        type: "WELCOME",
-        href: "/dashboard",
-      });
-    }
+
 
     return NextResponse.json({
       message: "Giriş başarılı",

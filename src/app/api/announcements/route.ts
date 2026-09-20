@@ -159,18 +159,30 @@ export async function POST(request: Request) {
           }
         } catch { /* push hatası ana işlemi bozmasın */ }
 
-        // Email bildirimi (sadece geçerli email adresi olanlara, yayıncı hariç)
+        // Email bildirimi (sadece geçerli email adresi olanlara, yayıncı hariç) - Hızlı ve Paralel Gönderim
         const emailsToSend = siteUsers.filter(
           (u) => u.id !== session.id && looksLikeEmail(u.emailOrPhone),
         );
-        console.log(`[announcements] ${emailsToSend.length} kullanıcıya email gönderilecek`);
-        for (const u of emailsToSend) {
-          const result = await sendAnnouncementEmail(u.emailOrPhone, u.name, title, content, category);
-          if (!result.ok) {
-            console.error(`[announcements] Email gönderilemedi: ${u.emailOrPhone} — ${result.error}`);
-          } else {
-            console.log(`[announcements] Email gönderildi: ${u.emailOrPhone}`);
-          }
+        console.log(`[announcements] ${emailsToSend.length} kullanıcıya paralel e-posta gönderiliyor...`);
+        
+        // 5'erli paketler halinde paralel gönder (Cloudflare timeout ve API rate limit koruması)
+        const batchSize = 5;
+        for (let i = 0; i < emailsToSend.length; i += batchSize) {
+          const batch = emailsToSend.slice(i, i + batchSize);
+          await Promise.allSettled(
+            batch.map(async (u) => {
+              try {
+                const res = await sendAnnouncementEmail(u.emailOrPhone, u.name, title, content, category);
+                if (!res.ok) {
+                  console.error(`[announcements] E-posta gönderilemedi: ${u.emailOrPhone} — ${res.error}`);
+                } else {
+                  console.log(`[announcements] E-posta gönderildi: ${u.emailOrPhone}`);
+                }
+              } catch (sendErr) {
+                console.error(`[announcements] E-posta istisnası: ${u.emailOrPhone}:`, sendErr);
+              }
+            })
+          );
         }
       }
     } catch {

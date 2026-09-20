@@ -114,7 +114,7 @@ export async function POST(request: Request) {
     const siteName = session.siteId
       ? (await d.db.select({ name: users.name }).from(users).where(eq(users.id, session.id)).limit(1))[0]?.name ?? "Site yönetimi"
       : "Site yönetimi";
-    createNotification(d.db, {
+    await createNotification(d.db, {
       userId: id,
       title: "Hoş Geldiniz!",
       body: `${siteName} sitesine başarıyla eklendiniz. Giriş bilgilerinizle panele erişebilirsiniz.`,

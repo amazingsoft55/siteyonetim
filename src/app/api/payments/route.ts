@@ -157,7 +157,7 @@ export async function POST(request: Request) {
 
       const row = await d.db.select().from(payments).where(eq(payments.id, id)).limit(1);
 
-      createNotification(d.db, {
+      await createNotification(d.db, {
         userId: targetUser,
         title: markPaid ? "Aidat Ödemesi Tamamlandı" : "Yeni Aidat Borcu",
         body: markPaid
@@ -169,23 +169,29 @@ export async function POST(request: Request) {
 
       // Kullanıcıya email bildirimi gönder
       if (looksLikeEmail(u[0].emailOrPhone)) {
-        const html = buildBrandedEmailHtml({
-          title: markPaid ? "Aidat Ödemesi Onaylandı" : "Yeni Aidat Borcu",
-          intro: `Merhaba ${u[0].name},`,
-          bodyHtml: `<p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#3f3f46">
-            ${period} dönemine ait <strong>${amount.toLocaleString("tr-TR")} TL</strong> aidatınız ${
-              markPaid ? "yönetici tarafından onaylandı." : "hesabınıza eklendi."
-            }
-          </p>`,
-          ctaHref: `${process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000"}/dashboard/payments`,
-          ctaLabel: "Ödemeleri Görüntüle",
-          footerNote: "Bu e-posta site yönetimi tarafından gönderilen bir aidat bildirimdir.",
-        });
-        sendBrandedEmail({
-          to: u[0].emailOrPhone,
-          subject: markPaid ? "Aidat Ödemesi Onaylandı — Site Yönetimi" : "Yeni Aidat Borcu — Site Yönetimi",
-          html,
-        }).catch(() => {});
+        try {
+          const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000").replace(/\/$/, "");
+          const html = buildBrandedEmailHtml({
+            title: markPaid ? "Aidat Ödemesi Onaylandı" : "Yeni Aidat Borcu",
+            intro: `Merhaba ${u[0].name},`,
+            bodyHtml: `<p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#3f3f46">
+              ${period} dönemine ait <strong>${amount.toLocaleString("tr-TR")} TL</strong> aidatınız ${
+                markPaid ? "yönetici tarafından onaylandı." : "hesabınıza eklendi."
+              }
+            </p>`,
+            ctaHref: `${baseUrl}/dashboard/payments`,
+            ctaLabel: "Ödemeleri Görüntüle",
+            footerNote: "Bu e-posta site yönetimi tarafından gönderilen bir aidat bildirimdir.",
+          });
+          const mailRes = await sendBrandedEmail({
+            to: u[0].emailOrPhone,
+            subject: markPaid ? "Aidat Ödemesi Onaylandı — Site Yönetimi" : "Yeni Aidat Borcu — Site Yönetimi",
+            html,
+          });
+          console.log("[payments] E-posta bildirim sonucu:", mailRes);
+        } catch (mailErr) {
+          console.error("[payments] E-posta bildirimi gönderilemedi:", mailErr);
+        }
       }
 
       return NextResponse.json({ success: true, payment: row[0] ? toClientPayment(row[0]) : null });

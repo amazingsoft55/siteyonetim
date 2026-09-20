@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { SiteLogo } from "@/components/SiteLogo";
+import { NotificationBell } from "@/components/NotificationBell";
 import { SITE_BRAND_NAME } from "@/lib/brand";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -22,6 +23,7 @@ import {
   Wallet,
   Building2,
   MessagesSquare,
+  Bell,
 } from "lucide-react";
 
 const NAV_ITEMS: {
@@ -36,6 +38,7 @@ const NAV_ITEMS: {
   { name: "Finans & Kasa", href: "/admin/finans", icon: Wallet },
   { name: "Duyuru Yönetimi", href: "/admin/announcements", icon: Megaphone },
   { name: "Arıza & Talepler", href: "/admin/requests", icon: Wrench },
+  { name: "Bildirimler", href: "/admin/bildirimler", icon: Bell },
   { name: "Yönetim Kurulu", href: "/admin/kullanicilar", icon: UserSquare2, siteManagerOnly: true },
   { name: "Site Ayarları", href: "/admin/settings", icon: Settings },
   { name: "Platform Destek", href: "/admin/destek", icon: LifeBuoy, siteManagerOnly: true },
@@ -190,7 +193,23 @@ export function AdminSidebar({ children }: { children: React.ReactNode }) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         
-        {/* Top bar for mobile header */}
+        {/* Desktop Header */}
+        <header className="hidden lg:flex items-center justify-between h-16 px-8 bg-white border-b border-slate-200/80 shrink-0">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-extrabold text-slate-900">Yönetici Kontrol Paneli</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <NotificationBell role="ADMIN" align="right" />
+            <Link
+              href="/"
+              className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 px-3 py-1.5 rounded-xl hover:bg-indigo-50 transition"
+            >
+              Siteye Dön &rarr;
+            </Link>
+          </div>
+        </header>
+
+        {/* Mobile Header */}
         <header className="lg:hidden flex items-center justify-between h-16 px-4 bg-white border-b border-slate-200 shrink-0">
           <div className="flex items-center gap-3">
             <button
@@ -201,9 +220,12 @@ export function AdminSidebar({ children }: { children: React.ReactNode }) {
             </button>
             <span className="text-sm font-bold text-slate-900">Yönetici Portalı</span>
           </div>
-          <Link href="/" className="text-xs font-semibold text-indigo-600 hover:underline">
-            Siteye Dön
-          </Link>
+          <div className="flex items-center gap-2">
+            <NotificationBell role="ADMIN" align="right" />
+            <Link href="/" className="text-xs font-semibold text-indigo-600 hover:underline">
+              Siteye Dön
+            </Link>
+          </div>
         </header>
 
         {/* Page Content */}

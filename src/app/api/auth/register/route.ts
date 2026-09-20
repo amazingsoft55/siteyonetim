@@ -255,7 +255,7 @@ export async function POST(request: Request) {
 
       // 2. Sistem İçi Hoş Geldiniz Bildirimi
       try {
-        createNotification(db, {
+        await createNotification(db, {
           userId,
           title: "Hoş Geldiniz!",
           body: `${resolvedSiteName} sistemine başarıyla kaydoldunuz.`,
@@ -273,7 +273,7 @@ export async function POST(request: Request) {
 
         for (const admin of siteAdmins) {
           try {
-            createNotification(db, {
+            await createNotification(db, {
               userId: admin.id,
               title: "Yeni Sakin Katıldı",
               body: `${name} (${apartmentNo ? `Daire ${apartmentNo}` : "Daire belirtilmemiş"}) siteye katıldı.`,
@@ -283,15 +283,18 @@ export async function POST(request: Request) {
           } catch {}
 
           try {
-            if (admin.emailOrPhone.includes("@")) {
-              void sendAccountPendingAdminNotificationEmail(admin.emailOrPhone, {
+            if (admin.emailOrPhone && admin.emailOrPhone.includes("@")) {
+              const resAdminMail = await sendAccountPendingAdminNotificationEmail(admin.emailOrPhone, {
                 userName: name,
                 userEmailOrPhone: emailOrPhone,
                 siteName: resolvedSiteName,
                 apartmentNo: apartmentNo || undefined,
               });
+              console.log("[register] Yönetici bildirim e-postası sonucu:", resAdminMail);
             }
-          } catch {}
+          } catch (admMailErr) {
+            console.error("[register] Yönetici bildirim e-postası hatası:", admMailErr);
+          }
         }
       }
     } catch (notifErr) {

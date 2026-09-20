@@ -120,7 +120,7 @@ export async function POST(request: Request) {
     const row = await d.db.select(publicUserColumns).from(users).where(eq(users.id, id)).limit(1);
 
     // Hoşgeldin bildirimi
-    createNotification(d.db, {
+    await createNotification(d.db, {
       userId: id,
       title: "Hoş Geldiniz!",
       body: "Platformumuza başarıyla eklendiniz. Giriş bilgilerinizle panele erişebilirsiniz.",
