@@ -19,6 +19,8 @@ import {
   Clock,
   Sparkles,
   ShieldCheck,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 type VerifiedSite = {
@@ -40,7 +42,9 @@ function RegisterFormInner() {
   const [name, setName] = React.useState("");
   const [emailOrPhone, setEmailOrPhone] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [showPassword, setShowPassword] = React.useState(false);
   const [passwordConfirm, setPasswordConfirm] = React.useState("");
+  const [showPasswordConfirm, setShowPasswordConfirm] = React.useState(false);
   const [termsAccepted, setTermsAccepted] = React.useState(true);
 
   // Sakin için: Katılım Kodu & Daire
@@ -439,13 +443,23 @@ function RegisterFormInner() {
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       required
                       placeholder="••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition-all bg-slate-50/50"
+                      className="w-full pl-10 pr-11 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition-all bg-slate-50/50"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                      tabIndex={-1}
+                      aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                      title={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
                 </div>
                 <div>
@@ -455,13 +469,23 @@ function RegisterFormInner() {
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
                     <input
-                      type="password"
+                      type={showPasswordConfirm ? "text" : "password"}
                       required
                       placeholder="••••••"
                       value={passwordConfirm}
                       onChange={(e) => setPasswordConfirm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition-all bg-slate-50/50"
+                      className="w-full pl-10 pr-11 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition-all bg-slate-50/50"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                      tabIndex={-1}
+                      aria-label={showPasswordConfirm ? "Şifreyi gizle" : "Şifreyi göster"}
+                      title={showPasswordConfirm ? "Şifreyi gizle" : "Şifreyi göster"}
+                    >
+                      {showPasswordConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
                 </div>
               </div>

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { readJsonError, readJsonNotice } from "@/lib/json-error";
-import { Mail, Pencil, Trash2 } from "lucide-react";
+import { Mail, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
 import { useAlert, useConfirm } from "@/components/ModalProvider";
 
 type UserRow = {
@@ -34,12 +34,14 @@ export default function AdminResidentsAccountsPage() {
   const [nuName, setNuName] = React.useState("");
   const [nuLogin, setNuLogin] = React.useState("");
   const [nuPass, setNuPass] = React.useState("");
+  const [showNuPass, setShowNuPass] = React.useState(false);
   const [nuApt, setNuApt] = React.useState("");
 
   const [editOpen, setEditOpen] = React.useState<UserRow | null>(null);
   const [edName, setEdName] = React.useState("");
   const [edLogin, setEdLogin] = React.useState("");
   const [edPass, setEdPass] = React.useState("");
+  const [showEdPass, setShowEdPass] = React.useState(false);
   const [edApt, setEdApt] = React.useState("");
   const [edRole, setEdRole] = React.useState<"ADMIN" | "USER">("USER");
   const [edSaving, setEdSaving] = React.useState(false);
@@ -259,14 +261,26 @@ export default function AdminResidentsAccountsPage() {
           </div>
           <div>
             <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">Şifre</label>
-            <input
-              type="password"
-              className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 px-4 py-3"
-              value={nuPass}
-              onChange={(e) => setNuPass(e.target.value)}
-              required
-              minLength={6}
-            />
+            <div className="relative">
+              <input
+                type={showNuPass ? "text" : "password"}
+                className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 pl-4 pr-11 py-3 text-sm focus:bg-white dark:focus:bg-zinc-900 transition outline-none"
+                value={nuPass}
+                onChange={(e) => setNuPass(e.target.value)}
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowNuPass(!showNuPass)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors focus:outline-none"
+                tabIndex={-1}
+                aria-label={showNuPass ? "Şifreyi gizle" : "Şifreyi göster"}
+                title={showNuPass ? "Şifreyi gizle" : "Şifreyi göster"}
+              >
+                {showNuPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           {tab === "residents" && (
             <div className="sm:col-span-2">
@@ -405,13 +419,25 @@ export default function AdminResidentsAccountsPage() {
               )}
               <div>
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide">Yeni şifre (opsiyonel)</label>
-                <input
-                  type="password"
-                  placeholder="Boşsa değişmez (en az 6 karakter)"
-                  className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 bg-white dark:bg-zinc-950"
-                  value={edPass}
-                  onChange={(e) => setEdPass(e.target.value)}
-                />
+                <div className="relative">
+                  <input
+                    type={showEdPass ? "text" : "password"}
+                    placeholder="Boşsa değişmez (en az 6 karakter)"
+                    className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 pl-4 pr-11 py-3 bg-white dark:bg-zinc-950 text-sm focus:ring-2 focus:ring-indigo-500 transition outline-none"
+                    value={edPass}
+                    onChange={(e) => setEdPass(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEdPass(!showEdPass)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors focus:outline-none"
+                    tabIndex={-1}
+                    aria-label={showEdPass ? "Şifreyi gizle" : "Şifreyi göster"}
+                    title={showEdPass ? "Şifreyi gizle" : "Şifreyi göster"}
+                  >
+                    {showEdPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               {edRole === "USER" && (
                 <div>

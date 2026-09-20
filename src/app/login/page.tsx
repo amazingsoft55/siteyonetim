@@ -3,25 +3,19 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, UserPlus, ShieldAlert, LogIn } from "lucide-react";
+import { ArrowRight, UserPlus, ShieldAlert, LogIn, Eye, EyeOff } from "lucide-react";
 import { SiteLogo } from "@/components/SiteLogo";
-import { browserApiUrl, getStoredApiBase, setStoredApiBase, getBrowserApiBase } from "@/lib/browser-api-base";
+import { browserApiUrl, getBrowserApiBase } from "@/lib/browser-api-base";
 
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
   const [usernameOrPhone, setUsernameOrPhone] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [showPassword, setShowPassword] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState("");
   const [isPendingNotice, setIsPendingNotice] = React.useState(false);
-  const [apiOriginDraft, setApiOriginDraft] = React.useState("");
-  const [showApiOrigin, setShowApiOrigin] = React.useState(false);
-  const [apiSaveNote, setApiSaveNote] = React.useState("");
   const [authChecked, setAuthChecked] = React.useState(false);
-
-  React.useEffect(() => {
-    setApiOriginDraft(getStoredApiBase());
-  }, []);
 
   React.useEffect(() => {
     let active = true;
@@ -114,7 +108,7 @@ export default function LoginPage() {
         data = await response.json();
       } catch {
         setErrorMsg(
-          "Sunucudan geçerli bir yanıt alınamadı. API adresini kontrol edin.",
+          "Sunucudan geçerli bir yanıt alınamadı. Lütfen daha sonra tekrar deneyin.",
         );
         setLoading(false);
         return;
@@ -253,14 +247,26 @@ export default function LoginPage() {
                   Şifremi unuttum?
                 </Link>
               </div>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 py-3 px-4 text-slate-900 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none bg-slate-50/50 text-sm transition-all"
-                placeholder="••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 py-3 pl-4 pr-11 text-slate-900 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none bg-slate-50/50 text-sm transition-all"
+                  placeholder="••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                  title={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -294,43 +300,6 @@ export default function LoginPage() {
             <UserPlus className="h-3.5 w-3.5" />
             Hesap Aç
           </Link>
-        </div>
-
-        {/* Sunucu Adresi (Mobil & Gelişmiş) */}
-        <div className="pt-2 border-t border-slate-100">
-          <button
-            type="button"
-            onClick={() => setShowApiOrigin((v) => !v)}
-            className="text-[11px] font-semibold text-slate-600 w-full text-center py-1 hover:text-indigo-600 cursor-pointer"
-          >
-            {showApiOrigin ? "▼ Sunucu adresi (gelişmiş)" : "▸ Sunucu adresi (mobil / özel kök)"}
-          </button>
-          {showApiOrigin && (
-            <div className="mt-2 space-y-2 px-1">
-              <p className="text-[10px] text-slate-500 leading-snug">
-                Varsayılan olarak mevcut tarayıcı adresine istek atılır. Mobil uygulamalar veya farklı domainler için kök adresi tanımlayabilirsiniz.
-              </p>
-              <input
-                type="url"
-                placeholder="https://..."
-                value={apiOriginDraft}
-                onChange={(e) => setApiOriginDraft(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 py-2 px-3 text-xs bg-slate-50"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setStoredApiBase(apiOriginDraft);
-                  setApiSaveNote("Kaydedildi.");
-                  void setTimeout(() => setApiSaveNote(""), 3000);
-                }}
-                className="w-full py-2 rounded-lg bg-slate-200 text-slate-800 text-xs font-bold"
-              >
-                Kaydet
-              </button>
-              {apiSaveNote ? <p className="text-[10px] text-emerald-600 font-semibold text-center">{apiSaveNote}</p> : null}
-            </div>
-          )}
         </div>
 
         <div className="text-center">

@@ -2,6 +2,36 @@ import { SITE_BRAND_NAME } from "@/lib/brand";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
 /* ==========================================================================
+   GÜVENLİK YARDIMCILARI (XSS VE HTML ENJEKSİYON KORUMASI)
+   ========================================================================== */
+
+/**
+ * Kullanıcı girdilerini (Ad, Soyad, Site Adı, Duyuru, vb.) HTML içine güvenle yerleştirmek için escape eder.
+ */
+export function escapeHtml(str: unknown): string {
+  if (str === null || str === undefined) return "";
+  const s = String(str);
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+/**
+ * Güvenli bağlantı URL kontrolü (yalnızca http veya https kabul eder).
+ */
+export function sanitizeUrl(url: unknown, fallback = "#"): string {
+  if (typeof url !== "string" || !url.trim()) return fallback;
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("/")) {
+    return escapeHtml(trimmed);
+  }
+  return fallback;
+}
+
+/* ==========================================================================
    E-POSTA TİPLERİ VE ARAYÜZLERİ
    ========================================================================== */
 
@@ -75,7 +105,7 @@ export type PaymentReceiptOptions = {
   recipientName: string;
   siteName: string;
   apartmentNo: string;
-  amount: string;
+  amount: string | number;
   period: string;
   paymentMethod?: string;
   receiptNo: string;
@@ -87,7 +117,7 @@ export type DueReminderOptions = {
   recipientName: string;
   siteName: string;
   apartmentNo: string;
-  totalAmount: string;
+  totalAmount: string | number;
   period: string;
   dueDate: string;
   payUrl?: string;
@@ -112,7 +142,7 @@ export type AccountDeletedEmailOptions = {
 };
 
 /* ==========================================================================
-   1. GENEL / ANA TEMEL ÇERÇEVE ŞABLONU (BASE WRAPPER)
+   1. GENEL / ANA TEMEL ÇERÇEVE ŞABLONU (BASE WRAPPER - ULTRA MODERN)
    ========================================================================== */
 
 export function buildBaseEmailWrapper(opts: {
@@ -137,50 +167,59 @@ export function buildBaseEmailWrapper(opts: {
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="x-apple-disable-message-reformatting"/>
-  <title>${opts.title} — ${SITE_BRAND_NAME}</title>
+  <title>${escapeHtml(opts.title)} — ${escapeHtml(SITE_BRAND_NAME)}</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; background-color: #f1f5f9; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; table-layout: fixed;">
+<body style="margin: 0; padding: 0; background-color: #f8fafc; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #1e293b;">
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; table-layout: fixed; width: 100%;">
     <tr>
-      <td align="center" style="padding: 40px 16px 48px;">
+      <td align="center" style="padding: 40px 16px 56px;">
 
-        <!-- Ana Kart Kapsayıcı -->
-        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 540px; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); border: 1px solid #e2e8f0;">
+        <!-- Ana Kart Kapsayıcı (Max 580px, Modern Glassmorphism & Shadow) -->
+        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #ffffff; border-radius: 28px; overflow: hidden; box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(226, 232, 240, 0.8); border: 1px solid #e2e8f0;">
 
-          <!-- Üst Degrade Şerit -->
+          <!-- Üst Canlı Degrade Şerit (Indigo -> Purple -> Pink) -->
           <tr>
-            <td style="height: 6px; background: linear-gradient(90deg, ${accent}, #8b5cf6, #ec4899);"></td>
+            <td style="height: 6px; background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%); font-size: 0; line-height: 0;">&nbsp;</td>
           </tr>
 
-          <!-- Başlık & Logo Alanı -->
+          <!-- Başlık & Logo Alanı (Modern Brand Header) -->
           <tr>
-            <td style="padding: 32px 32px 24px; text-align: center; border-bottom: 1px solid #f1f5f9; background-color: #fafbfc;">
+            <td style="padding: 32px 36px 24px; text-align: center; background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%); border-bottom: 1px solid #f1f5f9;">
               <table role="presentation" border="0" cellspacing="0" cellpadding="0" align="center">
                 <tr>
-                  <td align="center" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);">
-                    <img src="${logoUrl}" alt="${SITE_BRAND_NAME}" width="46" height="46" style="display: block; border-radius: 10px; border: 0;" />
+                  <td align="center" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e2e8f0; border-radius: 20px; padding: 10px; box-shadow: 0 8px 16px -4px rgba(79, 70, 229, 0.12);">
+                    <img src="${logoUrl}" alt="${escapeHtml(SITE_BRAND_NAME)}" width="48" height="48" style="display: block; border-radius: 12px; border: 0;" />
                   </td>
                 </tr>
               </table>
-              <h2 style="margin: 14px 0 0; font-size: 18px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px;">
-                ${SITE_BRAND_NAME}
+              <h2 style="margin: 14px 0 0; font-size: 19px; font-weight: 900; color: #0f172a; letter-spacing: -0.4px;">
+                ${escapeHtml(SITE_BRAND_NAME)}
               </h2>
-              <p style="margin: 3px 0 0; font-size: 12px; color: #64748b; font-weight: 500;">
-                Akıllı Site & Apartman Yönetim Sistemi
+              <p style="margin: 3px 0 0; font-size: 12px; color: #64748b; font-weight: 600; letter-spacing: 0.2px;">
+                Yeni Nesil Akıllı Site & Yaşam Portalı
               </p>
             </td>
           </tr>
 
           <!-- İçerik Alanı -->
           <tr>
-            <td style="padding: 36px 32px 32px;">
+            <td style="padding: 36px 36px 32px;">
 
               <!-- Rozet / Badge -->
-              <table role="presentation" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 16px;">
+              <table role="presentation" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 18px;">
                 <tr>
-                  <td style="background-color: ${badgeBg}; border-radius: 20px; padding: 5px 14px; border: 1px solid ${badgeColor}30;">
+                  <td style="background-color: ${badgeBg}; border-radius: 24px; padding: 6px 15px; border: 1px solid ${badgeColor}30;">
                     <span style="font-size: 11px; font-weight: 800; color: ${badgeColor}; text-transform: uppercase; letter-spacing: 0.8px;">
-                      ${badgeText}
+                      ${escapeHtml(badgeText)}
                     </span>
                   </td>
                 </tr>
@@ -194,34 +233,37 @@ export function buildBaseEmailWrapper(opts: {
 
           <!-- Alt Bilgi (Footer) -->
           <tr>
-            <td style="padding: 24px 32px 28px; background-color: #fafbfc; border-top: 1px solid #f1f5f9; text-align: center;">
-              <p style="margin: 0 0 10px; font-size: 12px; line-height: 1.6; color: #64748b;">
-                ${opts.footerNote ?? "Bu e-posta otomatik olarak gönderilmiştir. Lütfen doğrudan yanıtlamayınız."}
+            <td style="padding: 28px 36px 32px; background-color: #fafbfc; border-top: 1px solid #f1f5f9; text-align: center;">
+              <p style="margin: 0 0 12px; font-size: 12px; line-height: 1.6; color: #64748b;">
+                ${escapeHtml(opts.footerNote ?? "Bu e-posta otomatik olarak gönderilmiştir. Lütfen doğrudan yanıtlamayınız.")}
               </p>
-              <table role="presentation" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 12px auto 10px;">
+
+              <!-- Hızlı Bağlantılar -->
+              <table role="presentation" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 14px auto 14px;">
                 <tr>
-                  <td style="font-size: 11px; color: #94a3b8;">
-                    <a href="${base}/gizlilik-politikasi" target="_blank" style="color: #64748b; text-decoration: underline; margin: 0 6px;">Gizlilik Politikası</a> &bull;
-                    <a href="${base}/destek" target="_blank" style="color: #64748b; text-decoration: underline; margin: 0 6px;">Yardım Merkezi</a> &bull;
-                    <a href="${base}/login" target="_blank" style="color: #64748b; text-decoration: underline; margin: 0 6px;">Giriş Yap</a>
+                  <td style="font-size: 12px; font-weight: 600; color: #64748b;">
+                    <a href="${base}/dashboard" target="_blank" style="color: #4f46e5; text-decoration: none; margin: 0 8px;">Sakin Portalı</a> &bull;
+                    <a href="${base}/destek" target="_blank" style="color: #64748b; text-decoration: none; margin: 0 8px;">Yardım & Destek</a> &bull;
+                    <a href="${base}/gizlilik-politikasi" target="_blank" style="color: #64748b; text-decoration: none; margin: 0 8px;">Gizlilik</a>
                   </td>
                 </tr>
               </table>
-              <p style="margin: 0; font-size: 11px; color: #94a3b8;">
-                &copy; ${new Date().getFullYear()} ${SITE_BRAND_NAME}. Tüm hakları saklıdır.
+
+              <!-- Güvenlik Mührü -->
+              <table role="presentation" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 16px auto 8px; background-color: #f1f5f9; border-radius: 12px; padding: 8px 16px;">
+                <tr>
+                  <td style="font-size: 11px; font-weight: 600; color: #475569;">
+                    🔒 256-Bit SSL Uçtan Uca Güvenli &bull; KVKK Uyumlu Doğrulanmış Bildirim
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 8px 0 0; font-size: 11px; color: #94a3b8;">
+                &copy; ${new Date().getFullYear()} ${escapeHtml(SITE_BRAND_NAME)}. Tüm hakları saklıdır.
               </p>
             </td>
           </tr>
 
-        </table>
-
-        <!-- Güvenlik Bilgisi -->
-        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 540px; margin-top: 16px; text-align: center;">
-          <tr>
-            <td style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
-              🛡️ Bu işlem <strong>siteyonetim.keskindev.com</strong> altyapısı ile güvence altına alınmıştır.
-            </td>
-          </tr>
         </table>
 
       </td>
@@ -243,9 +285,9 @@ export function buildBrandedEmailHtml(opts: BrandedEmailOptions): string {
       ? `
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 32px auto 0;">
           <tr>
-            <td align="center" style="border-radius: 12px; background: ${accent}; box-shadow: 0 4px 14px ${accent}40;">
-              <a href="${opts.ctaHref}" target="_blank" style="font-size: 15px; color: #ffffff; text-decoration: none; font-weight: 700; padding: 15px 36px; border-radius: 12px; display: inline-block;">
-                ${opts.ctaLabel} &rarr;
+            <td align="center" style="border-radius: 16px; background: linear-gradient(135deg, ${accent} 0%, #7c3aed 100%); box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.45);">
+              <a href="${sanitizeUrl(opts.ctaHref)}" target="_blank" style="font-size: 15px; color: #ffffff; text-decoration: none; font-weight: 800; padding: 16px 38px; border-radius: 16px; display: inline-block; letter-spacing: 0.2px;">
+                ${escapeHtml(opts.ctaLabel)} &rarr;
               </a>
             </td>
           </tr>
@@ -254,11 +296,11 @@ export function buildBrandedEmailHtml(opts: BrandedEmailOptions): string {
       : "";
 
   const contentHtml = `
-    <h1 style="margin: 0 0 14px; font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.35; letter-spacing: -0.5px;">
-      ${opts.title}
+    <h1 style="margin: 0 0 14px; font-size: 23px; font-weight: 900; color: #0f172a; line-height: 1.35; letter-spacing: -0.5px;">
+      ${escapeHtml(opts.title)}
     </h1>
     <p style="margin: 0 0 22px; font-size: 15px; line-height: 1.7; color: #334155;">
-      ${opts.intro}
+      ${escapeHtml(opts.intro)}
     </p>
     ${opts.bodyHtml ?? ""}
     ${ctaButton}
@@ -276,148 +318,50 @@ export function buildBrandedEmailHtml(opts: BrandedEmailOptions): string {
 }
 
 /* ==========================================================================
-   3. ŞİFRE SIFIRLAMA ŞABLONU
-   ========================================================================== */
-
-export function buildPasswordResetEmailHtml(opts: PasswordResetEmailOptions): string {
-  const accent = "#e11d48";
-  const greeting = opts.recipientName?.trim() ? `Merhaba <strong>${opts.recipientName.trim()}</strong>,` : "Merhaba,";
-  const minutes = opts.expiresInMinutes || 60;
-
-  const contentHtml = `
-    <h1 style="margin: 0 0 14px; font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.35; letter-spacing: -0.5px;">
-      Şifre Sıfırlama Talebi
-    </h1>
-    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #334155;">
-      ${greeting} Site Yönetimi hesabınız için bir şifre sıfırlama talebinde bulunuldu. Yeni şifrenizi güvenli bir şekilde oluşturmak için aşağıdaki butona tıklayabilirsiniz.
-    </p>
-
-    <!-- Uyarı Kutusu -->
-    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #fff1f2; border: 1px solid #ffe4e6; border-left: 4px solid #e11d48; border-radius: 12px; margin: 16px 0 28px;">
-      <tr>
-        <td style="padding: 16px 18px;">
-          <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #9f1239;">
-            ⏱️ <strong>Süre Sınırı:</strong> Bu bağlantı güvenlik amacıyla yaklaşık <strong>${minutes} dakika</strong> geçerlidir. Talebi siz yapmadıysanız lütfen bu e-postayı dikkate almayınız.
-          </p>
-        </td>
-      </tr>
-    </table>
-
-    <!-- Eylem Butonu -->
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 28px auto 0;">
-      <tr>
-        <td align="center" style="border-radius: 12px; background: #e11d48; box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);">
-          <a href="${opts.resetUrl}" target="_blank" style="font-size: 15px; color: #ffffff; text-decoration: none; font-weight: 700; padding: 15px 36px; border-radius: 12px; display: inline-block;">
-            Yeni Şifremi Belirle &rarr;
-          </a>
-        </td>
-      </tr>
-    </table>
-  `;
-
-  return buildBaseEmailWrapper({
-    title: "Şifre Sıfırlama Talebi",
-    badge: "GÜVENLİK BİLDİRİMİ",
-    badgeColor: "#e11d48",
-    badgeBg: "#fff1f2",
-    accentColor: accent,
-    footerNote: "Bu talep bilginiz dahilinde değilse hesabınız tamamen güvendedir, hiçbir işlem yapmanıza gerek yoktur.",
-    contentHtml,
-  });
-}
-
-/* ==========================================================================
-   4. GÜVENLİK ONAY KODU (2FA / VERIFICATION CODE) ŞABLONU
-   ========================================================================== */
-
-export function buildVerificationCodeEmailHtml(opts: VerificationCodeEmailOptions): string {
-  const accent = "#059669";
-  const purpose = opts.purpose || "hesap güvenlik doğrulama";
-  const minutes = opts.expiresInMinutes || 15;
-
-  const contentHtml = `
-    <h1 style="margin: 0 0 14px; font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.35; letter-spacing: -0.5px;">
-      Tek Kullanımlık Onay Kodu
-    </h1>
-    <p style="margin: 0 0 22px; font-size: 15px; line-height: 1.7; color: #334155;">
-      Yönetim panelinizde <strong>${purpose}</strong> işlemini tamamlamak için aşağıdaki güvenlik kodunu kullanabilirsiniz:
-    </p>
-
-    <!-- Büyük Kod Kutusu -->
-    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 2px dashed #10b981; border-radius: 16px; margin: 24px 0;">
-      <tr>
-        <td align="center" style="padding: 28px 20px;">
-          <span style="font-size: 11px; font-weight: 800; color: #059669; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 8px;">
-            ONAY KODUNUZ
-          </span>
-          <span style="font-family: 'SFMono-Regular', Consolas, Menlo, Monaco, monospace; font-size: 38px; font-weight: 800; color: #065f46; letter-spacing: 8px; display: inline-block;">
-            ${opts.code}
-          </span>
-        </td>
-      </tr>
-    </table>
-
-    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f0fdf4; border: 1px solid #dcfce7; border-radius: 10px; margin-bottom: 16px;">
-      <tr>
-        <td style="padding: 12px 16px; text-align: center;">
-          <p style="margin: 0; font-size: 13px; color: #166534; line-height: 1.5;">
-            ⏳ Bu kod <strong>${minutes} dakika</strong> boyunca geçerlidir. Güvenliğiniz için bu kodu kimseyle paylaşmayınız.
-          </p>
-        </td>
-      </tr>
-    </table>
-  `;
-
-  return buildBaseEmailWrapper({
-    title: "Güvenlik Doğrulama Kodu",
-    badge: "ONAY KODU",
-    badgeColor: "#059669",
-    badgeBg: "#ecfdf5",
-    accentColor: accent,
-    footerNote: "Bu işlemi siz başlatmadıysanız lütfen derhal sistem yöneticinizle irtibata geçin.",
-    contentHtml,
-  });
-}
-
-/* ==========================================================================
-   5. HOŞ GELDİNİZ (YENİ SAKİN / YÖNETİCİ KAYIT) ŞABLONU
+   3. HOŞ GELDİNİZ (YENİ SAKİN / YÖNETİCİ KAYIT) ŞABLONU — ULTRA ETKİLEYİCİ
    ========================================================================== */
 
 export function buildWelcomeEmailHtml(opts: WelcomeEmailOptions): string {
   const base = getPublicSiteUrl().replace(/\/$/, "");
   const accent = "#4f46e5";
-  const loginUrl = opts.loginUrl || `${base}/login`;
+  const loginUrl = sanitizeUrl(opts.loginUrl || `${base}/login`);
+
+  const safeName = escapeHtml(opts.name);
+  const safeSiteName = escapeHtml(opts.siteName);
+  const safeEmail = escapeHtml(opts.emailOrPhone);
+  const safeApt = opts.apartmentNo ? escapeHtml(opts.apartmentNo) : null;
 
   const contentHtml = `
-    <h1 style="margin: 0 0 14px; font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.35; letter-spacing: -0.5px;">
-      Aramıza Hoş Geldiniz! 👋
+    <!-- Ana Başlık & Karşılama -->
+    <h1 style="margin: 0 0 12px; font-size: 24px; font-weight: 900; color: #0f172a; line-height: 1.3; letter-spacing: -0.6px;">
+      Aramıza Hoş Geldiniz! ✨
     </h1>
-    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #334155;">
-      Merhaba <strong>${opts.name}</strong>, <strong>${opts.siteName}</strong> sakinleri ve yönetim ağına kaydınız başarıyla tamamlandı. Sisteme aşağıdaki bilgilerle giriş yapabilirsiniz:
+    <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.7; color: #475569;">
+      Sayın <strong>${safeName}</strong>, <strong>${safeSiteName}</strong> dijital yönetim ve komşuluk platformundaki hesabınız başarıyla oluşturuldu.
     </p>
 
-    <!-- Bilgi Kartı -->
-    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; margin: 20px 0;">
+    <!-- Kullanıcı Hesap Kartı (Modern Glassmorphic Tasarım) -->
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 18px; margin: 20px 0 24px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);">
       <tr>
-        <td style="padding: 20px;">
+        <td style="padding: 22px;">
           <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
-              <td style="padding: 6px 0; border-bottom: 1px solid #f1f5f9;">
-                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Bağlı Olduğunuz Site:</span><br/>
-                <strong style="font-size: 15px; color: #0f172a;">${opts.siteName}</strong>
+              <td style="padding: 6px 0 10px; border-bottom: 1px solid #e2e8f0;">
+                <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Bağlı Olduğunuz Site:</span><br/>
+                <strong style="font-size: 16px; color: #0f172a; font-weight: 800;">${safeSiteName}</strong>
               </td>
             </tr>
             <tr>
-              <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
-                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Giriş E-postanız / Telefon:</span><br/>
-                <strong style="font-size: 15px; color: #0f172a;">${opts.emailOrPhone}</strong>
+              <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;">
+                <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Giriş E-Posta / Telefon:</span><br/>
+                <strong style="font-size: 15px; color: #4f46e5; font-weight: 700;">${safeEmail}</strong>
               </td>
             </tr>
-            ${opts.apartmentNo ? `
+            ${safeApt ? `
             <tr>
-              <td style="padding: 10px 0;">
-                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Daire Numaranız:</span><br/>
-                <strong style="font-size: 15px; color: #0f172a;">Daire ${opts.apartmentNo}</strong>
+              <td style="padding: 10px 0 4px;">
+                <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Daire Numarası:</span><br/>
+                <strong style="font-size: 15px; color: #0f172a; font-weight: 800;">Daire ${safeApt}</strong>
               </td>
             </tr>` : ""}
           </table>
@@ -425,23 +369,69 @@ export function buildWelcomeEmailHtml(opts: WelcomeEmailOptions): string {
       </tr>
     </table>
 
-    <!-- İlk Giriş Notu -->
-    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #f59e0b; border-radius: 12px; margin: 16px 0 28px;">
+    <!-- SİTEYE GİRME İSTEĞİ UYANDIRAN ÖZELLİK VİTRİNİ (FEATURES HIGHLIGHT) -->
+    <div style="margin: 28px 0 24px;">
+      <h3 style="margin: 0 0 14px; font-size: 14px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.8px;">
+        🚀 Sakin Paneli ile Neler Yapabilirsiniz?
+      </h3>
+
+      <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+          <td style="padding: 8px 0;">
+            <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #faf5ff; border: 1px solid #f3e8ff; border-radius: 12px; padding: 12px 16px;">
+              <tr>
+                <td width="36" valign="top" style="font-size: 20px;">💬</td>
+                <td style="font-size: 13px; color: #581c87; line-height: 1.5;">
+                  <strong>Komşu Sohbeti & Topluluk:</strong> Site sakinleriyle anlık tanışın, duyuruları kaçırmayın.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0;">
+            <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #ecfdf5; border: 1px solid #d1fae5; border-radius: 12px; padding: 12px 16px;">
+              <tr>
+                <td width="36" valign="top" style="font-size: 20px;">💳</td>
+                <td style="font-size: 13px; color: #065f46; line-height: 1.5;">
+                  <strong>Aidat & Kolay Ödeme:</strong> Aidat borçlarınızı, banka IBAN ve makbuzlarınızı anında görüntüleyin.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0;">
+            <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #eff6ff; border: 1px solid #dbeafe; border-radius: 12px; padding: 12px 16px;">
+              <tr>
+                <td width="36" valign="top" style="font-size: 20px;">🛠️</td>
+                <td style="font-size: 13px; color: #1e40af; line-height: 1.5;">
+                  <strong>Arıza & Talep İletimi:</strong> Apartmandaki arızaları fotoğraflı olarak yöneticiye 7/24 iletin.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Güvenlik & İlk Giriş Hatırlatması -->
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #f59e0b; border-radius: 12px; margin: 20px 0 28px;">
       <tr>
         <td style="padding: 14px 18px;">
           <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #92400e;">
-            💡 <strong>İlk Giriş:</strong> Şifreniz yöneticiniz tarafından tanımlanmıştır. Sisteme ilk girişinizde şifrenizi dilediğiniz gibi güncelleyebilirsiniz.
+            💡 <strong>Güvenlik Notu:</strong> Sisteme ilk girişinizde şifrenizi <strong>Hesabım</strong> sayfasından dilediğiniz gibi güncelleyebilirsiniz.
           </p>
         </td>
       </tr>
     </table>
 
-    <!-- Giriş Butonu -->
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 28px auto 0;">
+    <!-- BÜYÜK GİRİŞ BUTONU (HIGH-IMPACT CTA) -->
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 32px auto 8px;">
       <tr>
-        <td align="center" style="border-radius: 12px; background: ${accent}; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);">
-          <a href="${loginUrl}" target="_blank" style="font-size: 15px; color: #ffffff; text-decoration: none; font-weight: 700; padding: 15px 36px; border-radius: 12px; display: inline-block;">
-            Yönetim Paneline Giriş Yap &rarr;
+        <td align="center" style="border-radius: 18px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); box-shadow: 0 10px 24px -4px rgba(79, 70, 229, 0.4);">
+          <a href="${loginUrl}" target="_blank" style="font-size: 16px; color: #ffffff; text-decoration: none; font-weight: 800; padding: 17px 42px; border-radius: 18px; display: inline-block; letter-spacing: 0.3px;">
+            Sakin Paneline Giriş Yap &rarr;
           </a>
         </td>
       </tr>
@@ -454,45 +444,49 @@ export function buildWelcomeEmailHtml(opts: WelcomeEmailOptions): string {
     badgeColor: "#10b981",
     badgeBg: "#ecfdf5",
     accentColor: accent,
-    footerNote: "Bu hesap site yöneticiniz tarafından sisteme kaydedilmiştir.",
+    footerNote: "Bu hesap site yönetimi tarafından sisteme tanımlanmıştır.",
     contentHtml,
   });
 }
 
 /* ==========================================================================
-   6. YENİ DUYURU BİLDİRİMİ ŞABLONU
+   4. YENİ DUYURU BİLDİRİMİ ŞABLONU
    ========================================================================== */
 
 export function buildAnnouncementEmailHtml(opts: AnnouncementEmailOptions): string {
   const base = getPublicSiteUrl().replace(/\/$/, "");
   const accent = "#6366f1";
-  const viewUrl = opts.viewUrl || `${base}/dashboard/announcements`;
+  const viewUrl = sanitizeUrl(opts.viewUrl || `${base}/dashboard/announcements`);
+  const safeTitle = escapeHtml(opts.title);
+  const safeContent = escapeHtml(opts.content);
+  const safeCategory = escapeHtml(opts.category || "GENEL");
+  const safeRecipient = escapeHtml(opts.recipientName || "Değerli Sakin");
 
   const contentHtml = `
-    <h1 style="margin: 0 0 14px; font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.35; letter-spacing: -0.5px;">
-      ${opts.title}
+    <h1 style="margin: 0 0 12px; font-size: 24px; font-weight: 900; color: #0f172a; line-height: 1.35; letter-spacing: -0.6px;">
+      ${safeTitle}
     </h1>
-    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #334155;">
-      Merhaba <strong>${opts.recipientName || "Değerli Sakin"}</strong>, siteniz hakkında yeni bir duyuru yayınlandı:
+    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #475569;">
+      Merhaba <strong>${safeRecipient}</strong>, siteniz hakkında yeni bir resmi duyuru yayınlandı:
     </p>
 
-    <!-- Duyuru Kartı -->
-    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; margin: 20px 0 28px;">
+    <!-- Duyuru İçerik Kartı -->
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #fafbfc; border: 1px solid #e2e8f0; border-left: 4px solid #6366f1; border-radius: 16px; margin: 20px 0 28px;">
       <tr>
         <td style="padding: 24px;">
-          <div style="font-size: 15px; line-height: 1.8; color: #334155;">
-            ${opts.content}
+          <div style="font-size: 15px; line-height: 1.8; color: #334155; white-space: pre-wrap;">
+            ${safeContent}
           </div>
         </td>
       </tr>
     </table>
 
-    <!-- Duyuruyu Gör Butonu -->
+    <!-- CTA Butonu -->
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 28px auto 0;">
       <tr>
-        <td align="center" style="border-radius: 12px; background: ${accent}; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);">
-          <a href="${viewUrl}" target="_blank" style="font-size: 15px; color: #ffffff; text-decoration: none; font-weight: 700; padding: 15px 36px; border-radius: 12px; display: inline-block;">
-            Duyurunun Detaylarını Gör &rarr;
+        <td align="center" style="border-radius: 16px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.4);">
+          <a href="${viewUrl}" target="_blank" style="font-size: 15px; color: #ffffff; text-decoration: none; font-weight: 800; padding: 16px 38px; border-radius: 16px; display: inline-block;">
+            Duyuru Detayını Gör ve Yorum Yap &rarr;
           </a>
         </td>
       </tr>
@@ -501,59 +495,77 @@ export function buildAnnouncementEmailHtml(opts: AnnouncementEmailOptions): stri
 
   return buildBaseEmailWrapper({
     title: opts.title,
-    badge: `📢 DUYURU: ${opts.category.toUpperCase()}`,
+    badge: `📢 DUYURU: ${safeCategory.toUpperCase()}`,
     badgeColor: "#6366f1",
     badgeBg: "#eef2ff",
     accentColor: accent,
-    footerNote: "Bu e-posta site yönetimi tarafından duyuru amacıyla gönderilmiştir.",
+    footerNote: "Bu e-posta site yönetimi tarafından sakinleri bilgilendirmek amacıyla gönderilmiştir.",
     contentHtml,
   });
 }
 
 /* ==========================================================================
-   7. AİDAT & ÖDEME MAKBUZU ŞABLONU (PAYMENT RECEIPT)
+   5. AİDAT & ÖDEME MAKBUZU ŞABLONU (PAYMENT RECEIPT)
    ========================================================================== */
 
 export function buildPaymentReceiptEmailHtml(opts: PaymentReceiptOptions): string {
+  const base = getPublicSiteUrl().replace(/\/$/, "");
   const accent = "#059669";
+  const viewUrl = sanitizeUrl(opts.receiptUrl || `${base}/dashboard/payments`);
+  const safeName = escapeHtml(opts.recipientName);
+  const safePeriod = escapeHtml(opts.period);
+  const safeAmount = escapeHtml(String(opts.amount));
+  const safeSite = escapeHtml(opts.siteName);
+  const safeApt = escapeHtml(opts.apartmentNo);
+  const safeReceipt = escapeHtml(opts.receiptNo);
+  const safeDate = escapeHtml(opts.date);
 
   const contentHtml = `
-    <h1 style="margin: 0 0 14px; font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.35; letter-spacing: -0.5px;">
-      Ödemeniz Başarıyla Alındı 🎉
-    </h1>
-    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #334155;">
-      Sayın <strong>${opts.recipientName}</strong>, <strong>${opts.period}</strong> dönemine ait aidat ödemeniz başarıyla tahsil edilmiştir.
-    </p>
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="display: inline-block; width: 60px; height: 60px; line-height: 60px; border-radius: 50%; background-color: #ecfdf5; text-align: center; margin-bottom: 12px; border: 2px solid #a7f3d0;">
+        <span style="font-size: 30px; vertical-align: middle;">✅</span>
+      </div>
+      <h1 style="margin: 0 0 10px; font-size: 24px; font-weight: 900; color: #0f172a; line-height: 1.3; letter-spacing: -0.6px;">
+        Ödemeniz Başarıyla Alındı
+      </h1>
+      <p style="margin: 0; font-size: 15px; color: #475569; line-height: 1.6;">
+        Sayın <strong>${safeName}</strong>, <strong>${safePeriod}</strong> dönemine ait aidat ödemeniz başarıyla tahsil edilmiştir.
+      </p>
+    </div>
 
-    <!-- Makbuz Fatura Kartı -->
-    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; margin: 24px 0;">
+    <!-- Makbuz Kartı -->
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 20px; margin: 24px 0;">
       <tr>
         <td style="padding: 24px;">
           <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
-              <td style="padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
-                <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700;">Ödenen Tutar</span>
-                <p style="margin: 4px 0 0; font-size: 28px; font-weight: 800; color: #065f46;">${opts.amount} ₺</p>
+              <td style="padding-bottom: 16px; border-bottom: 1px dashed #cbd5e1; text-align: center;">
+                <span style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">TAHSİLAT TUTARI</span>
+                <p style="margin: 6px 0 0; font-size: 32px; font-weight: 900; color: #065f46; letter-spacing: -1px;">${safeAmount} ₺</p>
               </td>
             </tr>
             <tr>
-              <td style="padding: 14px 0 6px;">
-                <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <td style="padding: 16px 0 4px;">
+                <table width="100%" border="0" cellspacing="0" cellpadding="6">
                   <tr>
-                    <td style="font-size: 13px; color: #64748b;">Site / Daire:</td>
-                    <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a;">${opts.siteName} &bull; Daire ${opts.apartmentNo}</td>
+                    <td style="font-size: 13px; color: #64748b;">Site / Apartman:</td>
+                    <td align="right" style="font-size: 13px; font-weight: 800; color: #0f172a;">${safeSite}</td>
                   </tr>
                   <tr>
-                    <td style="padding-top: 8px; font-size: 13px; color: #64748b;">Dönem:</td>
-                    <td align="right" style="padding-top: 8px; font-size: 13px; font-weight: 700; color: #0f172a;">${opts.period}</td>
+                    <td style="font-size: 13px; color: #64748b;">Daire Numarası:</td>
+                    <td align="right" style="font-size: 13px; font-weight: 800; color: #0f172a;">Daire ${safeApt}</td>
                   </tr>
                   <tr>
-                    <td style="padding-top: 8px; font-size: 13px; color: #64748b;">İşlem Tarihi:</td>
-                    <td align="right" style="padding-top: 8px; font-size: 13px; font-weight: 700; color: #0f172a;">${opts.date}</td>
+                    <td style="font-size: 13px; color: #64748b;">Dönem:</td>
+                    <td align="right" style="font-size: 13px; font-weight: 800; color: #0f172a;">${safePeriod}</td>
                   </tr>
                   <tr>
-                    <td style="padding-top: 8px; font-size: 13px; color: #64748b;">Makbuz / İşlem No:</td>
-                    <td align="right" style="padding-top: 8px; font-size: 13px; font-weight: 700; color: #0f172a; font-family: monospace;">#${opts.receiptNo}</td>
+                    <td style="font-size: 13px; color: #64748b;">İşlem Tarihi:</td>
+                    <td align="right" style="font-size: 13px; font-weight: 800; color: #0f172a;">${safeDate}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size: 13px; color: #64748b;">Makbuz No:</td>
+                    <td align="right" style="font-size: 13px; font-weight: 800; color: #059669; font-family: monospace;">#${safeReceipt}</td>
                   </tr>
                 </table>
               </td>
@@ -562,49 +574,78 @@ export function buildPaymentReceiptEmailHtml(opts: PaymentReceiptOptions): strin
         </td>
       </tr>
     </table>
+
+    <!-- CTA Butonu -->
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 28px auto 0;">
+      <tr>
+        <td align="center" style="border-radius: 16px; background: linear-gradient(135deg, #059669 0%, #10b981 100%); box-shadow: 0 8px 20px -4px rgba(5, 150, 105, 0.4);">
+          <a href="${viewUrl}" target="_blank" style="font-size: 15px; color: #ffffff; text-decoration: none; font-weight: 800; padding: 16px 38px; border-radius: 16px; display: inline-block;">
+            Ödeme Geçmişini İncele &rarr;
+          </a>
+        </td>
+      </tr>
+    </table>
   `;
 
   return buildBaseEmailWrapper({
     title: "Ödeme Makbuzu",
-    badge: "ÖDEME BAŞARILI",
+    badge: "ÖDEME ONAYLANDI",
     badgeColor: "#059669",
     badgeBg: "#ecfdf5",
     accentColor: accent,
-    footerNote: "Bu belge resmi tahsilat kaydı niteliğindedir. İstediğiniz zaman panelinizden geçmiş makbuzlarınıza ulaşabilirsiniz.",
+    footerNote: "Bu belge resmi tahsilat kaydı niteliğindedir. İstediğiniz zaman sakin panelinizden tüm geçmiş makbuzlarınıza ulaşabilirsiniz.",
     contentHtml,
   });
 }
 
 /* ==========================================================================
-   8. TALEP & ARIZA DURUM GÜNCELLEMESİ ŞABLONU (SUPPORT TICKET)
+   6. TALEP & ARIZA DURUM GÜNCELLEMESİ ŞABLONU
    ========================================================================== */
 
 export function buildSupportTicketUpdateEmailHtml(opts: SupportTicketUpdateOptions): string {
+  const base = getPublicSiteUrl().replace(/\/$/, "");
   const accent = "#0284c7";
+  const viewUrl = sanitizeUrl(opts.viewUrl || `${base}/dashboard/requests`);
+  const safeName = escapeHtml(opts.recipientName);
+  const safeId = escapeHtml(opts.ticketId);
+  const safeTitle = escapeHtml(opts.ticketTitle);
+  const safeStatus = escapeHtml(opts.statusLabel);
+  const safeNote = opts.adminResponse ? escapeHtml(opts.adminResponse) : null;
 
   const contentHtml = `
-    <h1 style="margin: 0 0 14px; font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.35; letter-spacing: -0.5px;">
-      Talep Durumunuz Güncellendi
+    <h1 style="margin: 0 0 12px; font-size: 24px; font-weight: 900; color: #0f172a; line-height: 1.35; letter-spacing: -0.6px;">
+      Talep Durumunuz Güncellendi 🛠️
     </h1>
-    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #334155;">
-      Sayın <strong>${opts.recipientName}</strong>, oluşturmuş olduğunuz <strong>#${opts.ticketId}</strong> numaralı talep yönetici tarafından güncellendi.
+    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #475569;">
+      Sayın <strong>${safeName}</strong>, oluşturmuş olduğunuz <strong>#${safeId}</strong> numaralı talep yönetici tarafından incelenerek durumu güncellendi.
     </p>
 
     <!-- Talep Detay Kartı -->
-    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; margin: 20px 0 24px;">
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 18px; margin: 20px 0 24px;">
       <tr>
-        <td style="padding: 20px;">
-          <p style="margin: 0 0 6px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">Talep Konusu:</p>
-          <p style="margin: 0 0 16px; font-size: 16px; font-weight: 800; color: #0f172a;">${opts.ticketTitle}</p>
+        <td style="padding: 22px;">
+          <p style="margin: 0 0 4px; font-size: 11px; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Talep Konusu:</p>
+          <p style="margin: 0 0 16px; font-size: 16px; font-weight: 800; color: #0f172a;">${safeTitle}</p>
           
-          <p style="margin: 0 0 6px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">Yeni Durum:</p>
-          <p style="margin: 0 0 ${opts.adminResponse ? "16px" : "0"}; font-size: 14px; font-weight: 800; color: #0284c7;">${opts.statusLabel}</p>
+          <p style="margin: 0 0 4px; font-size: 11px; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Yeni Durum:</p>
+          <p style="margin: 0 0 ${safeNote ? "16px" : "0"}; font-size: 15px; font-weight: 800; color: #0284c7;">● ${safeStatus}</p>
 
-          ${opts.adminResponse ? `
-          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-left: 3px solid #0284c7; border-radius: 8px; padding: 12px 16px;">
-            <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; color: #64748b;">YÖNETİCİ NOTU:</p>
-            <p style="margin: 0; font-size: 13px; color: #334155; line-height: 1.6;">${opts.adminResponse}</p>
+          ${safeNote ? `
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #0284c7; border-radius: 10px; padding: 14px 18px;">
+            <p style="margin: 0 0 4px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">YÖNETİCİ NOTU:</p>
+            <p style="margin: 0; font-size: 14px; color: #1e293b; line-height: 1.6; white-space: pre-wrap;">${safeNote}</p>
           </div>` : ""}
+        </td>
+      </tr>
+    </table>
+
+    <!-- CTA Butonu -->
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 28px auto 0;">
+      <tr>
+        <td align="center" style="border-radius: 16px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); box-shadow: 0 8px 20px -4px rgba(2, 132, 199, 0.4);">
+          <a href="${viewUrl}" target="_blank" style="font-size: 15px; color: #ffffff; text-decoration: none; font-weight: 800; padding: 16px 38px; border-radius: 16px; display: inline-block;">
+            Talebi Görüntüle ve Yanıtla &rarr;
+          </a>
         </td>
       </tr>
     </table>
@@ -612,77 +653,73 @@ export function buildSupportTicketUpdateEmailHtml(opts: SupportTicketUpdateOptio
 
   return buildBaseEmailWrapper({
     title: "Talep Durum Güncellemesi",
-    badge: `TALEP: #${opts.ticketId}`,
+    badge: `TALEP: #${safeId}`,
     badgeColor: "#0284c7",
     badgeBg: "#e0f2fe",
     accentColor: accent,
-    footerNote: "Talebinize ek mesaj yazmak veya sürecini takip etmek için yönetim paneline giriş yapabilirsiniz.",
+    footerNote: "Talebinizle ilgili ek mesaj yazmak veya sürecini canlı takip etmek için yönetim paneline giriş yapabilirsiniz.",
     contentHtml,
   });
 }
 
 /* ==========================================================================
-   9. HESAP ONAYLANDI ŞABLONU (ACCOUNT APPROVED)
+   7. HESAP ONAYLANDI ŞABLONU
    ========================================================================== */
 
 export function buildAccountApprovedEmailHtml(opts: AccountApprovedEmailOptions): string {
+  const base = getPublicSiteUrl().replace(/\/$/, "");
   const accent = "#4f46e5";
-  const loginUrl = opts.loginUrl || `${getPublicSiteUrl()}/login`;
+  const loginUrl = sanitizeUrl(opts.loginUrl || `${base}/login`);
+  const safeName = escapeHtml(opts.name);
+  const safeSite = escapeHtml(opts.siteName);
+  const safeEmail = escapeHtml(opts.emailOrPhone);
+  const safeApt = opts.apartmentNo ? escapeHtml(opts.apartmentNo) : null;
 
   const contentHtml = `
     <div style="text-align: center; margin-bottom: 24px;">
-      <div style="display: inline-block; width: 56px; height: 56px; line-height: 56px; border-radius: 50%; background-color: #ecfdf5; text-align: center; margin-bottom: 12px;">
-        <span style="font-size: 28px; vertical-align: middle;">🎉</span>
+      <div style="display: inline-block; width: 60px; height: 60px; line-height: 60px; border-radius: 50%; background-color: #ecfdf5; text-align: center; margin-bottom: 12px; border: 2px solid #a7f3d0;">
+        <span style="font-size: 30px; vertical-align: middle;">🎉</span>
       </div>
-      <h1 style="margin: 0 0 10px; font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.3; letter-spacing: -0.5px;">
+      <h1 style="margin: 0 0 10px; font-size: 24px; font-weight: 900; color: #0f172a; line-height: 1.3; letter-spacing: -0.6px;">
         Hesabınız Başarıyla Onaylandı!
       </h1>
       <p style="margin: 0; font-size: 15px; color: #475569; line-height: 1.6;">
-        Sayın <strong>${opts.name}</strong>, <strong>${opts.siteName}</strong> için yapmış olduğunuz hesap başvurusu site yönetimi tarafından incelenmiş ve onaylanmıştır.
+        Sayın <strong>${safeName}</strong>, <strong>${safeSite}</strong> için yapmış olduğunuz hesap başvurusu site yönetimi tarafından onaylanarak aktifleştirilmiştir.
       </p>
     </div>
 
     <!-- Onay Detay Kartı -->
-    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; margin: 20px 0 24px;">
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 18px; margin: 20px 0 24px;">
       <tr>
         <td style="padding: 22px;">
           <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
               <td style="font-size: 13px; color: #64748b; padding-bottom: 10px;">Site / Apartman:</td>
-              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 10px;">${opts.siteName}</td>
+              <td align="right" style="font-size: 13px; font-weight: 800; color: #0f172a; padding-bottom: 10px;">${safeSite}</td>
             </tr>
-            ${opts.apartmentNo ? `
+            ${safeApt ? `
             <tr>
               <td style="font-size: 13px; color: #64748b; padding-bottom: 10px;">Daire Numarası:</td>
-              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 10px;">Daire ${opts.apartmentNo}</td>
+              <td align="right" style="font-size: 13px; font-weight: 800; color: #0f172a; padding-bottom: 10px;">Daire ${safeApt}</td>
             </tr>` : ""}
             <tr>
-              <td style="font-size: 13px; color: #64748b; padding-bottom: 10px;">Kayıtlı E-Posta / Telefon:</td>
-              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 10px;">${opts.emailOrPhone}</td>
+              <td style="font-size: 13px; color: #64748b; padding-bottom: 10px;">Giriş Bilgisi:</td>
+              <td align="right" style="font-size: 13px; font-weight: 800; color: #4f46e5; padding-bottom: 10px;">${safeEmail}</td>
             </tr>
             <tr>
               <td style="font-size: 13px; color: #64748b;">Hesap Durumu:</td>
-              <td align="right" style="font-size: 13px; font-weight: 700; color: #059669;">● Aktif — Giriş Yapılabilir</td>
+              <td align="right" style="font-size: 13px; font-weight: 800; color: #059669;">● Aktif &bull; Giriş Yapılabilir</td>
             </tr>
           </table>
         </td>
       </tr>
     </table>
 
-    <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 8px; padding: 14px 16px; margin: 18px 0 24px;">
-      <p style="margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #15803d;">Sakin Paneli ile Neler Yapabilirsiniz?</p>
-      <p style="margin: 0; font-size: 12px; color: #166534; line-height: 1.6;">
-        &bull; Aylık aidat ve ortak gider durumunuzu takip edebilirsiniz.<br/>
-        &bull; Yönetim duyurularını anlık olarak görüntüleyebilirsiniz.<br/>
-        &bull; Arıza, istek ve şikayetlerinizi doğrudan yöneticiye iletebilirsiniz.
-      </p>
-    </div>
-
     <!-- CTA Butonu -->
-    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 24px 0 16px;">
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 28px 0 16px;">
       <tr>
         <td align="center">
-          <a href="${loginUrl}" style="background-color: #4f46e5; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 700; padding: 14px 36px; border-radius: 12px; display: inline-block;">
+          <a href="${loginUrl}" target="_blank" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 800; padding: 16px 42px; border-radius: 16px; display: inline-block; box-shadow: 0 10px 24px -4px rgba(79, 70, 229, 0.4);">
             Hemen Giriş Yapın &rarr;
           </a>
         </td>
@@ -702,49 +739,54 @@ export function buildAccountApprovedEmailHtml(opts: AccountApprovedEmailOptions)
 }
 
 /* ==========================================================================
-   10. YÖNETİCİYE YENİ SAKİN KAYIT BİLDİRİM ŞABLONU
+   8. YÖNETİCİYE YENİ SAKİN KAYIT BİLDİRİM ŞABLONU
    ========================================================================== */
 
 export function buildAccountPendingAdminNotificationEmailHtml(opts: AccountPendingAdminNotificationOptions): string {
+  const base = getPublicSiteUrl().replace(/\/$/, "");
   const accent = "#f59e0b";
-  const reviewUrl = opts.adminReviewUrl || `${getPublicSiteUrl()}/admin/residents`;
+  const reviewUrl = sanitizeUrl(opts.adminReviewUrl || `${base}/admin/residents`);
+  const safeName = escapeHtml(opts.userName);
+  const safeEmail = escapeHtml(opts.userEmailOrPhone);
+  const safeSite = escapeHtml(opts.siteName);
+  const safeApt = opts.apartmentNo ? escapeHtml(opts.apartmentNo) : null;
 
   const contentHtml = `
-    <h1 style="margin: 0 0 14px; font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.35; letter-spacing: -0.5px;">
-      Yeni Sakin Kayıt Başvurusu 🔔
+    <h1 style="margin: 0 0 12px; font-size: 24px; font-weight: 900; color: #0f172a; line-height: 1.35; letter-spacing: -0.6px;">
+      Yeni Sakin Katıldı 🔔
     </h1>
-    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #334155;">
-      <strong>${opts.siteName}</strong> için yeni bir sakin kayıt başvurusu yapıldı. Başvuruyu inceleyip onaylayabilirsiniz.
+    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #475569;">
+      <strong>${safeSite}</strong> sitenize yeni bir sakin kaydı yapıldı. Sakin bilgilerini aşağıdan görüntüleyebilirsiniz:
     </p>
 
     <!-- Detay Kartı -->
-    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; margin: 20px 0 24px;">
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 18px; margin: 20px 0 24px;">
       <tr>
-        <td style="padding: 20px;">
+        <td style="padding: 22px;">
           <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
-              <td style="font-size: 13px; color: #64748b; padding-bottom: 8px;">Başvuran Adı:</td>
-              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 8px;">${opts.userName}</td>
+              <td style="font-size: 13px; color: #64748b; padding-bottom: 10px;">Sakin Adı:</td>
+              <td align="right" style="font-size: 13px; font-weight: 800; color: #0f172a; padding-bottom: 10px;">${safeName}</td>
             </tr>
             <tr>
-              <td style="font-size: 13px; color: #64748b; padding-bottom: 8px;">E-Posta / Telefon:</td>
-              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 8px;">${opts.userEmailOrPhone}</td>
+              <td style="font-size: 13px; color: #64748b; padding-bottom: 10px;">E-Posta / Telefon:</td>
+              <td align="right" style="font-size: 13px; font-weight: 800; color: #4f46e5; padding-bottom: 10px;">${safeEmail}</td>
             </tr>
-            ${opts.apartmentNo ? `
+            ${safeApt ? `
             <tr>
               <td style="font-size: 13px; color: #64748b;">Daire Numarası:</td>
-              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a;">Daire ${opts.apartmentNo}</td>
+              <td align="right" style="font-size: 13px; font-weight: 800; color: #0f172a;">Daire ${safeApt}</td>
             </tr>` : ""}
           </table>
         </td>
       </tr>
     </table>
 
-    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 24px 0 16px;">
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 28px 0 16px;">
       <tr>
         <td align="center">
-          <a href="${reviewUrl}" style="background-color: #4f46e5; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 700; padding: 14px 32px; border-radius: 12px; display: inline-block;">
-            Başvuruyu Yönetici Panelinde İncele &rarr;
+          <a href="${reviewUrl}" target="_blank" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 800; padding: 16px 38px; border-radius: 16px; display: inline-block; box-shadow: 0 8px 20px -4px rgba(245, 158, 11, 0.4);">
+            Sakinleri Yönetici Panelinde İncele &rarr;
           </a>
         </td>
       </tr>
@@ -752,12 +794,118 @@ export function buildAccountPendingAdminNotificationEmailHtml(opts: AccountPendi
   `;
 
   return buildBaseEmailWrapper({
-    title: "Yeni Sakin Kayıt Başvurusu",
-    badge: "YENİ BAŞVURU",
+    title: "Yeni Sakin Katıldı",
+    badge: "YENİ SAKİN",
     badgeColor: "#d97706",
     badgeBg: "#fef3c7",
     accentColor: accent,
     footerNote: "Bu e-posta yöneticisi olduğunuz siteye yeni bir sakin kaydı yapıldığında bilgilendirme amacıyla gönderilir.",
+    contentHtml,
+  });
+}
+
+/* ==========================================================================
+   9. ŞİFRE SIFIRLAMA ŞABLONU
+   ========================================================================== */
+
+export function buildPasswordResetEmailHtml(opts: PasswordResetEmailOptions): string {
+  const accent = "#e11d48";
+  const greeting = opts.recipientName?.trim() ? `Merhaba <strong>${escapeHtml(opts.recipientName.trim())}</strong>,` : "Merhaba,";
+  const minutes = opts.expiresInMinutes || 60;
+  const safeResetUrl = sanitizeUrl(opts.resetUrl);
+
+  const contentHtml = `
+    <h1 style="margin: 0 0 12px; font-size: 24px; font-weight: 900; color: #0f172a; line-height: 1.35; letter-spacing: -0.6px;">
+      Şifre Sıfırlama Talebi 🔐
+    </h1>
+    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #475569;">
+      ${greeting} Site Yönetimi hesabınız için bir şifre sıfırlama talebinde bulunuldu. Yeni şifrenizi güvenle oluşturmak için aşağıdaki butona tıklayabilirsiniz.
+    </p>
+
+    <!-- Uyarı Kutusu -->
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #fff1f2; border: 1px solid #ffe4e6; border-left: 4px solid #e11d48; border-radius: 14px; margin: 16px 0 28px;">
+      <tr>
+        <td style="padding: 16px 20px;">
+          <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #9f1239;">
+            ⏱️ <strong>Güvenlik Uyarısı:</strong> Bu bağlantı <strong>${minutes} dakika</strong> boyunca geçerlidir. Bu talebi siz yapmadıysanız hesabınız güvendedir, hiçbir işlem yapmanıza gerek yoktur.
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Eylem Butonu -->
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 28px auto 0;">
+      <tr>
+        <td align="center" style="border-radius: 16px; background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); box-shadow: 0 8px 20px -4px rgba(225, 29, 72, 0.4);">
+          <a href="${safeResetUrl}" target="_blank" style="font-size: 15px; color: #ffffff; text-decoration: none; font-weight: 800; padding: 16px 40px; border-radius: 16px; display: inline-block;">
+            Yeni Şifremi Belirle &rarr;
+          </a>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  return buildBaseEmailWrapper({
+    title: "Şifre Sıfırlama Talebi",
+    badge: "GÜVENLİK BİLDİRİMİ",
+    badgeColor: "#e11d48",
+    badgeBg: "#fff1f2",
+    accentColor: accent,
+    footerNote: "Şifre talebi sizin bilginiz dahilinde değilse lütfen bu iletiyi dikkate almayınız.",
+    contentHtml,
+  });
+}
+
+/* ==========================================================================
+   10. GÜVENLİK ONAY KODU (2FA / VERIFICATION CODE) ŞABLONU
+   ========================================================================== */
+
+export function buildVerificationCodeEmailHtml(opts: VerificationCodeEmailOptions): string {
+  const accent = "#059669";
+  const purpose = escapeHtml(opts.purpose || "hesap güvenlik doğrulama");
+  const minutes = opts.expiresInMinutes || 15;
+  const safeCode = escapeHtml(opts.code);
+
+  const contentHtml = `
+    <h1 style="margin: 0 0 12px; font-size: 24px; font-weight: 900; color: #0f172a; line-height: 1.35; letter-spacing: -0.6px;">
+      Güvenlik Doğrulama Kodu 🛡️
+    </h1>
+    <p style="margin: 0 0 22px; font-size: 15px; line-height: 1.7; color: #475569;">
+      Yönetim panelinizde <strong>${purpose}</strong> işlemini tamamlamak için aşağıdaki tek kullanımlık güvenlik kodunu kullanabilirsiniz:
+    </p>
+
+    <!-- Büyük Kod Kutusu -->
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border: 2px dashed #10b981; border-radius: 20px; margin: 24px 0;">
+      <tr>
+        <td align="center" style="padding: 28px 20px;">
+          <span style="font-size: 11px; font-weight: 800; color: #059669; text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 10px;">
+            ONAY KODUNUZ
+          </span>
+          <span style="font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 40px; font-weight: 900; color: #065f46; letter-spacing: 10px; display: inline-block;">
+            ${safeCode}
+          </span>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; margin-bottom: 16px;">
+      <tr>
+        <td style="padding: 12px 18px; text-align: center;">
+          <p style="margin: 0; font-size: 13px; color: #166534; line-height: 1.5;">
+            ⏳ Bu kod <strong>${minutes} dakika</strong> boyunca geçerlidir. Güvenliğiniz için bu kodu kimseyle paylaşmayınız.
+          </p>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  return buildBaseEmailWrapper({
+    title: "Güvenlik Doğrulama Kodu",
+    badge: "ONAY KODU",
+    badgeColor: "#059669",
+    badgeBg: "#ecfdf5",
+    accentColor: accent,
+    footerNote: "Bu işlemi siz başlatmadıysanız lütfen sistem yöneticinizle irtibata geçin.",
     contentHtml,
   });
 }
@@ -769,46 +917,50 @@ export function buildAccountPendingAdminNotificationEmailHtml(opts: AccountPendi
 export function buildAccountDeletedEmailHtml(opts: AccountDeletedEmailOptions): string {
   const accent = "#e11d48";
   const now = new Date().toLocaleString("tr-TR");
+  const safeName = escapeHtml(opts.recipientName);
+  const safeEmail = escapeHtml(opts.emailOrPhone);
+  const safeSite = escapeHtml(opts.siteName || SITE_BRAND_NAME);
+  const safeApt = opts.apartmentNo ? escapeHtml(opts.apartmentNo) : null;
 
   const contentHtml = `
-    <h1 style="margin: 0 0 14px; font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.35; letter-spacing: -0.5px;">
-      Hesabınız Kalıcı Olarak Silindi
+    <h1 style="margin: 0 0 12px; font-size: 24px; font-weight: 900; color: #0f172a; line-height: 1.35; letter-spacing: -0.6px;">
+      Hesabınız Kalıcı Olarak Silindi 🛡️
     </h1>
-    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #334155;">
-      Sayın <strong>${opts.recipientName}</strong>,<br /><br />
-      Talebiniz doğrultusunda <strong>${opts.siteName || SITE_BRAND_NAME}</strong> platformundaki hesabınız ve hesaba bağlı tüm kişisel verileriniz sistemimizden <strong>kalıcı olarak silinmiştir (KVKK Uyumlu)</strong>.
+    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #475569;">
+      Sayın <strong>${safeName}</strong>,<br /><br />
+      Talebiniz doğrultusunda <strong>${safeSite}</strong> platformundaki hesabınız ve hesaba bağlı tüm kişisel verileriniz sistemimizden <strong>kalıcı olarak silinmiştir (KVKK Uyumlu)</strong>.
     </p>
 
     <!-- Bilgi Kartı -->
-    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 14px; margin: 20px 0 24px;">
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 18px; margin: 20px 0 24px;">
       <tr>
-        <td style="padding: 20px;">
+        <td style="padding: 22px;">
           <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
-              <td style="font-size: 13px; color: #9f1239; padding-bottom: 8px;">Silinen Hesap:</td>
-              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 8px;">${opts.recipientName}</td>
+              <td style="font-size: 13px; color: #9f1239; padding-bottom: 10px;">Silinen Hesap:</td>
+              <td align="right" style="font-size: 13px; font-weight: 800; color: #0f172a; padding-bottom: 10px;">${safeName}</td>
             </tr>
             <tr>
-              <td style="font-size: 13px; color: #9f1239; padding-bottom: 8px;">E-Posta / Telefon:</td>
-              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 8px;">${opts.emailOrPhone}</td>
+              <td style="font-size: 13px; color: #9f1239; padding-bottom: 10px;">E-Posta / Telefon:</td>
+              <td align="right" style="font-size: 13px; font-weight: 800; color: #0f172a; padding-bottom: 10px;">${safeEmail}</td>
             </tr>
-            ${opts.apartmentNo ? `
+            ${safeApt ? `
             <tr>
-              <td style="font-size: 13px; color: #9f1239; padding-bottom: 8px;">Daire:</td>
-              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a; padding-bottom: 8px;">Daire ${opts.apartmentNo}</td>
+              <td style="font-size: 13px; color: #9f1239; padding-bottom: 10px;">Daire:</td>
+              <td align="right" style="font-size: 13px; font-weight: 800; color: #0f172a; padding-bottom: 10px;">Daire ${safeApt}</td>
             </tr>` : ""}
             <tr>
               <td style="font-size: 13px; color: #9f1239;">Silinme Tarihi:</td>
-              <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a;">${now}</td>
+              <td align="right" style="font-size: 13px; font-weight: 800; color: #0f172a;">${now}</td>
             </tr>
           </table>
         </td>
       </tr>
     </table>
 
-    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;">
+    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 20px; margin-bottom: 20px;">
       <p style="margin: 0; font-size: 12px; color: #64748b; line-height: 1.6;">
-        💡 Bu işlem sizin bilginiz dışında gerçekleştiyse veya tekrar katılmak isterseniz lütfen site yöneticiniz ile iletişime geçiniz.
+        💡 Bu işlem sizin bilginiz dışında gerçekleştiyse veya siteye tekrar dahil olmak isterseniz lütfen site yöneticiniz ile iletişime geçiniz.
       </p>
     </div>
   `;
@@ -819,8 +971,7 @@ export function buildAccountDeletedEmailHtml(opts: AccountDeletedEmailOptions): 
     badgeColor: "#e11d48",
     badgeBg: "#ffe4e6",
     accentColor: accent,
-    footerNote: "Bu bilgilendirme e-postası güvenlik ve yasal zorunluluk kapsamında gönderilmiştir.",
+    footerNote: "Bu bilgilendirme e-postası güvenlik ve yasal zorunluluk (KVKK) kapsamında gönderilmiştir.",
     contentHtml,
   });
 }
-

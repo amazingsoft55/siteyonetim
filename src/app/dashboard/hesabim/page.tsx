@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { readJsonError } from "@/lib/json-error";
-import { KeyRound, Mail, User, ShieldAlert, CheckCircle2, ArrowLeft } from "lucide-react";
+import { KeyRound, Mail, User, ShieldAlert, CheckCircle2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 
 type ResidentAccountInfo = {
   id: string;
@@ -19,7 +19,9 @@ export default function ResidentAccountPage() {
   const [name, setName] = React.useState("");
   const [login, setLogin] = React.useState("");
   const [newPass, setNewPass] = React.useState("");
+  const [showNewPass, setShowNewPass] = React.useState(false);
   const [confirmPass, setConfirmPass] = React.useState("");
+  const [showConfirmPass, setShowConfirmPass] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [err, setErr] = React.useState("");
@@ -28,6 +30,7 @@ export default function ResidentAccountPage() {
   // Hesap Silme
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [deletePassword, setDeletePassword] = React.useState("");
+  const [showDeletePassword, setShowDeletePassword] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
   const [deleteErr, setDeleteErr] = React.useState("");
 
@@ -218,25 +221,49 @@ export default function ResidentAccountPage() {
                   <KeyRound className="h-3 w-3" />
                   Yeni Şifre
                 </label>
-                <input
-                  type="password"
-                  className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-2.5 bg-slate-50 text-sm focus:bg-white transition"
-                  value={newPass}
-                  onChange={(e) => setNewPass(e.target.value)}
-                  placeholder="Boş bırakırsanız değişmez"
-                  minLength={6}
-                  disabled={loading}
-                />
+                <div className="relative">
+                  <input
+                    type={showNewPass ? "text" : "password"}
+                    className="mt-1 w-full rounded-2xl border border-slate-200 pl-4 pr-11 py-2.5 bg-slate-50 text-sm focus:bg-white transition"
+                    value={newPass}
+                    onChange={(e) => setNewPass(e.target.value)}
+                    placeholder="Boş bırakırsanız değişmez"
+                    minLength={6}
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPass(!showNewPass)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                    tabIndex={-1}
+                    aria-label={showNewPass ? "Şifreyi gizle" : "Şifreyi göster"}
+                    title={showNewPass ? "Şifreyi gizle" : "Şifreyi göster"}
+                  >
+                    {showNewPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500">Yeni Şifre (Tekrar)</label>
-                <input
-                  type="password"
-                  className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-2.5 bg-slate-50 text-sm focus:bg-white transition"
-                  value={confirmPass}
-                  onChange={(e) => setConfirmPass(e.target.value)}
-                  disabled={loading}
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPass ? "text" : "password"}
+                    className="mt-1 w-full rounded-2xl border border-slate-200 pl-4 pr-11 py-2.5 bg-slate-50 text-sm focus:bg-white transition"
+                    value={confirmPass}
+                    onChange={(e) => setConfirmPass(e.target.value)}
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPass(!showConfirmPass)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                    tabIndex={-1}
+                    aria-label={showConfirmPass ? "Şifreyi gizle" : "Şifreyi göster"}
+                    title={showConfirmPass ? "Şifreyi gizle" : "Şifreyi göster"}
+                  >
+                    {showConfirmPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -299,14 +326,26 @@ export default function ResidentAccountPage() {
 
             <div>
               <label className="text-xs font-bold text-slate-600 uppercase">Mevcut Şifreniz</label>
-              <input
-                type="password"
-                className="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 bg-slate-50 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-red-500 transition"
-                value={deletePassword}
-                onChange={(e) => setDeletePassword(e.target.value)}
-                placeholder="Mevcut şifrenizi yazın"
-                autoFocus
-              />
+              <div className="relative">
+                <input
+                  type={showDeletePassword ? "text" : "password"}
+                  className="mt-1.5 w-full rounded-2xl border border-slate-200 pl-4 pr-11 py-3 bg-slate-50 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-red-500 transition"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  placeholder="Mevcut şifrenizi yazın"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowDeletePassword(!showDeletePassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                  tabIndex={-1}
+                  aria-label={showDeletePassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                  title={showDeletePassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                >
+                  {showDeletePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             <div className="flex gap-3 pt-2">

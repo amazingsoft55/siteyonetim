@@ -3,13 +3,16 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { browserApiUrl } from "@/lib/browser-api-base";
 import { SiteLogo } from "@/components/SiteLogo";
 
 export default function SifreBelirlePage() {
   const router = useRouter();
   const [np, setNp] = React.useState("");
+  const [showNp, setShowNp] = React.useState(false);
   const [np2, setNp2] = React.useState("");
+  const [showNp2, setShowNp2] = React.useState(false);
   const [err, setErr] = React.useState("");
   const [busy, setBusy] = React.useState(false);
 
@@ -75,32 +78,56 @@ export default function SifreBelirlePage() {
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <label className="text-xs font-bold text-zinc-500 uppercase mb-1 block">Yeni şifre</label>
-            <input
-              type="password"
-              value={np}
-              onChange={(e) => setNp(e.target.value)}
-              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 py-3 px-3 outline-none focus:ring-2 focus:ring-indigo-500"
-              autoComplete="new-password"
-              required
-              minLength={8}
-            />
+            <div className="relative">
+              <input
+                type={showNp ? "text" : "password"}
+                value={np}
+                onChange={(e) => setNp(e.target.value)}
+                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 py-3 pl-3 pr-11 outline-none focus:ring-2 focus:ring-indigo-500 text-zinc-900 dark:text-white text-sm"
+                autoComplete="new-password"
+                required
+                minLength={8}
+              />
+              <button
+                type="button"
+                onClick={() => setShowNp(!showNp)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors focus:outline-none"
+                tabIndex={-1}
+                aria-label={showNp ? "Şifreyi gizle" : "Şifreyi göster"}
+                title={showNp ? "Şifreyi gizle" : "Şifreyi göster"}
+              >
+                {showNp ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           <div>
             <label className="text-xs font-bold text-zinc-500 uppercase mb-1 block">Yeni şifre (tekrar)</label>
-            <input
-              type="password"
-              value={np2}
-              onChange={(e) => setNp2(e.target.value)}
-              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 py-3 px-3 outline-none focus:ring-2 focus:ring-indigo-500"
-              autoComplete="new-password"
-              required
-              minLength={8}
-            />
+            <div className="relative">
+              <input
+                type={showNp2 ? "text" : "password"}
+                value={np2}
+                onChange={(e) => setNp2(e.target.value)}
+                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 py-3 pl-3 pr-11 outline-none focus:ring-2 focus:ring-indigo-500 text-zinc-900 dark:text-white text-sm"
+                autoComplete="new-password"
+                required
+                minLength={8}
+              />
+              <button
+                type="button"
+                onClick={() => setShowNp2(!showNp2)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors focus:outline-none"
+                tabIndex={-1}
+                aria-label={showNp2 ? "Şifreyi gizle" : "Şifreyi göster"}
+                title={showNp2 ? "Şifreyi gizle" : "Şifreyi göster"}
+              >
+                {showNp2 ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           <button
             type="submit"
             disabled={busy}
-            className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm disabled:opacity-60"
+            className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm disabled:opacity-60 transition cursor-pointer"
           >
             {busy ? "Kaydediliyor..." : "Şifreyi kaydet"}
           </button>
